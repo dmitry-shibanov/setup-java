@@ -8,7 +8,7 @@ import * as path from 'path';
 import * as semver from 'semver';
 import * as util from './util';
 
-import { JavaFactory } from './providers/IJavaProvider';
+import { JavaFactory } from './providers/java-factory';
 
 export async function install(version: string, arch: string, javaPackage: string, jdkFile?: string) {
 

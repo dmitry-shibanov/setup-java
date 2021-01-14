@@ -10031,6 +10031,44 @@ exports.DOMParser = DOMParserImpl_1.DOMParserImpl;
 
 /***/ }),
 
+/***/ 217:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const zulu_provider_1 = __importDefault(__webpack_require__(148));
+var JavaProviders;
+(function (JavaProviders) {
+    JavaProviders["AdopOpenJdk"] = "adopOpenJdk";
+    JavaProviders["Zulu"] = "zulu";
+})(JavaProviders = exports.JavaProviders || (exports.JavaProviders = {}));
+class JavaFactory {
+    constructor(version, arch, javaPackage = "jdk") {
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+    }
+    ;
+    getJavaProvider(provider) {
+        switch (provider) {
+            case JavaProviders.AdopOpenJdk:
+                return null;
+            case JavaProviders.Zulu:
+                return new zulu_provider_1.default(this.version, this.arch, this.javaPackage);
+            default:
+                return null;
+        }
+    }
+}
+exports.JavaFactory = JavaFactory;
+
+
+/***/ }),
+
 /***/ 247:
 /***/ (function(__unusedmodule, exports) {
 
@@ -14177,10 +14215,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core_1 = __importDefault(__webpack_require__(470));
 const path = __importStar(__webpack_require__(622));
-const IJavaProvider_1 = __webpack_require__(574);
+const java_factory_1 = __webpack_require__(217);
 function install(version, arch, javaPackage, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
-        const javaFactory = new IJavaProvider_1.JavaFactory(version, arch, javaPackage);
+        const javaFactory = new java_factory_1.JavaFactory(version, arch, javaPackage);
         const providerName = 'zulu';
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
@@ -22441,15 +22479,11 @@ exports.ObjectCache = ObjectCache;
 /***/ }),
 
 /***/ 574:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
 "use strict";
 
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const zulu_provider_1 = __importDefault(__webpack_require__(148));
 class IJavaProvider {
     constructor(provider) {
         this.provider = provider;
@@ -22459,30 +22493,6 @@ class IJavaProvider {
     }
 }
 exports.IJavaProvider = IJavaProvider;
-class JavaFactory {
-    constructor(version, arch, javaPackage = "jdk") {
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
-    }
-    ;
-    getJavaProvider(provider) {
-        switch (provider) {
-            case JavaProviders.AdopOpenJdk:
-                return null;
-            case JavaProviders.Zulu:
-                return new zulu_provider_1.default(this.version, this.arch, this.javaPackage);
-            default:
-                return null;
-        }
-    }
-}
-exports.JavaFactory = JavaFactory;
-var JavaProviders;
-(function (JavaProviders) {
-    JavaProviders["AdopOpenJdk"] = "adopOpenJdk";
-    JavaProviders["Zulu"] = "zulu";
-})(JavaProviders = exports.JavaProviders || (exports.JavaProviders = {}));
 
 
 /***/ }),
