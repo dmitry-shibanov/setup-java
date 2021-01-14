@@ -1,5 +1,9 @@
 import * as path from 'path';
 
+export const IS_WINDOWS = process.platform === 'win32';
+export const IS_LINUX = process.platform === 'linux';
+export const PLATFORM =  IS_WINDOWS ? "windows" : process.platform;
+
 export function getTempDir() {
   let tempDirectory = process.env.RUNNER_TEMP;
   if (tempDirectory === undefined) {
