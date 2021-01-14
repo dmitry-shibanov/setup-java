@@ -1,5 +1,5 @@
-import core from '@actions/core';
-import tc from '@actions/tool-cache';
+import * as core from '@actions/core';
+import * as tc from '@actions/tool-cache';
 import * as httpm from '@actions/http-client';
 
 import path from 'path';

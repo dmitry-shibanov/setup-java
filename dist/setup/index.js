@@ -9380,8 +9380,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const core_1 = __importDefault(__webpack_require__(470));
-const tool_cache_1 = __importDefault(__webpack_require__(533));
+const core = __importStar(__webpack_require__(470));
+const tc = __importStar(__webpack_require__(533));
 const httpm = __importStar(__webpack_require__(539));
 const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
@@ -9425,19 +9425,19 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
                 throw new Error(`No zulu java was found for version ${javaVersion}`);
             }
             const downloadUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`;
-            core_1.default.info(`Downloading ${this.provider} java version ${javaVersion}`);
-            const javaPath = yield tool_cache_1.default.downloadTool(downloadUrl);
+            core.info(`Downloading ${this.provider} java version ${javaVersion}`);
+            const javaPath = yield tc.downloadTool(downloadUrl);
             let downloadDir;
-            core_1.default.info(`Ectracting ${this.provider} java version ${javaVersion}`);
+            core.info(`Ectracting ${this.provider} java version ${javaVersion}`);
             if (util_1.IS_WINDOWS) {
-                downloadDir = yield tool_cache_1.default.extractZip(javaPath);
+                downloadDir = yield tc.extractZip(javaPath);
             }
             else {
-                downloadDir = yield tool_cache_1.default.extractTar(javaPath);
+                downloadDir = yield tc.extractTar(javaPath);
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tool_cache_1.default.cacheDir(archivePath, `Java_${this.provider}`, javaVersion, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}`, javaVersion, this.arch);
             return { javaPath: toolPath, javaVersion };
         });
     }
@@ -9445,13 +9445,13 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const featureCondition = '&feature=';
             const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${util_1.PLATFORM}&arch=${this.arch}&hw_bitness=64`;
-            core_1.default.debug(`url get all java versions: ${url}`);
+            core.debug(`url get all java versions: ${url}`);
             const zuluJson = (yield http.getJson(url)).result;
             if (!zuluJson || zuluJson.length === 0) {
                 throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${util_1.PLATFORM}`);
             }
-            core_1.default.debug(`get id: ${zuluJson[0].id}`);
-            core_1.default.debug('Get the list of zulu java versions');
+            core.debug(`get id: ${zuluJson[0].id}`);
+            core.debug('Get the list of zulu java versions');
             const zuluVersions = zuluJson.map(item => { var _a; return (_a = semver_1.default.coerce(item.jdk_version.join('.'))) !== null && _a !== void 0 ? _a : ""; });
             const maxVersion = semver_1.default.maxSatisfying(zuluVersions, range);
             if (!maxVersion) {
@@ -14797,7 +14797,6 @@ function configAuthentication(id, username, password, gpgPassphrase) {
         // otherwise use the home/.m2/ path
         const settingsDirectory = path.join(core.getInput(constants_1.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants_1.INPUT_SETTINGS_PATH) || exports.M2_DIR);
         yield io.mkdirP(settingsDirectory);
-        core.debug(`created directory ${settingsDirectory}`);
         yield write(settingsDirectory, generate(id, username, password, gpgPassphrase));
     });
 }

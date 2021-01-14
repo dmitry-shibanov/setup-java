@@ -30,7 +30,6 @@ export async function configAuthentication(
     core.getInput(INPUT_SETTINGS_PATH) || M2_DIR
   );
   await io.mkdirP(settingsDirectory);
-  core.debug(`created directory ${settingsDirectory}`);
   await write(
     settingsDirectory,
     generate(id, username, password, gpgPassphrase)
