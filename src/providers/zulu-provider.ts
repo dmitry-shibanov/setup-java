@@ -76,7 +76,8 @@ class ZuluProvider extends IJavaProvider {
         const downloadUrl = new URL(`https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`);
 
         core.info(`Downloading ${this.provider} java version ${javaVersion}`);
-        const javaPath = await tc.downloadTool(downloadUrl.href);
+        core.info(`Zulu url is ${zuluJavaJson.url}`);
+        const javaPath = await tc.downloadTool(zuluJavaJson.url);
         let downloadDir: string;
         
         core.info(`Ectracting ${this.provider} java version ${javaVersion}`);
