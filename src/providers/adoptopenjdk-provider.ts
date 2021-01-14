@@ -127,6 +127,10 @@ class AdopOpenJdkProvider extends IJavaProvider {
         const archivePath = path.join(downloadDir, archiveName);
         toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}`, fullVersion.version_data.semver, this.arch);
 
+        if(process.platform === 'darwin') {
+            toolPath = path.join(toolPath, 'Contents', 'Home')
+        }
+
         return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
     }
 
