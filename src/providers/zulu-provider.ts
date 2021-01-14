@@ -36,10 +36,12 @@ interface IZuluDetailed extends IZulu {
 
 class ZuluProvider extends IJavaProvider {
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
+    private platform: string;
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.version = this.fixJavaVersion(version);
+        this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
     }
 
     public async getJava() {
@@ -66,8 +68,7 @@ class ZuluProvider extends IJavaProvider {
         });
 
         const javaVersion = await this.getJavaVersion(http, range);
-        const platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
         const zuluJavaJson = (await http.getJson<IZuluDetailed>(url)).result;
 
         if(!zuluJavaJson) {
@@ -96,13 +97,13 @@ class ZuluProvider extends IJavaProvider {
 
     private async getJavaVersion(http: httpm.HttpClient, range: semver.Range): Promise<string> {
         const featureCondition = '&feature=';
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${PLATFORM}&arch=${this.arch}&hw_bitness=64`;
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
 
         core.debug(`url get all java versions: ${url}`);
         const zuluJson = (await http.getJson<Array<IZulu>>(url)).result;
 
         if(!zuluJson || zuluJson.length === 0) {
-            throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${PLATFORM}`);
+            throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
         }
         core.debug(`get id: ${zuluJson[0].id}`);
 

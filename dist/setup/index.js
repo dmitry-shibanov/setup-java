@@ -9398,6 +9398,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.version = this.fixJavaVersion(version);
+        this.platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
     }
     getJava() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -9420,8 +9421,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
                 maxRetries: 3
             });
             const javaVersion = yield this.getJavaVersion(http, range);
-            const platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
             const zuluJavaJson = (yield http.getJson(url)).result;
             if (!zuluJavaJson) {
                 throw new Error(`No zulu java was found for version ${javaVersion}`);
@@ -9447,11 +9447,11 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     getJavaVersion(http, range) {
         return __awaiter(this, void 0, void 0, function* () {
             const featureCondition = '&feature=';
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${util_1.PLATFORM}&arch=${this.arch}&hw_bitness=64`;
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
             core.debug(`url get all java versions: ${url}`);
             const zuluJson = (yield http.getJson(url)).result;
             if (!zuluJson || zuluJson.length === 0) {
-                throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${util_1.PLATFORM}`);
+                throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
             }
             core.debug(`get id: ${zuluJson[0].id}`);
             core.debug('Get the list of zulu java versions');
@@ -15272,12 +15272,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.install = void 0;
-const core_1 = __importDefault(__webpack_require__(470));
+const core = __importStar(__webpack_require__(470));
 const path = __importStar(__webpack_require__(622));
 const java_factory_1 = __webpack_require__(217);
 function install(version, arch, javaPackage, jdkFile) {
@@ -15292,18 +15289,18 @@ function install(version, arch, javaPackage, jdkFile) {
         const javaVersion = javaInfo.javaVersion;
         const toolPath = javaInfo.javaPath;
         let extendedJavaHome = 'JAVA_HOME_' + version + '_' + arch;
-        core_1.default.exportVariable(extendedJavaHome, toolPath); //TODO: remove for v2
+        core.exportVariable(extendedJavaHome, toolPath); //TODO: remove for v2
         // For portability reasons environment variables should only consist of
         // uppercase letters, digits, and the underscore. Therefore we convert
         // the extendedJavaHome variable to upper case and replace '.' symbols and
         // any other non-alphanumeric characters with an underscore.
         extendedJavaHome = extendedJavaHome.toUpperCase().replace(/[^0-9A-Z_]/g, '_');
-        core_1.default.exportVariable('JAVA_HOME', toolPath);
-        core_1.default.exportVariable(extendedJavaHome, toolPath);
-        core_1.default.addPath(path.join(toolPath, 'bin'));
-        core_1.default.setOutput('path', toolPath);
-        core_1.default.setOutput('version', javaVersion);
-        core_1.default.info(`Setuped up java ${javaVersion} from ${providerName}`);
+        core.exportVariable('JAVA_HOME', toolPath);
+        core.exportVariable(extendedJavaHome, toolPath);
+        core.addPath(path.join(toolPath, 'bin'));
+        core.setOutput('path', toolPath);
+        core.setOutput('version', javaVersion);
+        core.info(`Setuped up java ${javaVersion} from ${providerName}`);
     });
 }
 exports.install = install;
