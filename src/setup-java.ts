@@ -51,6 +51,7 @@ async function run() {
   try {
     const version = core.getInput(INPUT_JAVA_VERSION, {required: true});
     const arch = core.getInput(INPUT_ARCHITECTURE, {required: true});
+    const provider = core.getInput('provider') || 'zulu';
     const javaPackage = core.getInput(INPUT_JAVA_PACKAGE, {
       required: true
     });
