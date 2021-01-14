@@ -8449,6 +8449,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         this.javaPackage = javaPackage;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.arch = arch === 'x64' ? 'x86' : arch;
+        this.version = this.fixJavaVersion(version);
     }
     getJava() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -8497,10 +8498,13 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const featureCondition = '&feature=';
             const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${util_1.PLATFORM}&arch=${this.arch}&hw_bitness=64`;
+            core_1.default.debug(`url get all java versions: ${url}`);
             const zuluJson = (yield http.getJson(url)).result;
             if (!zuluJson || zuluJson.length === 0) {
                 throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${util_1.PLATFORM}`);
             }
+            core_1.default.debug(`get id: ${zuluJson[0].id}`);
+            core_1.default.debug('Get the list of zulu java versions');
             const zuluVersions = zuluJson.map(item => { var _a; return _a = semver_1.default.coerce(item.jdk_version.join('.')), (_a !== null && _a !== void 0 ? _a : ""); });
             const maxVersion = semver_1.default.maxSatisfying(zuluVersions, range);
             if (!maxVersion) {
@@ -8508,6 +8512,10 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             }
             return maxVersion.raw;
         });
+    }
+    fixJavaVersion(versionSpec) {
+        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
+        return version;
     }
 }
 exports.default = ZuluProvider;

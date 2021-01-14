@@ -38,6 +38,7 @@ class ZuluProvider extends IJavaProvider {
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
+        this.version = this.fixJavaVersion(version);
     }
 
     public async getJava() {
@@ -94,12 +95,15 @@ class ZuluProvider extends IJavaProvider {
         const featureCondition = '&feature=';
         const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${PLATFORM}&arch=${this.arch}&hw_bitness=64`;
 
+        core.debug(`url get all java versions: ${url}`);
         const zuluJson = (await http.getJson<Array<IZulu>>(url)).result;
 
         if(!zuluJson || zuluJson.length === 0) {
             throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${PLATFORM}`);
         }
+        core.debug(`get id: ${zuluJson[0].id}`);
 
+        core.debug('Get the list of zulu java versions');
         const zuluVersions = zuluJson.map(item => semver.coerce(item.jdk_version.join('.'))?? "");
         const maxVersion = semver.maxSatisfying(zuluVersions, range);
 
@@ -108,6 +112,11 @@ class ZuluProvider extends IJavaProvider {
         }
 
         return maxVersion.raw;
+    }
+
+    private fixJavaVersion(versionSpec: string) {
+        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
+        return version;
     }
     
 }
