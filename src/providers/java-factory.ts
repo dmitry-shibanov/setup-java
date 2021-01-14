@@ -1,3 +1,4 @@
+import AdopOpenJdkProvider from './adoptopenjdk-provider';
 import { IJavaProvider } from './IJavaProvider'
 import ZuluProvider from "./zulu-provider";
 
@@ -13,7 +14,7 @@ export class JavaFactory {
     public getJavaProvider(provider: JavaProviders|string): IJavaProvider | null {
         switch(provider) {
             case JavaProviders.AdopOpenJdk:
-                return null;
+                return new AdopOpenJdkProvider(this.version, this.arch, this.javaPackage);
             case JavaProviders.Zulu:
                 return new ZuluProvider(this.version, this.arch, this.javaPackage);
             default:

@@ -13,7 +13,7 @@ import { JavaFactory } from './providers/java-factory';
 export async function install(version: string, arch: string, javaPackage: string, jdkFile?: string) {
 
     const javaFactory = new JavaFactory(version, arch, javaPackage);
-    const providerName = 'zulu';
+    const providerName = 'adopOpenJdk';//'zulu';
     const provider = javaFactory.getJavaProvider(providerName);
     if(!provider) {
         throw new Error('No provider was found');

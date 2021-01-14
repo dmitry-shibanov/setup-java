@@ -9386,7 +9386,7 @@ const httpm = __importStar(__webpack_require__(539));
 const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
-const IJavaProvider_1 = __webpack_require__(574);
+const IJavaProvider_1 = __webpack_require__(857);
 const util_1 = __webpack_require__(322);
 const url_1 = __webpack_require__(835);
 class ZuluProvider extends IJavaProvider_1.IJavaProvider {
@@ -11229,6 +11229,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.JavaFactory = exports.JavaProviders = void 0;
+const adoptopenjdk_provider_1 = __importDefault(__webpack_require__(574));
 const zulu_provider_1 = __importDefault(__webpack_require__(148));
 var JavaProviders;
 (function (JavaProviders) {
@@ -11245,7 +11246,7 @@ class JavaFactory {
     getJavaProvider(provider) {
         switch (provider) {
             case JavaProviders.AdopOpenJdk:
-                return null;
+                return new adoptopenjdk_provider_1.default(this.version, this.arch, this.javaPackage);
             case JavaProviders.Zulu:
                 return new zulu_provider_1.default(this.version, this.arch, this.javaPackage);
             default:
@@ -15280,7 +15281,7 @@ const java_factory_1 = __webpack_require__(217);
 function install(version, arch, javaPackage, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const javaFactory = new java_factory_1.JavaFactory(version, arch, javaPackage);
-        const providerName = 'zulu';
+        const providerName = 'adopOpenJdk'; //'zulu';
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
             throw new Error('No provider was found');
@@ -26536,21 +26537,113 @@ exports.YAMLReader = YAMLReader_1.YAMLReader;
 /* 572 */,
 /* 573 */,
 /* 574 */
-/***/ (function(__unusedmodule, exports) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IJavaProvider = void 0;
-class IJavaProvider {
-    constructor(provider) {
-        this.provider = provider;
+const semver_1 = __importDefault(__webpack_require__(280));
+const httpm = __importStar(__webpack_require__(539));
+const core = __importStar(__webpack_require__(470));
+const tc = __importStar(__webpack_require__(533));
+const util_1 = __webpack_require__(322);
+const IJavaProvider_1 = __webpack_require__(857);
+const fs_1 = __importDefault(__webpack_require__(747));
+const path_1 = __importDefault(__webpack_require__(622));
+class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
+    constructor(version, arch, javaPackage = "jdk") {
+        super("adoptopenjdk");
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+        this.version = this.fixJavaVersion(version);
+        this.platform = util_1.PLATFORM === 'darwin' ? 'mac' : util_1.PLATFORM;
     }
-    findTool(toolName) {
-        return null;
+    getJava() {
+        throw new Error("Method not implemented.");
+    }
+    downloadTool(range) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            let toolPath;
+            const http = new httpm.HttpClient('setup-java', undefined, {
+                allowRetries: true,
+                maxRetries: 3
+            });
+            const versionSpec = this.fixJavaVersion(this.version);
+            const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
+            const javaVersionAvailable = (yield http.getJson(urlReleaseVersion)).result;
+            if (!javaVersionAvailable) {
+                throw new Error("No versions were found");
+            }
+            const javaVersions = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
+            const majorVersion = (_a = semver_1.default.maxSatisfying(javaVersions, new semver_1.default.Range(versionSpec))) === null || _a === void 0 ? void 0 : _a.major;
+            if (!majorVersion) {
+                throw new Error('Could not get major version');
+            }
+            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=jdk&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
+            const javaRleasesVersion = (yield http.getJson(releasesUrl)).result;
+            if (!javaRleasesVersion) {
+                throw new Error(`error in ${releasesUrl}`);
+            }
+            const fullVersion = javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
+            if (!fullVersion) {
+                throw new Error('version was not found by find call');
+            }
+            core.info(`Downloading ${this.provider} java version ${fullVersion.version_data.semver}`);
+            core.info(`Zulu url is ${fullVersion.binaries[0].package.link}`);
+            const javaPath = yield tc.downloadTool(fullVersion.binaries[0].package.link);
+            let downloadDir;
+            core.info(`Ectracting ${this.provider} java version ${fullVersion.version_data.semver}`);
+            if (util_1.IS_WINDOWS) {
+                downloadDir = yield tc.extractZip(javaPath);
+            }
+            else {
+                downloadDir = yield tc.extractTar(javaPath);
+            }
+            const archiveName = fs_1.default.readdirSync(downloadDir)[0];
+            const archivePath = path_1.default.join(downloadDir, archiveName);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}`, fullVersion.version_data.semver, this.arch);
+            return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
+        });
+    }
+    fixJavaVersion(versionSpec) {
+        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
+        return version;
     }
 }
-exports.IJavaProvider = IJavaProvider;
+exports.default = AdopOpenJdkProvider;
 
 
 /***/ }),
@@ -37145,7 +37238,25 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 /* 854 */,
 /* 855 */,
 /* 856 */,
-/* 857 */,
+/* 857 */
+/***/ (function(__unusedmodule, exports) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.IJavaProvider = void 0;
+class IJavaProvider {
+    constructor(provider) {
+        this.provider = provider;
+    }
+    findTool(toolName) {
+        return null;
+    }
+}
+exports.IJavaProvider = IJavaProvider;
+
+
+/***/ }),
 /* 858 */,
 /* 859 */,
 /* 860 */,
