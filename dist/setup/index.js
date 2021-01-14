@@ -7959,7 +7959,7 @@ exports.NodeList = NodeListImpl_1.NodeListImpl;
 const NodeListStaticImpl_1 = __webpack_require__(266);
 exports.NodeListStatic = NodeListStaticImpl_1.NodeListStaticImpl;
 const NonDocumentTypeChildNodeImpl_1 = __webpack_require__(18);
-const NonElementParentNodeImpl_1 = __webpack_require__(574);
+const NonElementParentNodeImpl_1 = __webpack_require__(827);
 const ParentNodeImpl_1 = __webpack_require__(934);
 const ProcessingInstructionImpl_1 = __webpack_require__(619);
 exports.ProcessingInstruction = ProcessingInstructionImpl_1.ProcessingInstructionImpl;
@@ -8405,6 +8405,112 @@ function orderedSet_contains(set1, set2, caseSensitive) {
 }
 exports.orderedSet_contains = orderedSet_contains;
 //# sourceMappingURL=OrderedSetAlgorithm.js.map
+
+/***/ }),
+
+/***/ 148:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core_1 = __importDefault(__webpack_require__(470));
+const tool_cache_1 = __importDefault(__webpack_require__(533));
+const httpm = __importStar(__webpack_require__(539));
+const path_1 = __importDefault(__webpack_require__(622));
+const fs_1 = __importDefault(__webpack_require__(747));
+const semver_1 = __importDefault(__webpack_require__(280));
+const IJavaProvider_1 = __webpack_require__(574);
+const util_1 = __webpack_require__(322);
+class ZuluProvider extends IJavaProvider_1.IJavaProvider {
+    constructor(version, arch, javaPackage = "jdk") {
+        super("zulu");
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+        this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
+    }
+    getJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            let javaInfo = this.findTool();
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            return javaInfo;
+        });
+    }
+    findTool(toolName) {
+        return null;
+    }
+    downloadTool(range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let toolPath;
+            const http = new httpm.HttpClient('setup-java', undefined, {
+                allowRetries: true,
+                maxRetries: 3
+            });
+            const javaVersion = yield this.getJavaVersion(http, range);
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${util_1.PLATFORM}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
+            const zuluJavaJson = (yield http.getJson(url)).result;
+            if (!zuluJavaJson) {
+                throw new Error(`No zulu java was found for version ${javaVersion}`);
+            }
+            const downloadUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`;
+            core_1.default.info(`Downloading ${this.provider} java version ${javaVersion}`);
+            const javaPath = yield tool_cache_1.default.downloadTool(downloadUrl);
+            let downloadDir;
+            core_1.default.info(`Ectracting ${this.provider} java version ${javaVersion}`);
+            if (util_1.IS_WINDOWS) {
+                downloadDir = yield tool_cache_1.default.extractZip(javaPath);
+            }
+            else {
+                downloadDir = yield tool_cache_1.default.extractTar(javaPath);
+            }
+            const archiveName = fs_1.default.readdirSync(downloadDir)[0];
+            const archivePath = path_1.default.join(downloadDir, archiveName);
+            toolPath = yield tool_cache_1.default.cacheDir(archivePath, `Java_${this.provider}`, javaVersion, this.arch);
+            return { javaPath: toolPath, javaVersion };
+        });
+    }
+    getJavaVersion(http, range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const featureCondition = '&feature=';
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${util_1.PLATFORM}&arch=${this.arch}&hw_bitness=64`;
+            const zuluJson = (yield http.getJson(url)).result;
+            if (!zuluJson || zuluJson.length === 0) {
+                throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${util_1.PLATFORM}`);
+            }
+            const zuluVersions = zuluJson.map(item => { var _a; return _a = semver_1.default.coerce(item.jdk_version.join('.')), (_a !== null && _a !== void 0 ? _a : ""); });
+            const maxVersion = semver_1.default.maxSatisfying(zuluVersions, range);
+            if (!maxVersion) {
+                throw new Error('No versions are satisfying');
+            }
+            return maxVersion.raw;
+        });
+    }
+}
+exports.default = ZuluProvider;
+
 
 /***/ }),
 
@@ -13136,6 +13242,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __importStar(__webpack_require__(622));
+exports.IS_WINDOWS = process.platform === 'win32';
+exports.IS_LINUX = process.platform === 'linux';
+exports.PLATFORM = exports.IS_WINDOWS ? "windows" : process.platform;
 function getTempDir() {
     let tempDirectory = process.env.RUNNER_TEMP;
     if (tempDirectory === undefined) {
@@ -13266,15 +13375,19 @@ const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
 const xmlbuilder2_1 = __webpack_require__(255);
-const constants = __importStar(__webpack_require__(694));
+const constants_1 = __webpack_require__(694);
 exports.M2_DIR = '.m2';
 exports.SETTINGS_FILE = 'settings.xml';
-function configAuthentication(id, username, password, gpgPassphrase = undefined) {
+function configAuthentication(id, username, password, gpgPassphrase) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log(`creating ${exports.SETTINGS_FILE} with server-id: ${id};`, 'environment variables:', `username=\$${username},`, `password=\$${password},`, `and gpg-passphrase=${gpgPassphrase ? '$' + gpgPassphrase : null}`);
+        core.info(`creating ${exports.SETTINGS_FILE} with server-id: ${id};
+     environment variables:
+     username=\$${username},
+     password=\$${password},
+     and gpg-passphrase=${gpgPassphrase ? '$' + gpgPassphrase : null}`);
         // when an alternate m2 location is specified use only that location (no .m2 directory)
         // otherwise use the home/.m2/ path
-        const settingsDirectory = path.join(core.getInput(constants.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants.INPUT_SETTINGS_PATH) ? '' : exports.M2_DIR);
+        const settingsDirectory = path.join(core.getInput(constants_1.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants_1.INPUT_SETTINGS_PATH) || exports.M2_DIR);
         yield io.mkdirP(settingsDirectory);
         core.debug(`created directory ${settingsDirectory}`);
         yield write(settingsDirectory, generate(id, username, password, gpgPassphrase));
@@ -13282,7 +13395,7 @@ function configAuthentication(id, username, password, gpgPassphrase = undefined)
 }
 exports.configAuthentication = configAuthentication;
 // only exported for testing purposes
-function generate(id, username, password, gpgPassphrase = undefined) {
+function generate(id, username, password, gpgPassphrase) {
     const xmlObj = {
         settings: {
             '@xmlns': 'http://maven.apache.org/SETTINGS/1.0.0',
@@ -13313,10 +13426,10 @@ function write(directory, settings) {
     return __awaiter(this, void 0, void 0, function* () {
         const location = path.join(directory, exports.SETTINGS_FILE);
         if (fs.existsSync(location)) {
-            console.warn(`overwriting existing file ${location}`);
+            core.warning(`overwriting existing file ${location}`);
         }
         else {
-            console.log(`writing ${location}`);
+            core.info(`writing ${location}`);
         }
         return fs.writeFileSync(location, settings, {
             encoding: 'utf-8',
@@ -14034,6 +14147,69 @@ exports.boundaryPoint_position = boundaryPoint_position;
 /***/ (function(module) {
 
 module.exports = require("assert");
+
+/***/ }),
+
+/***/ 389:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core_1 = __importDefault(__webpack_require__(470));
+const path = __importStar(__webpack_require__(622));
+const IJavaProvider_1 = __webpack_require__(574);
+function install(version, arch, javaPackage, jdkFile) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const javaFactory = new IJavaProvider_1.JavaFactory(version, arch, javaPackage);
+        const providerName = 'zulu';
+        const provider = javaFactory.getJavaProvider(providerName);
+        if (!provider) {
+            throw new Error('No provider was found');
+        }
+        const javaInfo = yield provider.getJava();
+        const javaVersion = javaInfo.javaVersion;
+        const toolPath = javaInfo.javaPath;
+        let extendedJavaHome = 'JAVA_HOME_' + version + '_' + arch;
+        core_1.default.exportVariable(extendedJavaHome, toolPath); //TODO: remove for v2
+        // For portability reasons environment variables should only consist of
+        // uppercase letters, digits, and the underscore. Therefore we convert
+        // the extendedJavaHome variable to upper case and replace '.' symbols and
+        // any other non-alphanumeric characters with an underscore.
+        extendedJavaHome = extendedJavaHome.toUpperCase().replace(/[^0-9A-Z_]/g, '_');
+        core_1.default.exportVariable('JAVA_HOME', toolPath);
+        core_1.default.exportVariable(extendedJavaHome, toolPath);
+        core_1.default.addPath(path.join(toolPath, 'bin'));
+        core_1.default.setOutput('path', toolPath);
+        core_1.default.setOutput('version', javaVersion);
+        core_1.default.info(`Setuped up java ${javaVersion} from ${providerName}`);
+    });
+}
+exports.install = install;
+function parseJavaVersion(versionSpec) {
+}
+function validateJavaVersion(versionSpec) {
+}
+
 
 /***/ }),
 
@@ -22269,33 +22445,45 @@ exports.ObjectCache = ObjectCache;
 
 "use strict";
 
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-const util_1 = __webpack_require__(918);
-const algorithm_1 = __webpack_require__(163);
-/**
- * Represents a mixin that extends non-element parent nodes. This mixin
- * is implemented by {@link Document} and {@link DocumentFragment}.
- */
-class NonElementParentNodeImpl {
-    /** @inheritdoc */
-    getElementById(id) {
-        /**
-         * The getElementById(elementId) method, when invoked, must return the first
-         * element, in tree order, within the context object’s descendants,
-         * whose ID is elementId, and null if there is no such element otherwise.
-         */
-        let ele = algorithm_1.tree_getFirstDescendantNode(util_1.Cast.asNode(this), false, false, (e) => util_1.Guard.isElementNode(e));
-        while (ele !== null) {
-            if (ele._uniqueIdentifier === id) {
-                return ele;
-            }
-            ele = algorithm_1.tree_getNextDescendantNode(util_1.Cast.asNode(this), ele, false, false, (e) => util_1.Guard.isElementNode(e));
-        }
+const zulu_provider_1 = __importDefault(__webpack_require__(148));
+class IJavaProvider {
+    constructor(provider) {
+        this.provider = provider;
+    }
+    findTool(toolName) {
         return null;
     }
 }
-exports.NonElementParentNodeImpl = NonElementParentNodeImpl;
-//# sourceMappingURL=NonElementParentNodeImpl.js.map
+exports.IJavaProvider = IJavaProvider;
+class JavaFactory {
+    constructor(version, arch, javaPackage = "jdk") {
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+    }
+    ;
+    getJavaProvider(provider) {
+        switch (provider) {
+            case JavaProviders.AdopOpenJdk:
+                return null;
+            case JavaProviders.Zulu:
+                return new zulu_provider_1.default(this.version, this.arch, this.javaPackage);
+            default:
+                return null;
+        }
+    }
+}
+exports.JavaFactory = JavaFactory;
+var JavaProviders;
+(function (JavaProviders) {
+    JavaProviders["AdopOpenJdk"] = "adopOpenJdk";
+    JavaProviders["Zulu"] = "zulu";
+})(JavaProviders = exports.JavaProviders || (exports.JavaProviders = {}));
+
 
 /***/ }),
 
@@ -28771,49 +28959,48 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
-const installer = __importStar(__webpack_require__(923));
+const installer = __importStar(__webpack_require__(389));
 const auth = __importStar(__webpack_require__(331));
 const gpg = __importStar(__webpack_require__(884));
-const constants = __importStar(__webpack_require__(694));
+const constants_1 = __webpack_require__(694);
 const path = __importStar(__webpack_require__(622));
+function configureAuthentication() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const id = core.getInput(constants_1.INPUT_SERVER_ID, { required: false });
+        const username = core.getInput(constants_1.INPUT_SERVER_USERNAME, {
+            required: false
+        });
+        const password = core.getInput(constants_1.INPUT_SERVER_PASSWORD, {
+            required: false
+        });
+        const gpgPrivateKey = core.getInput(constants_1.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
+            constants_1.INPUT_DEFAULT_GPG_PRIVATE_KEY;
+        const gpgPassphrase = core.getInput(constants_1.INPUT_GPG_PASSPHRASE, { required: false }) ||
+            (gpgPrivateKey ? constants_1.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
+        if (gpgPrivateKey) {
+            core.setSecret(gpgPrivateKey);
+        }
+        yield auth.configAuthentication(id, username, password, gpgPassphrase);
+        if (gpgPrivateKey) {
+            core.info('importing private key');
+            const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
+            core.saveState(constants_1.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+        }
+    });
+}
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            let version = core.getInput(constants.INPUT_VERSION);
-            if (!version) {
-                version = core.getInput(constants.INPUT_JAVA_VERSION, { required: true });
-            }
-            const arch = core.getInput(constants.INPUT_ARCHITECTURE, { required: true });
-            if (!['x86', 'x64'].includes(arch)) {
-                throw new Error(`architecture "${arch}" is not in [x86 | x64]`);
-            }
-            const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
+            const version = core.getInput(constants_1.INPUT_JAVA_VERSION, { required: true });
+            const arch = core.getInput(constants_1.INPUT_ARCHITECTURE, { required: true });
+            const javaPackage = core.getInput(constants_1.INPUT_JAVA_PACKAGE, {
                 required: true
             });
-            const jdkFile = core.getInput(constants.INPUT_JDK_FILE, { required: false });
-            yield installer.getJava(version, arch, jdkFile, javaPackage);
+            const jdkFile = core.getInput(constants_1.INPUT_JDK_FILE, { required: false });
+            yield installer.install(version, arch, javaPackage, jdkFile);
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
-            const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
-            const username = core.getInput(constants.INPUT_SERVER_USERNAME, {
-                required: false
-            });
-            const password = core.getInput(constants.INPUT_SERVER_PASSWORD, {
-                required: false
-            });
-            const gpgPrivateKey = core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
-                constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
-            const gpgPassphrase = core.getInput(constants.INPUT_GPG_PASSPHRASE, { required: false }) ||
-                (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
-            if (gpgPrivateKey) {
-                core.setSecret(gpgPrivateKey);
-            }
-            yield auth.configAuthentication(id, username, password, gpgPassphrase);
-            if (gpgPrivateKey) {
-                core.info('importing private key');
-                const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
-                core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
-            }
+            yield configureAuthentication();
         }
         catch (error) {
             core.setFailed(error.message);
@@ -31521,6 +31708,41 @@ module.exports = v4;
 
 /***/ }),
 
+/***/ 827:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+const util_1 = __webpack_require__(918);
+const algorithm_1 = __webpack_require__(163);
+/**
+ * Represents a mixin that extends non-element parent nodes. This mixin
+ * is implemented by {@link Document} and {@link DocumentFragment}.
+ */
+class NonElementParentNodeImpl {
+    /** @inheritdoc */
+    getElementById(id) {
+        /**
+         * The getElementById(elementId) method, when invoked, must return the first
+         * element, in tree order, within the context object’s descendants,
+         * whose ID is elementId, and null if there is no such element otherwise.
+         */
+        let ele = algorithm_1.tree_getFirstDescendantNode(util_1.Cast.asNode(this), false, false, (e) => util_1.Guard.isElementNode(e));
+        while (ele !== null) {
+            if (ele._uniqueIdentifier === id) {
+                return ele;
+            }
+            ele = algorithm_1.tree_getNextDescendantNode(util_1.Cast.asNode(this), ele, false, false, (e) => util_1.Guard.isElementNode(e));
+        }
+        return null;
+    }
+}
+exports.NonElementParentNodeImpl = NonElementParentNodeImpl;
+//# sourceMappingURL=NonElementParentNodeImpl.js.map
+
+/***/ }),
+
 /***/ 835:
 /***/ (function(module) {
 
@@ -33459,285 +33681,6 @@ exports.CDATASectionImpl = CDATASectionImpl;
  */
 WebIDLAlgorithm_1.idl_defineConst(CDATASectionImpl.prototype, "_nodeType", interfaces_1.NodeType.CData);
 //# sourceMappingURL=CDATASectionImpl.js.map
-
-/***/ }),
-
-/***/ 923:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const io = __importStar(__webpack_require__(1));
-const exec = __importStar(__webpack_require__(986));
-const httpm = __importStar(__webpack_require__(539));
-const tc = __importStar(__webpack_require__(533));
-const fs = __importStar(__webpack_require__(747));
-const path = __importStar(__webpack_require__(622));
-const semver = __importStar(__webpack_require__(280));
-const util = __importStar(__webpack_require__(322));
-const tempDirectory = util.getTempDir();
-const IS_WINDOWS = util.isWindows();
-function getJava(version, arch, jdkFile, javaPackage) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let toolPath = tc.find(javaPackage, version);
-        if (toolPath) {
-            core.debug(`Tool found in cache ${toolPath}`);
-        }
-        else {
-            let compressedFileExtension = '';
-            if (!jdkFile) {
-                core.debug('Downloading JDK from Azul');
-                const http = new httpm.HttpClient('setup-java', undefined, {
-                    allowRetries: true,
-                    maxRetries: 3
-                });
-                const url = 'https://static.azul.com/zulu/bin/';
-                const response = yield http.get(url);
-                const statusCode = response.message.statusCode || 0;
-                if (statusCode < 200 || statusCode > 299) {
-                    let body = '';
-                    try {
-                        body = yield response.readBody();
-                    }
-                    catch (err) {
-                        core.debug(`Unable to read body: ${err.message}`);
-                    }
-                    const message = `Unexpected HTTP status code '${response.message.statusCode}' when retrieving versions from '${url}'. ${body}`.trim();
-                    throw new Error(message);
-                }
-                const contents = yield response.readBody();
-                const refs = contents.match(/<a href.*\">/gi) || [];
-                const downloadInfo = getDownloadInfo(refs, version, arch, javaPackage);
-                jdkFile = yield tc.downloadTool(downloadInfo.url);
-                version = downloadInfo.version;
-                compressedFileExtension = IS_WINDOWS ? '.zip' : '.tar.gz';
-            }
-            else {
-                core.debug('Retrieving Jdk from local path');
-            }
-            compressedFileExtension = compressedFileExtension || getFileEnding(jdkFile);
-            let tempDir = path.join(tempDirectory, 'temp_' + Math.floor(Math.random() * 2000000000));
-            const jdkDir = yield unzipJavaDownload(jdkFile, compressedFileExtension, tempDir);
-            core.debug(`jdk extracted to ${jdkDir}`);
-            toolPath = yield tc.cacheDir(jdkDir, javaPackage, getCacheVersionString(version), arch);
-        }
-        let extendedJavaHome = 'JAVA_HOME_' + version + '_' + arch;
-        core.exportVariable(extendedJavaHome, toolPath); //TODO: remove for v2
-        // For portability reasons environment variables should only consist of
-        // uppercase letters, digits, and the underscore. Therefore we convert
-        // the extendedJavaHome variable to upper case and replace '.' symbols and
-        // any other non-alphanumeric characters with an underscore.
-        extendedJavaHome = extendedJavaHome.toUpperCase().replace(/[^0-9A-Z_]/g, '_');
-        core.exportVariable('JAVA_HOME', toolPath);
-        core.exportVariable(extendedJavaHome, toolPath);
-        core.addPath(path.join(toolPath, 'bin'));
-        core.setOutput('path', toolPath);
-        core.setOutput('version', version);
-    });
-}
-exports.getJava = getJava;
-function getCacheVersionString(version) {
-    const versionArray = version.split('.');
-    const major = versionArray[0];
-    const minor = versionArray.length > 1 ? versionArray[1] : '0';
-    const patch = versionArray.length > 2 ? versionArray[2] : '0';
-    return `${major}.${minor}.${patch}`;
-}
-function getFileEnding(file) {
-    let fileEnding = '';
-    if (file.endsWith('.tar')) {
-        fileEnding = '.tar';
-    }
-    else if (file.endsWith('.tar.gz')) {
-        fileEnding = '.tar.gz';
-    }
-    else if (file.endsWith('.zip')) {
-        fileEnding = '.zip';
-    }
-    else if (file.endsWith('.7z')) {
-        fileEnding = '.7z';
-    }
-    else {
-        throw new Error(`${file} has an unsupported file extension`);
-    }
-    return fileEnding;
-}
-function extractFiles(file, fileEnding, destinationFolder) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const stats = fs.statSync(file);
-        if (!stats) {
-            throw new Error(`Failed to extract ${file} - it doesn't exist`);
-        }
-        else if (stats.isDirectory()) {
-            throw new Error(`Failed to extract ${file} - it is a directory`);
-        }
-        if ('.tar' === fileEnding || '.tar.gz' === fileEnding) {
-            yield tc.extractTar(file, destinationFolder);
-        }
-        else if ('.zip' === fileEnding) {
-            yield tc.extractZip(file, destinationFolder);
-        }
-        else {
-            // fall through and use sevenZip
-            yield tc.extract7z(file, destinationFolder);
-        }
-    });
-}
-// This method recursively finds all .pack files under fsPath and unpacks them with the unpack200 tool
-function unpackJars(fsPath, javaBinPath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (fs.existsSync(fsPath)) {
-            if (fs.lstatSync(fsPath).isDirectory()) {
-                for (const file in fs.readdirSync(fsPath)) {
-                    const curPath = path.join(fsPath, file);
-                    yield unpackJars(curPath, javaBinPath);
-                }
-            }
-            else if (path.extname(fsPath).toLowerCase() === '.pack') {
-                // Unpack the pack file synchonously
-                const p = path.parse(fsPath);
-                const toolName = IS_WINDOWS ? 'unpack200.exe' : 'unpack200';
-                const args = IS_WINDOWS ? '-r -v -l ""' : '';
-                const name = path.join(p.dir, p.name);
-                yield exec.exec(`"${path.join(javaBinPath, toolName)}"`, [
-                    `${args} "${name}.pack" "${name}.jar"`
-                ]);
-            }
-        }
-    });
-}
-function unzipJavaDownload(repoRoot, fileEnding, destinationFolder, extension) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // Create the destination folder if it doesn't exist
-        yield io.mkdirP(destinationFolder);
-        const jdkFile = path.normalize(repoRoot);
-        const stats = fs.statSync(jdkFile);
-        if (stats.isFile()) {
-            yield extractFiles(jdkFile, fileEnding, destinationFolder);
-            const jdkDirectory = path.join(destinationFolder, fs.readdirSync(destinationFolder)[0]);
-            yield unpackJars(jdkDirectory, path.join(jdkDirectory, 'bin'));
-            return jdkDirectory;
-        }
-        else {
-            throw new Error(`Jdk argument ${jdkFile} is not a file`);
-        }
-    });
-}
-function getDownloadInfo(refs, version, arch, javaPackage) {
-    version = normalizeVersion(version);
-    const archExtension = arch === 'x86' ? 'i686' : 'x64';
-    let extension = '';
-    if (IS_WINDOWS) {
-        extension = `-win_${archExtension}.zip`;
-    }
-    else {
-        if (process.platform === 'darwin') {
-            extension = `-macosx_${archExtension}.tar.gz`;
-        }
-        else {
-            extension = `-linux_${archExtension}.tar.gz`;
-        }
-    }
-    core.debug(`Searching for files with extension: ${extension}`);
-    let pkgRegexp = new RegExp('');
-    let pkgTypeLength = 0;
-    if (javaPackage === 'jdk') {
-        pkgRegexp = /jdk.*-/gi;
-        pkgTypeLength = 'jdk'.length;
-    }
-    else if (javaPackage == 'jre') {
-        pkgRegexp = /jre.*-/gi;
-        pkgTypeLength = 'jre'.length;
-    }
-    else if (javaPackage == 'jdk+fx') {
-        pkgRegexp = /fx-jdk.*-/gi;
-        pkgTypeLength = 'fx-jdk'.length;
-    }
-    else {
-        throw new Error(`package argument ${javaPackage} is not in [jdk | jre | jdk+fx]`);
-    }
-    // Maps version to url
-    let versionMap = new Map();
-    // Filter by platform
-    refs.forEach(ref => {
-        if (!ref.endsWith(extension + '">')) {
-            return;
-        }
-        // If we haven't returned, means we're looking at the correct platform
-        let versions = ref.match(pkgRegexp) || [];
-        if (versions.length > 1) {
-            throw new Error(`Invalid ref received from https://static.azul.com/zulu/bin/: ${ref}`);
-        }
-        if (versions.length == 0) {
-            return;
-        }
-        const refVersion = versions[0].slice(pkgTypeLength, versions[0].length - 1);
-        if (semver.satisfies(refVersion, version)) {
-            versionMap.set(refVersion, 'https://static.azul.com/zulu/bin/' +
-                ref.slice('<a href="'.length, ref.length - '">'.length));
-        }
-    });
-    // Choose the most recent satisfying version
-    let curVersion = '0.0.0';
-    let curUrl = '';
-    for (const entry of versionMap.entries()) {
-        const entryVersion = entry[0];
-        const entryUrl = entry[1];
-        if (semver.gt(entryVersion, curVersion)) {
-            curUrl = entryUrl;
-            curVersion = entryVersion;
-        }
-    }
-    if (curUrl == '') {
-        throw new Error(`No valid download found for version ${version} and package ${javaPackage}. Check https://static.azul.com/zulu/bin/ for a list of valid versions or download your own jdk file and add the jdkFile argument`);
-    }
-    return { version: curVersion, url: curUrl };
-}
-function normalizeVersion(version) {
-    if (version.slice(0, 2) === '1.') {
-        // Trim leading 1. for versions like 1.8
-        version = version.slice(2);
-        if (!version) {
-            throw new Error('1. is not a valid version');
-        }
-    }
-    if (version.endsWith('-ea')) {
-        // convert e.g. 14-ea to 14.0.0-ea
-        if (version.indexOf('.') == -1) {
-            version = version.slice(0, version.length - 3) + '.0.0-ea';
-        }
-        // match anything in -ea.X (semver won't do .x matching on pre-release versions)
-        if (version[0] >= '0' && version[0] <= '9') {
-            version = '>=' + version;
-        }
-    }
-    else if (version.split('.').length < 3) {
-        // For non-ea versions, add trailing .x if it is missing
-        if (version[version.length - 1] != 'x') {
-            version = version + '.x';
-        }
-    }
-    return version;
-}
-
 
 /***/ }),
 

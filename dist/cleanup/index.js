@@ -1058,13 +1058,13 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const gpg = __importStar(__webpack_require__(884));
-const constants = __importStar(__webpack_require__(211));
+const constants_1 = __webpack_require__(211);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        if (core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false })) {
+        if (core.getInput(constants_1.INPUT_GPG_PRIVATE_KEY, { required: false })) {
             core.info('removing private key from keychain');
             try {
-                const keyFingerprint = core.getState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT);
+                const keyFingerprint = core.getState(constants_1.STATE_GPG_PRIVATE_KEY_FINGERPRINT);
                 yield gpg.deleteKey(keyFingerprint);
             }
             catch (error) {
@@ -1092,6 +1092,9 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const path = __importStar(__webpack_require__(622));
+exports.IS_WINDOWS = process.platform === 'win32';
+exports.IS_LINUX = process.platform === 'linux';
+exports.PLATFORM = exports.IS_WINDOWS ? "windows" : process.platform;
 function getTempDir() {
     let tempDirectory = process.env.RUNNER_TEMP;
     if (tempDirectory === undefined) {
