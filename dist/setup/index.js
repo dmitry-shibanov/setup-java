@@ -34060,6 +34060,7 @@ function run() {
         try {
             const version = core.getInput(constants_1.INPUT_JAVA_VERSION, { required: true });
             const arch = core.getInput(constants_1.INPUT_ARCHITECTURE, { required: true });
+            const provider = core.getInput('provider') || 'zulu';
             const javaPackage = core.getInput(constants_1.INPUT_JAVA_PACKAGE, {
                 required: true
             });
