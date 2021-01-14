@@ -66,8 +66,15 @@ class AdopOpenJdkProvider extends IJavaProvider {
         this.platform = PLATFORM === 'darwin' ? 'mac' : PLATFORM;
     }
 
-    public getJava(): Promise<IJavaInfo> {
-        throw new Error("Method not implemented.");
+    public async getJava(): Promise<IJavaInfo> {
+        const range = new semver.Range(this.version);
+        let javaInfo = this.findTool();
+
+        if(!javaInfo) {
+            javaInfo = await this.downloadTool(range);
+        }
+
+        return javaInfo;
     }
 
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {

@@ -26591,7 +26591,14 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         this.platform = util_1.PLATFORM === 'darwin' ? 'mac' : util_1.PLATFORM;
     }
     getJava() {
-        throw new Error("Method not implemented.");
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            let javaInfo = this.findTool();
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            return javaInfo;
+        });
     }
     downloadTool(range) {
         var _a;
