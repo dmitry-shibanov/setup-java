@@ -10,10 +10,10 @@ import * as util from './util';
 
 import { JavaFactory } from './providers/java-factory';
 
-export async function install(version: string, arch: string, javaPackage: string, jdkFile?: string) {
+export async function install(version: string, arch: string, javaPackage: string, providerName: string, jdkFile?: string) {
 
     const javaFactory = new JavaFactory(normalizeVersion(version), arch, javaPackage);
-    const providerName = 'adopOpenJdk';//'zulu';
+    //const providerName = 'adopOpenJdk';//'zulu';
     const provider = javaFactory.getJavaProvider(providerName);
     if(!provider) {
         throw new Error('No provider was found');

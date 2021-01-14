@@ -15273,10 +15273,10 @@ exports.install = void 0;
 const core = __importStar(__webpack_require__(470));
 const path = __importStar(__webpack_require__(622));
 const java_factory_1 = __webpack_require__(217);
-function install(version, arch, javaPackage, jdkFile) {
+function install(version, arch, javaPackage, providerName, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const javaFactory = new java_factory_1.JavaFactory(normalizeVersion(version), arch, javaPackage);
-        const providerName = 'adopOpenJdk'; //'zulu';
+        //const providerName = 'adopOpenJdk';//'zulu';
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
             throw new Error('No provider was found');
@@ -34065,7 +34065,7 @@ function run() {
                 required: true
             });
             const jdkFile = core.getInput(constants_1.INPUT_JDK_FILE, { required: false });
-            yield installer.install(version, arch, javaPackage, jdkFile);
+            yield installer.install(version, arch, javaPackage, provider, jdkFile);
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
             yield configureAuthentication();
