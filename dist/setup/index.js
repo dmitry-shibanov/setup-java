@@ -8448,6 +8448,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         this.arch = arch;
         this.javaPackage = javaPackage;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
+        this.arch = arch === 'x64' ? 'x86' : arch;
     }
     getJava() {
         return __awaiter(this, void 0, void 0, function* () {

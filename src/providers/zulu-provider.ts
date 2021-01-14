@@ -37,6 +37,7 @@ class ZuluProvider extends IJavaProvider {
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
+        this.arch = arch === 'x64' ? 'x86' : arch;
     }
 
     public async getJava() {
