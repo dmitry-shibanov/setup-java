@@ -7,6 +7,7 @@ import fs from 'fs';
 import semver from 'semver';
 import { IJavaInfo, IJavaProvider } from './IJavaProvider';
 import { IS_WINDOWS, PLATFORM } from '../util';
+import { URL } from 'url';
 
 interface IZulu {
     id: number;
@@ -65,16 +66,17 @@ class ZuluProvider extends IJavaProvider {
         });
 
         const javaVersion = await this.getJavaVersion(http, range);
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${PLATFORM}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
+        const platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
         const zuluJavaJson = (await http.getJson<IZuluDetailed>(url)).result;
 
         if(!zuluJavaJson) {
             throw new Error(`No zulu java was found for version ${javaVersion}`);
         }
-        const downloadUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`
+        const downloadUrl = new URL(`https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`);
 
         core.info(`Downloading ${this.provider} java version ${javaVersion}`);
-        const javaPath = await tc.downloadTool(downloadUrl);
+        const javaPath = await tc.downloadTool(downloadUrl.href);
         let downloadDir: string;
         
         core.info(`Ectracting ${this.provider} java version ${javaVersion}`);
