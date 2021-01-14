@@ -40,7 +40,6 @@ class ZuluProvider extends IJavaProvider {
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
-        this.version = this.fixJavaVersion(version);
         this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
     }
 
@@ -116,11 +115,6 @@ class ZuluProvider extends IJavaProvider {
         }
 
         return maxVersion.raw;
-    }
-
-    private fixJavaVersion(versionSpec: string) {
-        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
-        return version;
     }
     
 }

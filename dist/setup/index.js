@@ -9397,7 +9397,6 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         this.javaPackage = javaPackage;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.arch = arch === 'x64' ? 'x86' : arch;
-        this.version = this.fixJavaVersion(version);
         this.platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
     }
     getJava() {
@@ -9462,10 +9461,6 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             }
             return maxVersion.raw;
         });
-    }
-    fixJavaVersion(versionSpec) {
-        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
-        return version;
     }
 }
 exports.default = ZuluProvider;
@@ -15280,7 +15275,7 @@ const path = __importStar(__webpack_require__(622));
 const java_factory_1 = __webpack_require__(217);
 function install(version, arch, javaPackage, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
-        const javaFactory = new java_factory_1.JavaFactory(version, arch, javaPackage);
+        const javaFactory = new java_factory_1.JavaFactory(normalizeVersion(version), arch, javaPackage);
         const providerName = 'adopOpenJdk'; //'zulu';
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
@@ -15305,6 +15300,32 @@ function install(version, arch, javaPackage, jdkFile) {
     });
 }
 exports.install = install;
+function normalizeVersion(version) {
+    if (version.slice(0, 2) === '1.') {
+        // Trim leading 1. for versions like 1.8
+        version = version.slice(2);
+        if (!version) {
+            throw new Error('1. is not a valid version');
+        }
+    }
+    if (version.endsWith('-ea')) {
+        // convert e.g. 14-ea to 14.0.0-ea
+        if (version.indexOf('.') == -1) {
+            version = version.slice(0, version.length - 3) + '.0.0-ea';
+        }
+        // match anything in -ea.X (semver won't do .x matching on pre-release versions)
+        if (version[0] >= '0' && version[0] <= '9') {
+            version = '>=' + version;
+        }
+    }
+    else if (version.split('.').length < 3) {
+        // For non-ea versions, add trailing .x if it is missing
+        if (version[version.length - 1] != 'x') {
+            version = version + '.x';
+        }
+    }
+    return version;
+}
 function parseJavaVersion(versionSpec) {
 }
 function validateJavaVersion(versionSpec) {
@@ -26587,7 +26608,6 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         this.version = version;
         this.arch = arch;
         this.javaPackage = javaPackage;
-        this.version = this.fixJavaVersion(version);
         this.platform = util_1.PLATFORM === 'darwin' ? 'mac' : util_1.PLATFORM;
     }
     getJava() {
@@ -26608,7 +26628,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                 allowRetries: true,
                 maxRetries: 3
             });
-            const versionSpec = this.fixJavaVersion(this.version);
+            const versionSpec = this.version;
             const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
             const javaVersionAvailable = (yield http.getJson(urlReleaseVersion)).result;
             if (!javaVersionAvailable) {
@@ -26647,10 +26667,6 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             }
             return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
         });
-    }
-    fixJavaVersion(versionSpec) {
-        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
-        return version;
     }
 }
 exports.default = AdopOpenJdkProvider;

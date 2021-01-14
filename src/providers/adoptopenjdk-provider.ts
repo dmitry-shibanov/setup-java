@@ -62,7 +62,6 @@ class AdopOpenJdkProvider extends IJavaProvider {
     
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("adoptopenjdk");
-        this.version = this.fixJavaVersion(version);
         this.platform = PLATFORM === 'darwin' ? 'mac' : PLATFORM;
     }
 
@@ -83,7 +82,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
             allowRetries: true,
             maxRetries: 3
         });
-        const versionSpec = this.fixJavaVersion(this.version);
+        const versionSpec = this.version;
         const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases"
         const javaVersionAvailable = (await http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
 
@@ -132,11 +131,6 @@ class AdopOpenJdkProvider extends IJavaProvider {
         }
 
         return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
-    }
-
-    private fixJavaVersion(versionSpec: string) {
-        const version = versionSpec.startsWith('1.') ? versionSpec.replace('1.', '') : versionSpec;
-        return version;
     }
 }
 
