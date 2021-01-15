@@ -9400,18 +9400,23 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         this.platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
     }
     getJava() {
+        const _super = Object.create(null, {
+            findTool: { get: () => super.findTool }
+        });
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
-            let javaInfo = this.findTool();
+            let javaInfo = _super.findTool.call(this, this.javaPackage, this.version, this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
             return javaInfo;
         });
     }
-    findTool(toolName) {
-        return null;
-    }
+    // protected findTool(): string | null;
+    // protected findTool(toolName?: string): string | null {
+    //     toolName ??= this.javaPackage;
+    //     return tc.find(toolName, this.version, this.arch);
+    // }    
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
@@ -26611,9 +26616,12 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         this.platform = util_1.PLATFORM === 'darwin' ? 'mac' : util_1.PLATFORM;
     }
     getJava() {
+        const _super = Object.create(null, {
+            findTool: { get: () => super.findTool }
+        });
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
-            let javaInfo = this.findTool();
+            let javaInfo = _super.findTool.call(this, this.javaPackage, this.version, this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
@@ -37266,18 +37274,56 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 /* 855 */,
 /* 856 */,
 /* 857 */
-/***/ (function(__unusedmodule, exports) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IJavaProvider = void 0;
+const tc = __importStar(__webpack_require__(533));
+const path_1 = __importDefault(__webpack_require__(622));
 class IJavaProvider {
     constructor(provider) {
         this.provider = provider;
     }
-    findTool(toolName) {
-        return null;
+    findTool(toolName, version, arch) {
+        const toolPath = tc.find(toolName, version, arch);
+        const javaVersion = this.getVersionFromPath(toolPath);
+        if (!javaVersion) {
+            return null;
+        }
+        return {
+            javaVersion,
+            javaPath: toolPath
+        };
+    }
+    getVersionFromPath(toolPath) {
+        if (toolPath) {
+            return path_1.default.basename(path_1.default.dirname(toolPath));
+        }
+        return toolPath;
     }
 }
 exports.IJavaProvider = IJavaProvider;

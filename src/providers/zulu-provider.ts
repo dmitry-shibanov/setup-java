@@ -45,7 +45,7 @@ class ZuluProvider extends IJavaProvider {
 
     public async getJava() {
         const range = new semver.Range(this.version);
-        let javaInfo = this.findTool();
+        let javaInfo = super.findTool(this.javaPackage, this.version, this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -54,10 +54,11 @@ class ZuluProvider extends IJavaProvider {
         return javaInfo;
     }
 
-    protected findTool(): IJavaInfo | null;
-    protected findTool(toolName?: string): IJavaInfo | null {
-        return null;
-    }    
+    // protected findTool(): string | null;
+    // protected findTool(toolName?: string): string | null {
+    //     toolName ??= this.javaPackage;
+    //     return tc.find(toolName, this.version, this.arch);
+    // }    
 
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
         let toolPath: string;

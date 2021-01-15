@@ -67,7 +67,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
-        let javaInfo = this.findTool();
+        let javaInfo = super.findTool(this.javaPackage, this.version, this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
