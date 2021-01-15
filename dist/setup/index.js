@@ -9405,7 +9405,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         });
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
-            let javaInfo = _super.findTool.call(this, this.javaPackage, this.version, this.arch);
+            let javaInfo = _super.findTool.call(this, `Java_${this.provider}`, this.version, this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
@@ -26621,7 +26621,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         });
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
-            let javaInfo = _super.findTool.call(this, this.javaPackage, this.version, this.arch);
+            let javaInfo = _super.findTool.call(this, `Java_${this.provider}`, this.version, this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
