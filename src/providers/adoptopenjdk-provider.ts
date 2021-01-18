@@ -1,13 +1,13 @@
-import semver from 'semver';
 import * as httpm from '@actions/http-client';
 import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 
-import { IS_WINDOWS, PLATFORM, getMachineJavaPath, IS_MACOS, extraMacOs } from "../util";
-import { IJavaInfo, IJavaProvider } from "./IJavaProvider";
-
 import fs from 'fs';
 import path from 'path';
+import semver from 'semver';
+
+import { IS_WINDOWS, PLATFORM, getMachineJavaPath, IS_MACOS, extraMacOs } from "../util";
+import { IJavaInfo, IJavaProvider } from "./IJavaProvider";
 
 interface IReleaseVersion {
     available_lts_releases: Array<number>,
@@ -67,7 +67,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
     }
 
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
-        let javaInfo = super.findTool(`Java_${this.provider}`, this.version, this.arch);
+        let javaInfo = super.findTool(toolName, version, arch);
         if(!javaInfo) {
             const javaDist = getMachineJavaPath();
             const versionsDir = fs.readdirSync(javaDist);
@@ -84,32 +84,37 @@ class AdopOpenJdkProvider extends IJavaProvider {
                 }
 
                 const content: string = fs.readFileSync(javaReleaseFile).toString();
-                const re1 = /JAVA_VERSION=\"(.*)\"$/gm
-                const regexExecArr = re1.exec(content);
-                const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
-                const regexExecArr2 = re2.exec(content);
-                if(!regexExecArr || !regexExecArr2) {
+                const javaVersion = this.parseFile("JAVA_VERSION", content);
+                const implemetor = this.parseFile("IMPLEMENTOR", content);
+
+                if(!javaVersion || !implemetor || implemetor !== this.implemetor) {
                     core.info('No match was found');
                     return null;
                 }
 
                 return javaInfo = {
-                    javaVersion: regexExecArr[1],
+                    javaVersion: javaVersion,
                     javaPath: javaPath
                 }
             });
 
-            let javaInfoC = javaInformations.find(item => {
+            javaInfo = javaInformations.find(item => {
                 return item && semver.satisfies(item.javaVersion, version);
-            });
+            }) || null;
 
-            if(!javaInfoC) {
-                return null;
-            }
-
-            javaInfo = javaInfoC;
         }
         return javaInfo;
+    }
+
+    private parseFile(keyWord: string, content: string) {
+        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
+        const regexExecArr = re.exec(content);
+
+        if(!regexExecArr) {
+            return null;
+        }
+
+        return regexExecArr[1];
     }
 
     public async getJava(): Promise<IJavaInfo> {

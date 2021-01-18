@@ -1,14 +1,13 @@
 import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 import * as httpm from '@actions/http-client';
-import * as io from '@actions/io';
 
 import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
+
 import { IJavaInfo, IJavaProvider } from './IJavaProvider';
-import { getMachineJavaPath, IS_WINDOWS, PLATFORM } from '../util';
-import { URL } from 'url';
+import { getMachineJavaPath, IS_WINDOWS, IS_MACOS, PLATFORM, extraMacOs } from '../util';
 
 interface IZulu {
     id: number;
@@ -36,12 +35,14 @@ interface IZuluDetailed extends IZulu {
 }
 
 class ZuluProvider extends IJavaProvider {
+    private implemetor: string;
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
+        this.implemetor = "Azul Systems, Inc.";
     }
 
     public async getJava() {
@@ -58,10 +59,52 @@ class ZuluProvider extends IJavaProvider {
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
         if(!javaInfo) {
-            
+            const javaDist = getMachineJavaPath();
+            const versionsDir = fs.readdirSync(javaDist).filter(item => item.includes('zulu'));
+            const javaInformations = versionsDir.map(item => {
+                let javaPath = path.join(javaDist, item);
+                if(IS_MACOS) {
+                    javaPath = path.join(javaPath, extraMacOs);
+                }
+                let javaReleaseFile = path.join(javaPath, 'release');
+
+                if(!(fs.existsSync(javaReleaseFile) && fs.lstatSync(javaReleaseFile).isFile())) {
+                    core.info('file does not exist')
+                    return null;
+                }
+
+                const content: string = fs.readFileSync(javaReleaseFile).toString();
+                const javaVersion = this.parseFile("JAVA_VERSION", content);
+
+                if(!javaVersion) {
+                    core.info('No match was found');
+                    return null;
+                }
+
+                return javaInfo = {
+                    javaVersion: javaVersion,
+                    javaPath: javaPath
+                }
+            });
+
+            javaInfo = javaInformations.find(item => {
+                return item && semver.satisfies(item.javaVersion, version);
+            }) || null;
+
         }
-        return javaInfo
-    }    
+        return javaInfo;
+    }
+
+    private parseFile(keyWord: string, content: string) {
+        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
+        const regexExecArr = re.exec(content);
+
+        if(!regexExecArr) {
+            return null;
+        }
+
+        return regexExecArr[1];
+    }
 
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
         let toolPath: string;
@@ -77,7 +120,6 @@ class ZuluProvider extends IJavaProvider {
         if(!zuluJavaJson) {
             throw new Error(`No zulu java was found for version ${javaVersion}`);
         }
-        const downloadUrl = new URL(`https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`);
 
         core.info(`Downloading ${this.provider} java version ${javaVersion}`);
         core.info(`Zulu url is ${zuluJavaJson.url}`);

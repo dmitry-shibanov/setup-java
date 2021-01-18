@@ -9388,7 +9388,6 @@ const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
 const IJavaProvider_1 = __webpack_require__(857);
 const util_1 = __webpack_require__(322);
-const url_1 = __webpack_require__(835);
 class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     constructor(version, arch, javaPackage = "jdk") {
         super("zulu");
@@ -9398,6 +9397,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
+        this.implemetor = "Azul Systems, Inc.";
     }
     getJava() {
         const _super = Object.create(null, {
@@ -9415,8 +9415,42 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     findTool(toolName, version, arch) {
         let javaInfo = super.findTool(toolName, version, arch);
         if (!javaInfo) {
+            const javaDist = util_1.getMachineJavaPath();
+            const versionsDir = fs_1.default.readdirSync(javaDist).filter(item => item.includes('zulu'));
+            const javaInformations = versionsDir.map(item => {
+                let javaPath = path_1.default.join(javaDist, item);
+                if (util_1.IS_MACOS) {
+                    javaPath = path_1.default.join(javaPath, util_1.extraMacOs);
+                }
+                let javaReleaseFile = path_1.default.join(javaPath, 'release');
+                if (!(fs_1.default.existsSync(javaReleaseFile) && fs_1.default.lstatSync(javaReleaseFile).isFile())) {
+                    core.info('file does not exist');
+                    return null;
+                }
+                const content = fs_1.default.readFileSync(javaReleaseFile).toString();
+                const javaVersion = this.parseFile("JAVA_VERSION", content);
+                if (!javaVersion) {
+                    core.info('No match was found');
+                    return null;
+                }
+                return javaInfo = {
+                    javaVersion: javaVersion,
+                    javaPath: javaPath
+                };
+            });
+            javaInfo = javaInformations.find(item => {
+                return item && semver_1.default.satisfies(item.javaVersion, version);
+            }) || null;
         }
         return javaInfo;
+    }
+    parseFile(keyWord, content) {
+        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
+        const regexExecArr = re.exec(content);
+        if (!regexExecArr) {
+            return null;
+        }
+        return regexExecArr[1];
     }
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -9431,7 +9465,6 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             if (!zuluJavaJson) {
                 throw new Error(`No zulu java was found for version ${javaVersion}`);
             }
-            const downloadUrl = new url_1.URL(`https://api.azul.com/zulu/download/community/v1.0/bundles/${zuluJavaJson.id}/binary`);
             core.info(`Downloading ${this.provider} java version ${javaVersion}`);
             core.info(`Zulu url is ${zuluJavaJson.url}`);
             const javaPath = yield tc.downloadTool(zuluJavaJson.url);
@@ -26611,14 +26644,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const semver_1 = __importDefault(__webpack_require__(280));
 const httpm = __importStar(__webpack_require__(539));
 const core = __importStar(__webpack_require__(470));
 const tc = __importStar(__webpack_require__(533));
-const util_1 = __webpack_require__(322);
-const IJavaProvider_1 = __webpack_require__(857);
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
+const semver_1 = __importDefault(__webpack_require__(280));
+const util_1 = __webpack_require__(322);
+const IJavaProvider_1 = __webpack_require__(857);
 class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
     constructor(version, arch, javaPackage = "jdk") {
         super("adoptopenjdk");
@@ -26630,7 +26663,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         this.implemetor = "AdoptOpenJDK";
     }
     findTool(toolName, version, arch) {
-        let javaInfo = super.findTool(`Java_${this.provider}`, this.version, this.arch);
+        let javaInfo = super.findTool(toolName, version, arch);
         if (!javaInfo) {
             const javaDist = util_1.getMachineJavaPath();
             const versionsDir = fs_1.default.readdirSync(javaDist);
@@ -26645,28 +26678,30 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                     return null;
                 }
                 const content = fs_1.default.readFileSync(javaReleaseFile).toString();
-                const re1 = /JAVA_VERSION=\"(.*)\"$/gm;
-                const regexExecArr = re1.exec(content);
-                const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
-                const regexExecArr2 = re2.exec(content);
-                if (!regexExecArr || !regexExecArr2) {
+                const javaVersion = this.parseFile("JAVA_VERSION", content);
+                const implemetor = this.parseFile("IMPLEMENTOR", content);
+                if (!javaVersion || !implemetor || implemetor !== this.implemetor) {
                     core.info('No match was found');
                     return null;
                 }
                 return javaInfo = {
-                    javaVersion: regexExecArr[1],
+                    javaVersion: javaVersion,
                     javaPath: javaPath
                 };
             });
-            let javaInfoC = javaInformations.find(item => {
+            javaInfo = javaInformations.find(item => {
                 return item && semver_1.default.satisfies(item.javaVersion, version);
-            });
-            if (!javaInfoC) {
-                return null;
-            }
-            javaInfo = javaInfoC;
+            }) || null;
         }
         return javaInfo;
+    }
+    parseFile(keyWord, content) {
+        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
+        const regexExecArr = re.exec(content);
+        if (!regexExecArr) {
+            return null;
+        }
+        return regexExecArr[1];
     }
     getJava() {
         return __awaiter(this, void 0, void 0, function* () {
