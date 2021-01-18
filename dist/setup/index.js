@@ -26640,17 +26640,13 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                     javaPath = path_1.default.join(javaPath, util_1.extraMacOs);
                 }
                 let javaReleaseFile = path_1.default.join(javaPath, 'release');
-                if (!fs_1.default.existsSync(javaReleaseFile)) {
-                    core.info(`Release file does not exist to the path: ${javaReleaseFile}`);
-                    return null;
-                }
                 const content = fs_1.default.readFileSync(javaReleaseFile).toString();
                 core.info(`content is ${content}`);
                 const re1 = /JAVA_VERSION=\"(.*)\"$/gm;
                 const regexExecArr = re1.exec(content);
                 core.info(`java version is ${regexExecArr[1]}`);
                 const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
-                const regexExecArr2 = re1.exec(content);
+                const regexExecArr2 = re2.exec(content);
                 core.info(`IMPLEMENTOR is ${regexExecArr2[1]}`);
                 if (!regexExecArr || !regexExecArr2) {
                     core.info('No match was found');

@@ -77,10 +77,6 @@ class AdopOpenJdkProvider extends IJavaProvider {
                     javaPath = path.join(javaPath, extraMacOs);
                 }
                 let javaReleaseFile = path.join(javaPath, 'release');
-                if(!fs.existsSync(javaReleaseFile)) {
-                    core.info(`Release file does not exist to the path: ${javaReleaseFile}`);
-                    return null;
-                }
 
                 const content: string = fs.readFileSync(javaReleaseFile).toString();
                 core.info(`content is ${content}`);
@@ -88,7 +84,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
                 const regexExecArr = re1.exec(content);
                 core.info(`java version is ${regexExecArr![1]}`);
                 const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
-                const regexExecArr2 = re1.exec(content);
+                const regexExecArr2 = re2.exec(content);
                 core.info(`IMPLEMENTOR is ${regexExecArr2![1]}`);
                 if(!regexExecArr || !regexExecArr2) {
                     core.info('No match was found');
