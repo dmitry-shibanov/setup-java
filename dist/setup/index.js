@@ -26645,6 +26645,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                     return null;
                 }
                 const content = fs_1.default.readFileSync(javaReleaseFile).toString();
+                core.info(`content is ${content}`);
                 const re1 = /JAVA_VERSION=\"(.*)\"$/gm;
                 const regexExecArr = re1.exec(content);
                 const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
