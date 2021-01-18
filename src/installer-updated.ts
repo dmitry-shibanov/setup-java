@@ -52,7 +52,7 @@ function normalizeVersion(version: string): string {
       }
     }
 
-    if(!semver.valid(version)) {
+    if(!semver.coerce(version)) {
         throw new Error(`The version ${version} is not valid semver notation please check README file for code snippets and 
                 more detailed information`)
     }
