@@ -1,12 +1,13 @@
 import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 import * as httpm from '@actions/http-client';
+import * as io from '@actions/io';
 
 import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
 import { IJavaInfo, IJavaProvider } from './IJavaProvider';
-import { IS_WINDOWS, PLATFORM } from '../util';
+import { getMachineJavaPath, IS_WINDOWS, PLATFORM } from '../util';
 import { URL } from 'url';
 
 interface IZulu {
@@ -54,11 +55,13 @@ class ZuluProvider extends IJavaProvider {
         return javaInfo;
     }
 
-    // protected findTool(): string | null;
-    // protected findTool(toolName?: string): string | null {
-    //     toolName ??= this.javaPackage;
-    //     return tc.find(toolName, this.version, this.arch);
-    // }    
+    protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
+        let javaInfo = super.findTool(toolName, version, arch);
+        if(!javaInfo) {
+            
+        }
+        return javaInfo
+    }    
 
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
         let toolPath: string;

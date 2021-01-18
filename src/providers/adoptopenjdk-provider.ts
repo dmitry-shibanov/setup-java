@@ -3,7 +3,7 @@ import * as httpm from '@actions/http-client';
 import * as core from '@actions/core';
 import * as tc from '@actions/tool-cache';
 
-import { IS_WINDOWS, PLATFORM } from "../util";
+import { IS_WINDOWS, PLATFORM, getMachineJavaPath, IS_MACOS, extraMacOs } from "../util";
 import { IJavaInfo, IJavaProvider } from "./IJavaProvider";
 
 import fs from 'fs';
@@ -56,18 +56,64 @@ interface IRelease {
 }
 
 class AdopOpenJdkProvider extends IJavaProvider {
-    // https://api.adoptopenjdk.net/v3/assets/feature_releases/8/ga?heap_size=normal&image_type=jdk&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=x64&os=linux
-    // private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
+    private implemetor: string;
     
     constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("adoptopenjdk");
         this.platform = PLATFORM === 'darwin' ? 'mac' : PLATFORM;
+        //         IMPLEMENTOR="AdoptOpenJDK"
+        this.implemetor = "AdoptOpenJDK";
+    }
+
+    protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
+        let javaInfo = super.findTool(`Java_${this.provider}`, this.version, this.arch);
+        if(!javaInfo) {
+            const javaDist = getMachineJavaPath();
+            const versionsDir = fs.readdirSync(javaDist);
+            const javaInformations = versionsDir.map(item => {
+                let javaPath = path.join(javaDist, item);
+                if(IS_MACOS) {
+                    javaPath = path.join(javaPath, extraMacOs);
+                }
+                let javaReleaseFile = path.join(javaPath, 'release');
+                if(!fs.existsSync(javaReleaseFile)) {
+                    core.info(`Release file does not exist to the path: ${javaReleaseFile}`);
+                    return null;
+                }
+
+                const content: string = fs.readFileSync(javaReleaseFile).toString();
+                const re1 = /JAVA_VERSION=\"(.*)\"$/gm
+                const regexExecArr = re1.exec(content)!;
+                const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
+                const regexExecArr2 = re1.exec(content)!;
+                if(!regexExecArr || !regexExecArr2) {
+                    core.info('No match was found');
+                    return null;
+                }
+
+                return javaInfo = {
+                    javaVersion: regexExecArr[1],
+                    javaPath: javaPath
+                }
+            });
+
+            let javaInfoC = javaInformations.find(item => {
+                return item && semver.satisfies(item.javaVersion, version);
+            });
+
+            if(!javaInfoC) {
+                return null;
+            }
+
+            javaInfo = javaInfoC;
+        }
+        return javaInfo;
     }
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
-        let javaInfo = super.findTool(`Java_${this.provider}`, this.version, this.arch);
+        let javaInfo = this.findTool(`Java_${this.provider}`, this.version, this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);

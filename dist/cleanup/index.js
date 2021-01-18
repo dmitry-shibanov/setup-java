@@ -1129,11 +1129,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isWindows = exports.getTempDir = exports.PLATFORM = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getMachineJavaPath = exports.isWindows = exports.getTempDir = exports.extraMacOs = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const path = __importStar(__webpack_require__(622));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
+exports.IS_MACOS = process.platform === 'darwin';
 exports.PLATFORM = exports.IS_WINDOWS ? "windows" : process.platform;
+const windowsPreInstalled = path.normalize('C:/Program Files/Java');
+const linuxPreInstalled = "/usr/lib/jvm";
+const macosPreInstalled = "/Library/Java/JavaVirtualMachines";
+exports.extraMacOs = "Contents/Home";
 function getTempDir() {
     let tempDirectory = process.env.RUNNER_TEMP;
     if (tempDirectory === undefined) {
@@ -1161,6 +1166,18 @@ function isWindows() {
     return process.platform === 'win32';
 }
 exports.isWindows = isWindows;
+function getMachineJavaPath() {
+    if (exports.IS_WINDOWS) {
+        return windowsPreInstalled;
+    }
+    else if (exports.IS_LINUX) {
+        return linuxPreInstalled;
+    }
+    else {
+        return macosPreInstalled;
+    }
+}
+exports.getMachineJavaPath = getMachineJavaPath;
 
 
 /***/ }),

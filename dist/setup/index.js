@@ -9412,11 +9412,12 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             return javaInfo;
         });
     }
-    // protected findTool(): string | null;
-    // protected findTool(toolName?: string): string | null {
-    //     toolName ??= this.javaPackage;
-    //     return tc.find(toolName, this.version, this.arch);
-    // }    
+    findTool(toolName, version, arch) {
+        let javaInfo = super.findTool(toolName, version, arch);
+        if (!javaInfo) {
+        }
+        return javaInfo;
+    }
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
@@ -14510,11 +14511,16 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isWindows = exports.getTempDir = exports.PLATFORM = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getMachineJavaPath = exports.isWindows = exports.getTempDir = exports.extraMacOs = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const path = __importStar(__webpack_require__(622));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
+exports.IS_MACOS = process.platform === 'darwin';
 exports.PLATFORM = exports.IS_WINDOWS ? "windows" : process.platform;
+const windowsPreInstalled = path.normalize('C:/Program Files/Java');
+const linuxPreInstalled = "/usr/lib/jvm";
+const macosPreInstalled = "/Library/Java/JavaVirtualMachines";
+exports.extraMacOs = "Contents/Home";
 function getTempDir() {
     let tempDirectory = process.env.RUNNER_TEMP;
     if (tempDirectory === undefined) {
@@ -14542,6 +14548,18 @@ function isWindows() {
     return process.platform === 'win32';
 }
 exports.isWindows = isWindows;
+function getMachineJavaPath() {
+    if (exports.IS_WINDOWS) {
+        return windowsPreInstalled;
+    }
+    else if (exports.IS_LINUX) {
+        return linuxPreInstalled;
+    }
+    else {
+        return macosPreInstalled;
+    }
+}
+exports.getMachineJavaPath = getMachineJavaPath;
 
 
 /***/ }),
@@ -15277,25 +15295,18 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.install = void 0;
 const core = __importStar(__webpack_require__(470));
 const path = __importStar(__webpack_require__(622));
+const semver = __importStar(__webpack_require__(280));
 const java_factory_1 = __webpack_require__(217);
 function install(version, arch, javaPackage, providerName, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const javaFactory = new java_factory_1.JavaFactory(normalizeVersion(version), arch, javaPackage);
-        //const providerName = 'adopOpenJdk';//'zulu';
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
             throw new Error('No provider was found');
         }
         const javaInfo = yield provider.getJava();
-        const javaVersion = javaInfo.javaVersion;
-        const toolPath = javaInfo.javaPath;
-        let extendedJavaHome = 'JAVA_HOME_' + version + '_' + arch;
-        core.exportVariable(extendedJavaHome, toolPath); //TODO: remove for v2
-        // For portability reasons environment variables should only consist of
-        // uppercase letters, digits, and the underscore. Therefore we convert
-        // the extendedJavaHome variable to upper case and replace '.' symbols and
-        // any other non-alphanumeric characters with an underscore.
-        extendedJavaHome = extendedJavaHome.toUpperCase().replace(/[^0-9A-Z_]/g, '_');
+        const { javaVersion, javaPath: toolPath } = javaInfo;
+        const extendedJavaHome = `JAVA_HOME_${version}_${arch}`.toUpperCase().replace(/[^0-9A-Z_]/g, '_');
         core.exportVariable('JAVA_HOME', toolPath);
         core.exportVariable(extendedJavaHome, toolPath);
         core.addPath(path.join(toolPath, 'bin'));
@@ -15305,6 +15316,7 @@ function install(version, arch, javaPackage, providerName, jdkFile) {
     });
 }
 exports.install = install;
+// this function validates and parse java version to its normal semver notation
 function normalizeVersion(version) {
     if (version.slice(0, 2) === '1.') {
         // Trim leading 1. for versions like 1.8
@@ -15329,11 +15341,11 @@ function normalizeVersion(version) {
             version = version + '.x';
         }
     }
+    if (!semver.valid(version)) {
+        throw new Error(`The version ${version} is not valid semver notation please check README file for code snippets and 
+                more detailed information`);
+    }
     return version;
-}
-function parseJavaVersion(versionSpec) {
-}
-function validateJavaVersion(versionSpec) {
 }
 
 
@@ -26614,14 +26626,52 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         this.arch = arch;
         this.javaPackage = javaPackage;
         this.platform = util_1.PLATFORM === 'darwin' ? 'mac' : util_1.PLATFORM;
+        //         IMPLEMENTOR="AdoptOpenJDK"
+        this.implemetor = "AdoptOpenJDK";
+    }
+    findTool(toolName, version, arch) {
+        let javaInfo = super.findTool(`Java_${this.provider}`, this.version, this.arch);
+        if (!javaInfo) {
+            const javaDist = util_1.getMachineJavaPath();
+            const versionsDir = fs_1.default.readdirSync(javaDist);
+            const javaInformations = versionsDir.map(item => {
+                let javaPath = path_1.default.join(javaDist, item);
+                if (util_1.IS_MACOS) {
+                    javaPath = path_1.default.join(javaPath, util_1.extraMacOs);
+                }
+                let javaReleaseFile = path_1.default.join(javaPath, 'release');
+                if (!fs_1.default.existsSync(javaReleaseFile)) {
+                    core.info(`Release file does not exist to the path: ${javaReleaseFile}`);
+                    return null;
+                }
+                const content = fs_1.default.readFileSync(javaReleaseFile).toString();
+                const re1 = /JAVA_VERSION=\"(.*)\"$/gm;
+                const regexExecArr = re1.exec(content);
+                const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
+                const regexExecArr2 = re1.exec(content);
+                if (!regexExecArr || !regexExecArr2) {
+                    core.info('No match was found');
+                    return null;
+                }
+                return javaInfo = {
+                    javaVersion: regexExecArr[1],
+                    javaPath: javaPath
+                };
+            });
+            let javaInfoC = javaInformations.find(item => {
+                return item && semver_1.default.satisfies(item.javaVersion, version);
+            });
+            if (!javaInfoC) {
+                return null;
+            }
+            javaInfo = javaInfoC;
+        }
+        return javaInfo;
     }
     getJava() {
-        const _super = Object.create(null, {
-            findTool: { get: () => super.findTool }
-        });
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
-            let javaInfo = _super.findTool.call(this, `Java_${this.provider}`, this.version, this.arch);
+            let javaInfo = this.findTool(`Java_${this.provider}`, this.version, this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
