@@ -85,9 +85,11 @@ class AdopOpenJdkProvider extends IJavaProvider {
                 const content: string = fs.readFileSync(javaReleaseFile).toString();
                 core.info(`content is ${content}`);
                 const re1 = /JAVA_VERSION=\"(.*)\"$/gm
-                const regexExecArr = re1.exec(content)!;
+                const regexExecArr = re1.exec(content);
+                core.info(`java version is ${regexExecArr![1]}`);
                 const re2 = /IMPLEMENTOR=\"(.*)\"$/gm;
-                const regexExecArr2 = re1.exec(content)!;
+                const regexExecArr2 = re1.exec(content);
+                core.info(`IMPLEMENTOR is ${regexExecArr2![1]}`);
                 if(!regexExecArr || !regexExecArr2) {
                     core.info('No match was found');
                     return null;
