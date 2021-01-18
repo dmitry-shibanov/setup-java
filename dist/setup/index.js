@@ -26642,6 +26642,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                 let javaReleaseFile = path_1.default.join(javaPath, 'release');
                 if (!(fs_1.default.existsSync(javaReleaseFile) && fs_1.default.lstatSync(javaReleaseFile).isFile())) {
                     core.info('file does not exist');
+                    return null;
                 }
                 const content = fs_1.default.readFileSync(javaReleaseFile).toString();
                 core.info(`content is ${content}`);

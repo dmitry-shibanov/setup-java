@@ -80,6 +80,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
                 if(!(fs.existsSync(javaReleaseFile) && fs.lstatSync(javaReleaseFile).isFile())) {
                     core.info('file does not exist')
+                    return null;
                 }
 
                 const content: string = fs.readFileSync(javaReleaseFile).toString();
