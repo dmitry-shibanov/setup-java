@@ -59,10 +59,9 @@ class AdopOpenJdkProvider extends IJavaProvider {
     private platform: string;
     private implemetor: string;
     
-    constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
+    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("adoptopenjdk");
         this.platform = PLATFORM === 'darwin' ? 'mac' : PLATFORM;
-        //         IMPLEMENTOR="AdoptOpenJDK"
         this.implemetor = "AdoptOpenJDK";
     }
 
@@ -109,7 +108,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
             });
 
             javaInfo = javaInformations.find(item => {
-                return item && semver.satisfies(item.javaVersion, version);
+                return item && semver.satisfies(item.javaVersion, new semver.Range(version));
             }) || null;
 
         }
@@ -132,7 +131,9 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
-        let javaInfo = this.findTool(`Java_${this.provider}`, this.version, this.arch);
+        const majorVersion = await this.getAvailableReleases(range);
+
+        let javaInfo = this.findTool(`Java_${this.provider}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -141,15 +142,9 @@ class AdopOpenJdkProvider extends IJavaProvider {
         return javaInfo;
     }
 
-    protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
-        let toolPath: string;
-        const http = new httpm.HttpClient('setup-java', undefined, {
-            allowRetries: true,
-            maxRetries: 3
-        });
-        const versionSpec = this.version;
+    private async getAvailableReleases(range: semver.Range) {
         const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases"
-        const javaVersionAvailable = (await http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
+        const javaVersionAvailable = (await this.http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
 
         if (!javaVersionAvailable) {
             throw new Error("No versions were found")
@@ -157,14 +152,22 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
         const javaVersions = javaVersionAvailable.available_releases.map(item => semver.coerce(item)!)!;
 
-        const majorVersion = semver.maxSatisfying(javaVersions, new semver.Range(versionSpec))?.major;
+        const majorVersion = semver.maxSatisfying(javaVersions, range)?.major;
 
         if(!majorVersion) {
             throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
         }
 
+        return majorVersion;
+    }
+
+    protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
+        let toolPath: string;
+
+        const majorVersion = await this.getAvailableReleases(range);
+
         const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=jdk&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
-        const javaRleasesVersion = ( await http.getJson<IRelease[]>(releasesUrl)).result;
+        const javaRleasesVersion = ( await this.http.getJson<IRelease[]>(releasesUrl)).result;
 
         if(!javaRleasesVersion) {
             throw new Error(`error in ${releasesUrl}`);

@@ -38,7 +38,7 @@ class ZuluProvider extends IJavaProvider {
     private implemetor: string;
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
-    constructor(private version: string, private arch: string, private javaPackage: string = "jdk") {
+    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
@@ -47,7 +47,8 @@ class ZuluProvider extends IJavaProvider {
 
     public async getJava() {
         const range = new semver.Range(this.version);
-        let javaInfo = this.findTool(`Java_${this.provider}`, this.version, this.arch);
+        const majorVersion = await this.getAvailableMajor(range);
+        let javaInfo = this.findTool(`Java_${this.provider}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -90,7 +91,7 @@ class ZuluProvider extends IJavaProvider {
             });
 
             javaInfo = javaInformations.find(item => {
-                return item && semver.satisfies(item.javaVersion, version);
+                return item && semver.satisfies(item.javaVersion, new semver.Range(version));
             }) || null;
 
         }
@@ -111,16 +112,29 @@ class ZuluProvider extends IJavaProvider {
         return version;
     }
 
+    private async getAvailableMajor(range: semver.Range) {
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
+        const zuluJavaJson = (await this.http.getJson<Array<IZulu>>(url)).result;
+        if(!zuluJavaJson) {
+            throw new Error(`No zulu java was found for all`);
+        }
+
+        const javaVersions = zuluJavaJson.map(item => semver.coerce(item.jdk_version.join('.'))!);
+        const majorVersion = semver.maxSatisfying(javaVersions, range);
+
+        if(!majorVersion) {
+            throw new Error(`No zulu major versions was found`);
+        }
+
+        return majorVersion.major;
+    }
+
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
         let toolPath: string;
-        const http = new httpm.HttpClient('setup-java', undefined, {
-            allowRetries: true,
-            maxRetries: 3
-        });
 
-        const javaVersion = await this.getJavaVersion(http, range);
+        const javaVersion = await this.getJavaVersion(this.http, range);
         const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
-        const zuluJavaJson = (await http.getJson<IZuluDetailed>(url)).result;
+        const zuluJavaJson = (await this.http.getJson<IZuluDetailed>(url)).result;
 
         if(!zuluJavaJson) {
             throw new Error(`No zulu java was found for version ${javaVersion}`);
