@@ -84,10 +84,20 @@ class AdopOpenJdkProvider extends IJavaProvider {
                 }
 
                 const content: string = fs.readFileSync(javaReleaseFile).toString();
-                const javaVersion = this.parseFile("JAVA_VERSION", content);
-                const implemetor = this.parseFile("IMPLEMENTOR", content);
+                const implemetation = this.parseFile("IMPLEMENTOR", content);
 
-                if(!javaVersion || !implemetor || implemetor !== this.implemetor) {
+                const re = new RegExp(/^[7,8]\./);
+                core.debug(`implementor is ${this.implemetor}`);
+                core.debug(`implemetation is ${implemetation}`);
+                if(!re.test(version) && implemetation !== this.implemetor) {
+                    return null;
+                }
+
+                const javaVersion = this.parseFile("JAVA_VERSION", content);
+
+                core.debug(`java version is ${javaVersion}`);
+
+                if(!javaVersion) {
                     core.info('No match was found');
                     return null;
                 }
@@ -109,12 +119,15 @@ class AdopOpenJdkProvider extends IJavaProvider {
     private parseFile(keyWord: string, content: string) {
         const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
         const regexExecArr = re.exec(content);
-
+        core.debug(`regexExecArr is ${regexExecArr}`);
         if(!regexExecArr) {
             return null;
         }
 
-        return regexExecArr[1];
+        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
+
+
+        return version;
     }
 
     public async getJava(): Promise<IJavaInfo> {

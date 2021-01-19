@@ -103,7 +103,9 @@ class ZuluProvider extends IJavaProvider {
             return null;
         }
 
-        return regexExecArr[1];
+        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
+
+        return version;
     }
 
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {

@@ -9448,7 +9448,8 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         if (!regexExecArr) {
             return null;
         }
-        return regexExecArr[1];
+        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
+        return version;
     }
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26676,9 +26677,16 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                     return null;
                 }
                 const content = fs_1.default.readFileSync(javaReleaseFile).toString();
+                const implemetation = this.parseFile("IMPLEMENTOR", content);
+                const re = new RegExp(/^[7,8]\./);
+                core.debug(`implementor is ${this.implemetor}`);
+                core.debug(`implemetation is ${implemetation}`);
+                if (!re.test(version) && implemetation !== this.implemetor) {
+                    return null;
+                }
                 const javaVersion = this.parseFile("JAVA_VERSION", content);
-                const implemetor = this.parseFile("IMPLEMENTOR", content);
-                if (!javaVersion || !implemetor || implemetor !== this.implemetor) {
+                core.debug(`java version is ${javaVersion}`);
+                if (!javaVersion) {
                     core.info('No match was found');
                     return null;
                 }
@@ -26696,10 +26704,12 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
     parseFile(keyWord, content) {
         const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
         const regexExecArr = re.exec(content);
+        core.debug(`regexExecArr is ${regexExecArr}`);
         if (!regexExecArr) {
             return null;
         }
-        return regexExecArr[1];
+        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
+        return version;
     }
     getJava() {
         return __awaiter(this, void 0, void 0, function* () {
