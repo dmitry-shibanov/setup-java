@@ -47,7 +47,7 @@ class ZuluProvider extends IJavaProvider {
 
     public async getJava() {
         const range = new semver.Range(this.version);
-        let javaInfo = super.findTool(`Java_${this.provider}`, this.version, this.arch);
+        let javaInfo = this.findTool(`Java_${this.provider}`, this.version, this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
