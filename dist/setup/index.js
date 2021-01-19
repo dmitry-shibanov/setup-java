@@ -26689,7 +26689,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                 }
                 const javaVersion = this.parseFile("JAVA_VERSION", content);
                 core.debug(`java version is ${javaVersion}`);
-                if (!javaVersion) {
+                if (!javaVersion || implemetation !== this.implemetor) {
                     core.info('No match was found');
                     return null;
                 }

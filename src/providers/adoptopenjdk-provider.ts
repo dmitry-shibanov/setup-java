@@ -97,7 +97,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
                 core.debug(`java version is ${javaVersion}`);
 
-                if(!javaVersion) {
+                if(!javaVersion || implemetation !== this.implemetor) {
                     core.info('No match was found');
                     return null;
                 }
