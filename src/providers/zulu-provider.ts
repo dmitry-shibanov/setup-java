@@ -133,7 +133,7 @@ class ZuluProvider extends IJavaProvider {
         let toolPath: string;
 
         const javaVersion = await this.getJavaVersion(this.http, range);
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}`;
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}&bundle_type=${this.javaPackage}`;
         const zuluJavaJson = (await this.http.getJson<IZuluDetailed>(url)).result;
 
         if(!zuluJavaJson) {
