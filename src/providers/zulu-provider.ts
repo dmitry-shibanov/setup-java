@@ -81,8 +81,10 @@ class ZuluProvider extends IJavaProvider {
                     return null;
                 }
 
+                core.debug(`javaVersion.split('_')[0] is ${javaVersion.split('_')[0]}`);
+
                 return javaInfo = {
-                    javaVersion: javaVersion,
+                    javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
                     javaPath: javaPath
                 }
             });
@@ -103,8 +105,9 @@ class ZuluProvider extends IJavaProvider {
             return null;
         }
 
+        core.debug(`regexExecArr[1] after exec is ${regexExecArr[1]}`);
         let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
-
+        core.debug(`version after exec is ${version}`);
         return version;
     }
 

@@ -9430,8 +9430,9 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
                     core.info('No match was found');
                     return null;
                 }
+                core.debug(`javaVersion.split('_')[0] is ${javaVersion.split('_')[0]}`);
                 return javaInfo = {
-                    javaVersion: javaVersion,
+                    javaVersion: semver_1.default.coerce(javaVersion.split('_')[0]).version,
                     javaPath: javaPath
                 };
             });
@@ -9448,7 +9449,9 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         if (!regexExecArr) {
             return null;
         }
+        core.debug(`regexExecArr[1] after exec is ${regexExecArr[1]}`);
         let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
+        core.debug(`version after exec is ${version}`);
         return version;
     }
     downloadTool(range) {
@@ -26691,7 +26694,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
                     return null;
                 }
                 return javaInfo = {
-                    javaVersion: javaVersion,
+                    javaVersion: semver_1.default.coerce(javaVersion.split('_')[0]).version,
                     javaPath: javaPath
                 };
             });

@@ -103,7 +103,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
                 }
 
                 return javaInfo = {
-                    javaVersion: javaVersion,
+                    javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
                     javaPath: javaPath
                 }
             });
