@@ -56,8 +56,9 @@ async function run() {
       required: true
     });
     const jdkFile = core.getInput(INPUT_JDK_FILE, {required: false});
+    const features = core.getInput("feature");
 
-    await installer.install(version, arch, javaPackage, provider, jdkFile);
+    await installer.install(version, arch, javaPackage, provider, jdkFile, features);
 
     const matchersPath = path.join(__dirname, '..', '..', '.github');
     core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);

@@ -9388,12 +9388,13 @@ const semver_1 = __importDefault(__webpack_require__(280));
 const IJavaProvider_1 = __webpack_require__(857);
 const util_1 = __webpack_require__(322);
 class ZuluProvider extends IJavaProvider_1.IJavaProvider {
-    constructor(http, version, arch, javaPackage = "jdk") {
+    constructor(http, version, arch, javaPackage = "jdk", features) {
         super("zulu");
         this.http = http;
         this.version = version;
         this.arch = arch;
         this.javaPackage = javaPackage;
+        this.features = features;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
@@ -9498,8 +9499,11 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     }
     getJavaVersion(http, range) {
         return __awaiter(this, void 0, void 0, function* () {
-            const featureCondition = '&feature=';
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
+            let featureCondition = '';
+            if (!this.features) {
+                featureCondition = `feature=${this.features}`;
+            }
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&${featureCondition}`;
             core.debug(`url get all java versions: ${url}`);
             const zuluJson = (yield http.getJson(url)).result;
             if (!zuluJson || zuluJson.length === 0) {
@@ -11285,11 +11289,12 @@ var JavaProviders;
     JavaProviders["Zulu"] = "zulu";
 })(JavaProviders = exports.JavaProviders || (exports.JavaProviders = {}));
 class JavaFactory {
-    constructor(http, version, arch, javaPackage = "jdk") {
+    constructor(http, version, arch, javaPackage = "jdk", features) {
         this.http = http;
         this.version = version;
         this.arch = arch;
         this.javaPackage = javaPackage;
+        this.features = features;
     }
     ;
     getJavaProvider(provider) {
@@ -11297,7 +11302,7 @@ class JavaFactory {
             case JavaProviders.AdopOpenJdk:
                 return new adoptopenjdk_provider_1.default(this.http, this.version, this.arch, this.javaPackage);
             case JavaProviders.Zulu:
-                return new zulu_provider_1.default(this.http, this.version, this.arch, this.javaPackage);
+                return new zulu_provider_1.default(this.http, this.version, this.arch, this.javaPackage, this.features);
             default:
                 return null;
         }
@@ -15379,13 +15384,13 @@ const httpm = __importStar(__webpack_require__(539));
 const path = __importStar(__webpack_require__(622));
 const java_factory_1 = __webpack_require__(217);
 const util_1 = __webpack_require__(322);
-function install(version, arch, javaPackage, providerName, jdkFile) {
+function install(version, arch, javaPackage, providerName, features, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
         });
-        const javaFactory = new java_factory_1.JavaFactory(http, util_1.normalizeVersion(version), arch, javaPackage);
+        const javaFactory = new java_factory_1.JavaFactory(http, util_1.normalizeVersion(version), arch, javaPackage, features);
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
             throw new Error('No provider was found');
@@ -34190,7 +34195,8 @@ function run() {
                 required: true
             });
             const jdkFile = core.getInput(constants_1.INPUT_JDK_FILE, { required: false });
-            yield installer.install(version, arch, javaPackage, provider, jdkFile);
+            const features = core.getInput("feature");
+            yield installer.install(version, arch, javaPackage, provider, jdkFile, features);
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
             yield configureAuthentication();

@@ -5,14 +5,14 @@ import * as path from 'path';
 import { JavaFactory } from './providers/java-factory';
 import { normalizeVersion } from './util';
 
-export async function install(version: string, arch: string, javaPackage: string, providerName: string, jdkFile?: string) {
+export async function install(version: string, arch: string, javaPackage: string, providerName: string, features: string, jdkFile?: string) {
 
     const http = new httpm.HttpClient('setup-java', undefined, {
         allowRetries: true,
         maxRetries: 3
     });
 
-    const javaFactory = new JavaFactory(http, normalizeVersion(version), arch, javaPackage);
+    const javaFactory = new JavaFactory(http, normalizeVersion(version), arch, javaPackage, features);
     const provider = javaFactory.getJavaProvider(providerName);
     if(!provider) {
         throw new Error('No provider was found');

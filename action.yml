@@ -24,6 +24,9 @@ inputs:
   provider:
     description: 'Provider of java'
     required: false
+  feature:
+    description: 'Features implemented for java. For now this field will work only for zulu provider.'
+    required: false
   server-id:
     description: 'ID of the distributionManagement repository in the pom.xml
        file. Default is `github`'

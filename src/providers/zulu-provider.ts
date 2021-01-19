@@ -38,7 +38,7 @@ class ZuluProvider extends IJavaProvider {
     private implemetor: string;
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
-    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
+    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk", private features?: string) {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
@@ -160,8 +160,11 @@ class ZuluProvider extends IJavaProvider {
     }
 
     private async getJavaVersion(http: httpm.HttpClient, range: semver.Range): Promise<string> {
-        const featureCondition = '&feature=';
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
+        let featureCondition = '';
+        if(!this.features) {
+            featureCondition = `feature=${this.features}`;
+        }
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&${featureCondition}`;
 
         core.debug(`url get all java versions: ${url}`);
         const zuluJson = (await http.getJson<Array<IZulu>>(url)).result;
