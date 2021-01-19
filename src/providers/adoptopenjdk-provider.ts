@@ -147,7 +147,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
         const majorVersion = semver.maxSatisfying(javaVersions, new semver.Range(versionSpec))?.major;
 
         if(!majorVersion) {
-            throw new Error('Could not get major version');
+            throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
         }
 
         const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=jdk&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;

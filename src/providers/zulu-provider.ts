@@ -98,7 +98,7 @@ class ZuluProvider extends IJavaProvider {
     private parseFile(keyWord: string, content: string) {
         const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
         const regexExecArr = re.exec(content);
-
+        core.debug(`regexExecArr is ${regexExecArr}`);
         if(!regexExecArr) {
             return null;
         }

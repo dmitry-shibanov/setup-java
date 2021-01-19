@@ -9447,6 +9447,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     parseFile(keyWord, content) {
         const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
         const regexExecArr = re.exec(content);
+        core.debug(`regexExecArr is ${regexExecArr}`);
         if (!regexExecArr) {
             return null;
         }
@@ -26730,7 +26731,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             const javaVersions = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
             const majorVersion = (_a = semver_1.default.maxSatisfying(javaVersions, new semver_1.default.Range(versionSpec))) === null || _a === void 0 ? void 0 : _a.major;
             if (!majorVersion) {
-                throw new Error('Could not get major version');
+                throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
             }
             const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=jdk&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
             const javaRleasesVersion = (yield http.getJson(releasesUrl)).result;
