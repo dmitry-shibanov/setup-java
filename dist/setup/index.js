@@ -9463,6 +9463,8 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             if (!zuluJavaJson) {
                 throw new Error(`No zulu java was found for all`);
             }
+            core.debug(`url for getAvailableMajor is ${url}`);
+            core.debug(`zuluJavaJson for getAvailableMajor is ${zuluJavaJson}`);
             const javaVersions = zuluJavaJson.map(item => semver_1.default.coerce(item.jdk_version.join('.')));
             const majorVersion = semver_1.default.maxSatisfying(javaVersions, range);
             if (!majorVersion) {
@@ -9477,6 +9479,8 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             const javaVersion = yield this.getJavaVersion(this.http, range);
             const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}&bundle_type=${this.javaPackage}`;
             const zuluJavaJson = (yield this.http.getJson(url)).result;
+            core.debug(`url for initilial download tool is ${url}`);
+            core.debug(`zuluJavaJson for initilial download tool is ${zuluJavaJson}`);
             if (!zuluJavaJson) {
                 throw new Error(`No zulu java was found for version ${javaVersion}`);
             }
