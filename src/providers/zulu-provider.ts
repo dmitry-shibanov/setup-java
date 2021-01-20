@@ -48,7 +48,7 @@ class ZuluProvider extends IJavaProvider {
     public async getJava() {
         const range = new semver.Range(this.version);
         const majorVersion = await this.getAvailableMajor(range);
-        let javaInfo = this.findTool(`Java_${this.provider}`, majorVersion.toString(), this.arch);
+        let javaInfo = this.findTool(`Java_${this.provider}_${this.javaPackage}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -59,7 +59,7 @@ class ZuluProvider extends IJavaProvider {
 
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
-        if(!javaInfo) {
+        if(!javaInfo && this.javaPackage === 'jdk') {
             const javaDist = getMachineJavaPath();
             const versionsDir = fs.readdirSync(javaDist).filter(item => item.includes('zulu'));
             const javaInformations = versionsDir.map(item => {
@@ -154,7 +154,7 @@ class ZuluProvider extends IJavaProvider {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}`, javaVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, javaVersion, this.arch);
 
         return { javaPath: toolPath, javaVersion };
     }

@@ -67,7 +67,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
-        if(!javaInfo) {
+        if(!javaInfo && this.javaPackage === 'jdk') {
             const javaDist = getMachineJavaPath();
             const versionsDir = fs.readdirSync(javaDist);
             const javaInformations = versionsDir.map(item => {
@@ -133,7 +133,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
         const range = new semver.Range(this.version);
         const majorVersion = await this.getAvailableReleases(range);
 
-        let javaInfo = this.findTool(`Java_${this.provider}`, majorVersion.toString(), this.arch);
+        let javaInfo = this.findTool(`Java_${this.provider}_${this.javaPackage}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -192,7 +192,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}`, fullVersion.version_data.semver, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
 
         if(process.platform === 'darwin') {
             toolPath = path.join(toolPath, 'Contents', 'Home')

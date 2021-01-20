@@ -9404,7 +9404,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
             const majorVersion = yield this.getAvailableMajor(range);
-            let javaInfo = this.findTool(`Java_${this.provider}`, majorVersion.toString(), this.arch);
+            let javaInfo = this.findTool(`Java_${this.provider}_${this.javaPackage}`, majorVersion.toString(), this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
@@ -9413,7 +9413,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     }
     findTool(toolName, version, arch) {
         let javaInfo = super.findTool(toolName, version, arch);
-        if (!javaInfo) {
+        if (!javaInfo && this.javaPackage === 'jdk') {
             const javaDist = util_1.getMachineJavaPath();
             const versionsDir = fs_1.default.readdirSync(javaDist).filter(item => item.includes('zulu'));
             const javaInformations = versionsDir.map(item => {
@@ -9493,7 +9493,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}`, javaVersion, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, javaVersion, this.arch);
             return { javaPath: toolPath, javaVersion };
         });
     }
@@ -26690,7 +26690,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
     }
     findTool(toolName, version, arch) {
         let javaInfo = super.findTool(toolName, version, arch);
-        if (!javaInfo) {
+        if (!javaInfo && this.javaPackage === 'jdk') {
             const javaDist = util_1.getMachineJavaPath();
             const versionsDir = fs_1.default.readdirSync(javaDist);
             const javaInformations = versionsDir.map(item => {
@@ -26742,7 +26742,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         return __awaiter(this, void 0, void 0, function* () {
             const range = new semver_1.default.Range(this.version);
             const majorVersion = yield this.getAvailableReleases(range);
-            let javaInfo = this.findTool(`Java_${this.provider}`, majorVersion.toString(), this.arch);
+            let javaInfo = this.findTool(`Java_${this.provider}_${this.javaPackage}`, majorVersion.toString(), this.arch);
             if (!javaInfo) {
                 javaInfo = yield this.downloadTool(range);
             }
@@ -26791,7 +26791,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}`, fullVersion.version_data.semver, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
             if (process.platform === 'darwin') {
                 toolPath = path_1.default.join(toolPath, 'Contents', 'Home');
             }
