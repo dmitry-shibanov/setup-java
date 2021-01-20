@@ -166,7 +166,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
         const majorVersion = await this.getAvailableReleases(range);
 
-        const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=${this.javaPackage}&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
+        const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
         const javaRleasesVersion = ( await this.http.getJson<IRelease[]>(releasesUrl)).result;
 
         if(!javaRleasesVersion) {

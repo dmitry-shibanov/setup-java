@@ -26769,7 +26769,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
             const majorVersion = yield this.getAvailableReleases(range);
-            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=${this.javaPackage}&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
+            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
             const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
             if (!javaRleasesVersion) {
                 throw new Error(`error in ${releasesUrl}`);
