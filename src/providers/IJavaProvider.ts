@@ -29,8 +29,8 @@ export abstract class IJavaProvider {
         return toolPath;
     }
 
-    public abstract async getJava(): Promise<IJavaInfo>;
-    protected abstract async downloadTool(range: semver.Range): Promise<IJavaInfo>;
+    public abstract getJava(): Promise<IJavaInfo>;
+    protected abstract downloadTool(range: semver.Range): Promise<IJavaInfo>;
 }
 
 export interface IJavaInfo {

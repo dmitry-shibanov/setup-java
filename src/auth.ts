@@ -4,8 +4,8 @@ import * as path from 'path';
 import * as core from '@actions/core';
 import * as io from '@actions/io';
 
-import { create as xmlCreate } from 'xmlbuilder2';
-import { INPUT_SETTINGS_PATH } from './constants';
+import {create as xmlCreate} from 'xmlbuilder2';
+import {INPUT_SETTINGS_PATH} from './constants';
 
 export const M2_DIR = '.m2';
 export const SETTINGS_FILE = 'settings.xml';

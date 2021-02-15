@@ -7,38 +7,14 @@ import fs from 'fs';
 import semver from 'semver';
 
 import { IJavaInfo, IJavaProvider } from './IJavaProvider';
-import { getMachineJavaPath, IS_WINDOWS, IS_MACOS, PLATFORM, extraMacOs } from '../util';
-
-interface IZulu {
-    id: number;
-    name: string;
-    url: string;
-    jdk_version: Array<number>;
-    zulu_version: Array<number>;
-}
-
-interface IZuluDetailed extends IZulu {
-    arch: string;
-    abi: string;
-    hw_bitness: string;
-    os: string;
-    ext: string;
-    bundle_type: string;
-    release_status: string;
-    support_term: string;
-    last_modified: string;
-    size: string;
-    md5_hash: string;
-    sha256_hash: string;
-    javafx: boolean;
-    features: Array<string>;
-}
+import { IZulu, IZuluDetailed } from './IZulu';
+import { getJavaVersionsPath, IS_WINDOWS, IS_MACOS, PLATFORM, extraMacOs, parseFile, getJavaReleaseFileContent } from '../util';
 
 class ZuluProvider extends IJavaProvider {
     private implemetor: string;
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
-    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk", private features?: string) {
+    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
@@ -60,22 +36,20 @@ class ZuluProvider extends IJavaProvider {
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
         if(!javaInfo && this.javaPackage === 'jdk') {
-            const javaDist = getMachineJavaPath();
+            const javaDist = getJavaVersionsPath();
             const versionsDir = fs.readdirSync(javaDist).filter(item => item.includes('zulu'));
             const javaInformations = versionsDir.map(item => {
                 let javaPath = path.join(javaDist, item);
                 if(IS_MACOS) {
                     javaPath = path.join(javaPath, extraMacOs);
                 }
-                let javaReleaseFile = path.join(javaPath, 'release');
 
-                if(!(fs.existsSync(javaReleaseFile) && fs.lstatSync(javaReleaseFile).isFile())) {
-                    core.info('file does not exist')
+                const content: string | null = getJavaReleaseFileContent(javaPath);
+                if (!content) {
                     return null;
                 }
 
-                const content: string = fs.readFileSync(javaReleaseFile).toString();
-                const javaVersion = this.parseFile("JAVA_VERSION", content);
+                const javaVersion = parseFile("JAVA_VERSION", content);
 
                 if(!javaVersion) {
                     core.info('No match was found');
@@ -98,30 +72,12 @@ class ZuluProvider extends IJavaProvider {
         return javaInfo;
     }
 
-    private parseFile(keyWord: string, content: string) {
-        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
-        const regexExecArr = re.exec(content);
-        core.debug(`regexExecArr is ${regexExecArr}`);
-        if(!regexExecArr) {
-            return null;
-        }
-
-        core.debug(`regexExecArr[1] after exec is ${regexExecArr[1]}`);
-        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
-        core.debug(`version after exec is ${version}`);
-        return version;
-    }
-
     private async getAvailableMajor(range: semver.Range) {
         const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
         const zuluJavaJson = (await this.http.getJson<Array<IZulu>>(url)).result;
         if(!zuluJavaJson) {
             throw new Error(`No zulu java was found for all`);
         }
-
-        core.debug(`url for getAvailableMajor is ${url}`);
-        core.debug(`zuluJavaJson for getAvailableMajor is ${zuluJavaJson}`);
-
 
         const javaVersions = zuluJavaJson.map(item => semver.coerce(item.jdk_version.join('.'))!);
         const majorVersion = semver.maxSatisfying(javaVersions, range);
@@ -166,11 +122,7 @@ class ZuluProvider extends IJavaProvider {
     }
 
     private async getJavaVersion(http: httpm.HttpClient, range: semver.Range): Promise<string> {
-        let featureCondition = '';
-        if(!this.features) {
-            featureCondition = `feature=${this.features}`;
-        }
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&${featureCondition}`;
+        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
 
         core.debug(`url get all java versions: ${url}`);
         const zuluJson = (await http.getJson<Array<IZulu>>(url)).result;

@@ -9388,13 +9388,12 @@ const semver_1 = __importDefault(__webpack_require__(280));
 const IJavaProvider_1 = __webpack_require__(857);
 const util_1 = __webpack_require__(322);
 class ZuluProvider extends IJavaProvider_1.IJavaProvider {
-    constructor(http, version, arch, javaPackage = "jdk", features) {
+    constructor(http, version, arch, javaPackage = "jdk") {
         super("zulu");
         this.http = http;
         this.version = version;
         this.arch = arch;
         this.javaPackage = javaPackage;
-        this.features = features;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = util_1.PLATFORM === 'darwin' ? 'macos' : util_1.PLATFORM;
@@ -9414,20 +9413,18 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     findTool(toolName, version, arch) {
         let javaInfo = super.findTool(toolName, version, arch);
         if (!javaInfo && this.javaPackage === 'jdk') {
-            const javaDist = util_1.getMachineJavaPath();
+            const javaDist = util_1.getJavaVersionsPath();
             const versionsDir = fs_1.default.readdirSync(javaDist).filter(item => item.includes('zulu'));
             const javaInformations = versionsDir.map(item => {
                 let javaPath = path_1.default.join(javaDist, item);
                 if (util_1.IS_MACOS) {
                     javaPath = path_1.default.join(javaPath, util_1.extraMacOs);
                 }
-                let javaReleaseFile = path_1.default.join(javaPath, 'release');
-                if (!(fs_1.default.existsSync(javaReleaseFile) && fs_1.default.lstatSync(javaReleaseFile).isFile())) {
-                    core.info('file does not exist');
+                const content = util_1.getJavaReleaseFileContent(javaPath);
+                if (!content) {
                     return null;
                 }
-                const content = fs_1.default.readFileSync(javaReleaseFile).toString();
-                const javaVersion = this.parseFile("JAVA_VERSION", content);
+                const javaVersion = util_1.parseFile("JAVA_VERSION", content);
                 if (!javaVersion) {
                     core.info('No match was found');
                     return null;
@@ -9444,18 +9441,6 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
         }
         return javaInfo;
     }
-    parseFile(keyWord, content) {
-        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
-        const regexExecArr = re.exec(content);
-        core.debug(`regexExecArr is ${regexExecArr}`);
-        if (!regexExecArr) {
-            return null;
-        }
-        core.debug(`regexExecArr[1] after exec is ${regexExecArr[1]}`);
-        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
-        core.debug(`version after exec is ${version}`);
-        return version;
-    }
     getAvailableMajor(range) {
         return __awaiter(this, void 0, void 0, function* () {
             const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
@@ -9463,8 +9448,6 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
             if (!zuluJavaJson) {
                 throw new Error(`No zulu java was found for all`);
             }
-            core.debug(`url for getAvailableMajor is ${url}`);
-            core.debug(`zuluJavaJson for getAvailableMajor is ${zuluJavaJson}`);
             const javaVersions = zuluJavaJson.map(item => semver_1.default.coerce(item.jdk_version.join('.')));
             const majorVersion = semver_1.default.maxSatisfying(javaVersions, range);
             if (!majorVersion) {
@@ -9503,11 +9486,7 @@ class ZuluProvider extends IJavaProvider_1.IJavaProvider {
     }
     getJavaVersion(http, range) {
         return __awaiter(this, void 0, void 0, function* () {
-            let featureCondition = '';
-            if (!this.features) {
-                featureCondition = `feature=${this.features}`;
-            }
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&${featureCondition}`;
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
             core.debug(`url get all java versions: ${url}`);
             const zuluJson = (yield http.getJson(url)).result;
             if (!zuluJson || zuluJson.length === 0) {
@@ -11293,12 +11272,11 @@ var JavaProviders;
     JavaProviders["Zulu"] = "zulu";
 })(JavaProviders = exports.JavaProviders || (exports.JavaProviders = {}));
 class JavaFactory {
-    constructor(http, version, arch, javaPackage = "jdk", features) {
+    constructor(http, version, arch, javaPackage = "jdk") {
         this.http = http;
         this.version = version;
         this.arch = arch;
         this.javaPackage = javaPackage;
-        this.features = features;
     }
     ;
     getJavaProvider(provider) {
@@ -11306,7 +11284,7 @@ class JavaFactory {
             case JavaProviders.AdopOpenJdk:
                 return new adoptopenjdk_provider_1.default(this.http, this.version, this.arch, this.javaPackage);
             case JavaProviders.Zulu:
-                return new zulu_provider_1.default(this.http, this.version, this.arch, this.javaPackage, this.features);
+                return new zulu_provider_1.default(this.http, this.version, this.arch, this.javaPackage);
             default:
                 return null;
         }
@@ -14567,18 +14545,24 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.normalizeVersion = exports.getMachineJavaPath = exports.isWindows = exports.getTempDir = exports.extraMacOs = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.normalizeVersion = exports.parseFile = exports.getJavaReleaseFileContent = exports.getJavaVersionsPath = exports.isWindows = exports.createHttpClient = exports.getTempDir = exports.extraMacOs = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+const httpm = __importStar(__webpack_require__(539));
+const core = __importStar(__webpack_require__(470));
+const fs_1 = __importDefault(__webpack_require__(747));
 const path = __importStar(__webpack_require__(622));
 const semver = __importStar(__webpack_require__(280));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
 exports.IS_MACOS = process.platform === 'darwin';
-exports.PLATFORM = exports.IS_WINDOWS ? "windows" : process.platform;
+exports.PLATFORM = exports.IS_WINDOWS ? 'windows' : process.platform;
 const windowsPreInstalled = path.normalize('C:/Program Files/Java');
-const linuxPreInstalled = "/usr/lib/jvm";
-const macosPreInstalled = "/Library/Java/JavaVirtualMachines";
-exports.extraMacOs = "Contents/Home";
+const linuxPreInstalled = '/usr/lib/jvm';
+const macosPreInstalled = '/Library/Java/JavaVirtualMachines';
+exports.extraMacOs = 'Contents/Home';
 function getTempDir() {
     let tempDirectory = process.env.RUNNER_TEMP;
     if (tempDirectory === undefined) {
@@ -14602,11 +14586,19 @@ function getTempDir() {
     return tempDirectory;
 }
 exports.getTempDir = getTempDir;
+function createHttpClient() {
+    const http = new httpm.HttpClient('setup-java', undefined, {
+        allowRetries: true,
+        maxRetries: 3
+    });
+    return http;
+}
+exports.createHttpClient = createHttpClient;
 function isWindows() {
     return process.platform === 'win32';
 }
 exports.isWindows = isWindows;
-function getMachineJavaPath() {
+function getJavaVersionsPath() {
     if (exports.IS_WINDOWS) {
         return windowsPreInstalled;
     }
@@ -14617,7 +14609,29 @@ function getMachineJavaPath() {
         return macosPreInstalled;
     }
 }
-exports.getMachineJavaPath = getMachineJavaPath;
+exports.getJavaVersionsPath = getJavaVersionsPath;
+function getJavaReleaseFileContent(javaDirectory) {
+    let javaReleaseFile = path.join(javaDirectory, 'release');
+    if (!(fs_1.default.existsSync(javaReleaseFile) && fs_1.default.lstatSync(javaReleaseFile).isFile())) {
+        core.info('Release file for java was not found');
+        return null;
+    }
+    const content = fs_1.default.readFileSync(javaReleaseFile).toString();
+    return content;
+}
+exports.getJavaReleaseFileContent = getJavaReleaseFileContent;
+function parseFile(keyWord, content) {
+    const re = new RegExp(`${keyWord}="(.*)"$`, 'gm');
+    const regexExecArr = re.exec(content);
+    if (!regexExecArr) {
+        return null;
+    }
+    let version = regexExecArr[1].startsWith('1.')
+        ? regexExecArr[1].replace('1.', '')
+        : regexExecArr[1];
+    return version;
+}
+exports.parseFile = parseFile;
 // this function validates and parse java version to its normal semver notation
 function normalizeVersion(version) {
     if (version.slice(0, 2) === '1.') {
@@ -15388,20 +15402,22 @@ const httpm = __importStar(__webpack_require__(539));
 const path = __importStar(__webpack_require__(622));
 const java_factory_1 = __webpack_require__(217);
 const util_1 = __webpack_require__(322);
-function install(version, arch, javaPackage, providerName, features, jdkFile) {
+function install(version, arch, javaPackage, providerName, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
         });
-        const javaFactory = new java_factory_1.JavaFactory(http, util_1.normalizeVersion(version), arch, javaPackage, features);
+        const javaFactory = new java_factory_1.JavaFactory(http, util_1.normalizeVersion(version), arch, javaPackage);
         const provider = javaFactory.getJavaProvider(providerName);
         if (!provider) {
             throw new Error('No provider was found');
         }
         const javaInfo = yield provider.getJava();
         const { javaVersion, javaPath: toolPath } = javaInfo;
-        const extendedJavaHome = `JAVA_HOME_${version}_${arch}`.toUpperCase().replace(/[^0-9A-Z_]/g, '_');
+        const extendedJavaHome = `JAVA_HOME_${version}_${arch}`
+            .toUpperCase()
+            .replace(/[^0-9A-Z_]/g, '_');
         core.exportVariable('JAVA_HOME', toolPath);
         core.exportVariable(extendedJavaHome, toolPath);
         core.addPath(path.join(toolPath, 'bin'));
@@ -26695,32 +26711,27 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
     findTool(toolName, version, arch) {
         let javaInfo = super.findTool(toolName, version, arch);
         if (!javaInfo && this.javaPackage === 'jdk') {
-            const javaDist = util_1.getMachineJavaPath();
+            const javaDist = util_1.getJavaVersionsPath();
             const versionsDir = fs_1.default.readdirSync(javaDist);
-            const javaInformations = versionsDir.map(item => {
-                let javaPath = path_1.default.join(javaDist, item);
+            const javaInformations = versionsDir.map(versionDir => {
+                let javaPath = path_1.default.join(javaDist, versionDir);
                 if (util_1.IS_MACOS) {
                     javaPath = path_1.default.join(javaPath, util_1.extraMacOs);
                 }
-                let javaReleaseFile = path_1.default.join(javaPath, 'release');
-                if (!(fs_1.default.existsSync(javaReleaseFile) && fs_1.default.lstatSync(javaReleaseFile).isFile())) {
-                    core.info('file does not exist');
+                const content = util_1.getJavaReleaseFileContent(javaPath);
+                if (!content) {
                     return null;
                 }
-                const content = fs_1.default.readFileSync(javaReleaseFile).toString();
-                const implemetation = this.parseFile("IMPLEMENTOR", content);
+                const implemetation = util_1.parseFile("IMPLEMENTOR", content);
                 const re = new RegExp(/^[7,8]\./);
-                core.debug(`implementor is ${this.implemetor}`);
-                core.debug(`implemetation is ${implemetation}`);
                 if (!re.test(version) && implemetation !== this.implemetor) {
                     return null;
                 }
-                const javaVersion = this.parseFile("JAVA_VERSION", content);
-                core.debug(`java version is ${javaVersion}`);
-                if (!javaVersion || implemetation !== this.implemetor) {
-                    core.info('No match was found');
+                const javaVersion = util_1.parseFile("JAVA_VERSION", content);
+                if (!javaVersion) {
                     return null;
                 }
+                core.info(`found java ${javaVersion} version for ${implemetation}`);
                 return javaInfo = {
                     javaVersion: semver_1.default.coerce(javaVersion.split('_')[0]).version,
                     javaPath: javaPath
@@ -26731,16 +26742,6 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             }) || null;
         }
         return javaInfo;
-    }
-    parseFile(keyWord, content) {
-        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
-        const regexExecArr = re.exec(content);
-        core.debug(`regexExecArr is ${regexExecArr}`);
-        if (!regexExecArr) {
-            return null;
-        }
-        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
-        return version;
     }
     getJava() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -26759,10 +26760,10 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
             const javaVersionAvailable = (yield this.http.getJson(urlReleaseVersion)).result;
             if (!javaVersionAvailable) {
-                throw new Error("No versions were found");
+                throw new Error(`No versions were found for ${this.implemetor}`);
             }
-            const javaVersions = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
-            const majorVersion = (_a = semver_1.default.maxSatisfying(javaVersions, range)) === null || _a === void 0 ? void 0 : _a.major;
+            const javaSemVer = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
+            const majorVersion = (_a = semver_1.default.maxSatisfying(javaSemVer, range)) === null || _a === void 0 ? void 0 : _a.major;
             if (!majorVersion) {
                 throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
             }
@@ -26775,18 +26776,13 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             const majorVersion = yield this.getAvailableReleases(range);
             const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
             const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
-            if (!javaRleasesVersion) {
-                throw new Error(`error in ${releasesUrl}`);
-            }
-            const fullVersion = javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
+            const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
             if (!fullVersion) {
-                throw new Error('version was not found by find call');
+                throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
             }
-            core.info(`Downloading ${this.provider} java version ${fullVersion.version_data.semver}`);
-            core.info(`Zulu url is ${fullVersion.binaries[0].package.link}`);
+            core.info(`Downloading ${this.provider}, java version ${fullVersion.version_data.semver}`);
             const javaPath = yield tc.downloadTool(fullVersion.binaries[0].package.link);
             let downloadDir;
-            core.info(`Ectracting ${this.provider} java version ${fullVersion.version_data.semver}`);
             if (util_1.IS_WINDOWS) {
                 downloadDir = yield tc.extractZip(javaPath);
             }
@@ -26797,7 +26793,7 @@ class AdopOpenJdkProvider extends IJavaProvider_1.IJavaProvider {
             const archivePath = path_1.default.join(downloadDir, archiveName);
             toolPath = yield tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
             if (process.platform === 'darwin') {
-                toolPath = path_1.default.join(toolPath, 'Contents', 'Home');
+                toolPath = path_1.default.join(toolPath, util_1.extraMacOs);
             }
             return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
         });
@@ -34163,21 +34159,21 @@ const core = __importStar(__webpack_require__(470));
 const installer = __importStar(__webpack_require__(389));
 const auth = __importStar(__webpack_require__(331));
 const gpg = __importStar(__webpack_require__(884));
-const constants_1 = __webpack_require__(694);
+const constants = __importStar(__webpack_require__(694));
 const path = __importStar(__webpack_require__(622));
 function configureAuthentication() {
     return __awaiter(this, void 0, void 0, function* () {
-        const id = core.getInput(constants_1.INPUT_SERVER_ID, { required: false });
-        const username = core.getInput(constants_1.INPUT_SERVER_USERNAME, {
+        const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
+        const username = core.getInput(constants.INPUT_SERVER_USERNAME, {
             required: false
         });
-        const password = core.getInput(constants_1.INPUT_SERVER_PASSWORD, {
+        const password = core.getInput(constants.INPUT_SERVER_PASSWORD, {
             required: false
         });
-        const gpgPrivateKey = core.getInput(constants_1.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
-            constants_1.INPUT_DEFAULT_GPG_PRIVATE_KEY;
-        const gpgPassphrase = core.getInput(constants_1.INPUT_GPG_PASSPHRASE, { required: false }) ||
-            (gpgPrivateKey ? constants_1.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
+        const gpgPrivateKey = core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
+            constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
+        const gpgPassphrase = core.getInput(constants.INPUT_GPG_PASSPHRASE, { required: false }) ||
+            (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
         if (gpgPrivateKey) {
             core.setSecret(gpgPrivateKey);
         }
@@ -34185,22 +34181,23 @@ function configureAuthentication() {
         if (gpgPrivateKey) {
             core.info('importing private key');
             const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
-            core.saveState(constants_1.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+            core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
         }
     });
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const version = core.getInput(constants_1.INPUT_JAVA_VERSION, { required: true });
-            const arch = core.getInput(constants_1.INPUT_ARCHITECTURE, { required: true });
-            const provider = core.getInput('provider') || 'zulu';
-            const javaPackage = core.getInput(constants_1.INPUT_JAVA_PACKAGE, {
+            const version = core.getInput(constants.INPUT_JAVA_VERSION, {
                 required: true
             });
-            const jdkFile = core.getInput(constants_1.INPUT_JDK_FILE, { required: false });
-            const features = core.getInput("feature");
-            yield installer.install(version, arch, javaPackage, provider, jdkFile, features);
+            const arch = core.getInput(constants.INPUT_ARCHITECTURE, { required: true });
+            const javaDistributor = core.getInput('java-distro') || 'zulu';
+            const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
+                required: true
+            });
+            const jdkFile = core.getInput(constants.INPUT_JDK_FILE, { required: false });
+            yield installer.install(version, arch, javaPackage, javaDistributor, jdkFile);
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
             yield configureAuthentication();

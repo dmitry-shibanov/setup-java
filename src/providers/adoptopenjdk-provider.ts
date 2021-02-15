@@ -6,54 +6,9 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { IS_WINDOWS, PLATFORM, getMachineJavaPath, IS_MACOS, extraMacOs } from "../util";
+import { IS_WINDOWS, PLATFORM, getJavaVersionsPath, IS_MACOS, extraMacOs, getJavaReleaseFileContent, parseFile } from "../util";
 import { IJavaInfo, IJavaProvider } from "./IJavaProvider";
-
-interface IReleaseVersion {
-    available_lts_releases: Array<number>,
-    available_releases: Array<number>,
-    most_recent_feature_release: number,
-    most_recent_feature_version: number,
-    most_recent_lts: number,
-    tip_version: number
-}
-
-interface IRelease {
-        binaries: [
-            {
-                architecture: string,
-                heap_size: string,
-                image_type: string,
-                jvm_impl: string,
-                os: string,
-                package: {
-                    checksum: string,
-                    checksum_link: string,
-                    download_count: number,
-                    link: string,
-                    metadata_link: string,
-                    name: string,
-                    size: string
-                },
-                project: string,
-                scm_ref: string,
-                updated_at: string
-            }
-        ],
-        id: string,
-        release_link: string,
-        release_name: string,
-        release_type: string,
-        vendor: string,
-        version_data: {
-            build: number,
-            major: number,
-            minor: number,
-            openjdk_version: string,
-            security: string,
-            semver: string
-        }
-}
+import { IRelease, IReleaseVersion } from './IAdoptOpenJdk'
 
 class AdopOpenJdkProvider extends IJavaProvider {
     private platform: string;
@@ -68,38 +23,33 @@ class AdopOpenJdkProvider extends IJavaProvider {
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
         if(!javaInfo && this.javaPackage === 'jdk') {
-            const javaDist = getMachineJavaPath();
+            const javaDist = getJavaVersionsPath();
             const versionsDir = fs.readdirSync(javaDist);
-            const javaInformations = versionsDir.map(item => {
-                let javaPath = path.join(javaDist, item);
+            const javaInformations = versionsDir.map(versionDir => {
+                let javaPath = path.join(javaDist, versionDir);
                 if(IS_MACOS) {
                     javaPath = path.join(javaPath, extraMacOs);
                 }
-                let javaReleaseFile = path.join(javaPath, 'release');
 
-                if(!(fs.existsSync(javaReleaseFile) && fs.lstatSync(javaReleaseFile).isFile())) {
-                    core.info('file does not exist')
+                const content: string | null = getJavaReleaseFileContent(javaPath);
+                if (!content) {
                     return null;
                 }
 
-                const content: string = fs.readFileSync(javaReleaseFile).toString();
-                const implemetation = this.parseFile("IMPLEMENTOR", content);
+                const implemetation = parseFile("IMPLEMENTOR", content);
 
                 const re = new RegExp(/^[7,8]\./);
-                core.debug(`implementor is ${this.implemetor}`);
-                core.debug(`implemetation is ${implemetation}`);
                 if(!re.test(version) && implemetation !== this.implemetor) {
                     return null;
                 }
 
-                const javaVersion = this.parseFile("JAVA_VERSION", content);
+                const javaVersion = parseFile("JAVA_VERSION", content);
 
-                core.debug(`java version is ${javaVersion}`);
-
-                if(!javaVersion || implemetation !== this.implemetor) {
-                    core.info('No match was found');
+                if(!javaVersion) {
                     return null;
                 }
+
+                core.info(`found java ${javaVersion} version for ${implemetation}`);
 
                 return javaInfo = {
                     javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
@@ -113,20 +63,6 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
         }
         return javaInfo;
-    }
-
-    private parseFile(keyWord: string, content: string) {
-        const re = new RegExp(`${keyWord}="(.*)"$`, "gm");
-        const regexExecArr = re.exec(content);
-        core.debug(`regexExecArr is ${regexExecArr}`);
-        if(!regexExecArr) {
-            return null;
-        }
-
-        let version = regexExecArr[1].startsWith('1.') ? regexExecArr[1].replace('1.', '') : regexExecArr[1];
-
-
-        return version;
     }
 
     public async getJava(): Promise<IJavaInfo> {
@@ -147,12 +83,11 @@ class AdopOpenJdkProvider extends IJavaProvider {
         const javaVersionAvailable = (await this.http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
 
         if (!javaVersionAvailable) {
-            throw new Error("No versions were found")
+            throw new Error(`No versions were found for ${this.implemetor}`)
         }
 
-        const javaVersions = javaVersionAvailable.available_releases.map(item => semver.coerce(item)!)!;
-
-        const majorVersion = semver.maxSatisfying(javaVersions, range)?.major;
+        const javaSemVer = javaVersionAvailable.available_releases.map(item => semver.coerce(item)!)!;
+        const majorVersion = semver.maxSatisfying(javaSemVer, range)?.major;
 
         if(!majorVersion) {
             throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
@@ -165,25 +100,18 @@ class AdopOpenJdkProvider extends IJavaProvider {
         let toolPath: string;
 
         const majorVersion = await this.getAvailableReleases(range);
-
         const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
         const javaRleasesVersion = ( await this.http.getJson<IRelease[]>(releasesUrl)).result;
-
-        if(!javaRleasesVersion) {
-            throw new Error(`error in ${releasesUrl}`);
-        }
-        const fullVersion = javaRleasesVersion.find(item => semver.satisfies(item.version_data.semver, range));
+        const fullVersion = javaRleasesVersion?.find(item => semver.satisfies(item.version_data.semver, range));
 
         if(!fullVersion) {
-            throw new Error('version was not found by find call');
+            throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
         }
 
-        core.info(`Downloading ${this.provider} java version ${fullVersion.version_data.semver}`);
-        core.info(`Zulu url is ${fullVersion.binaries[0].package.link}`);
+        core.info(`Downloading ${this.provider}, java version ${fullVersion.version_data.semver}`);
         const javaPath = await tc.downloadTool(fullVersion.binaries[0].package.link);
         let downloadDir: string;
         
-        core.info(`Ectracting ${this.provider} java version ${fullVersion.version_data.semver}`);
         if(IS_WINDOWS) {
             downloadDir = await tc.extractZip(javaPath);
         } else {
@@ -195,7 +123,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
         toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
 
         if(process.platform === 'darwin') {
-            toolPath = path.join(toolPath, 'Contents', 'Home')
+            toolPath = path.join(toolPath, extraMacOs);
         }
 
         return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };

@@ -10,14 +10,14 @@ export enum JavaProviders {
 
 export class JavaFactory {
 
-    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk", private features?: string) { };
+    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") { };
 
     public getJavaProvider(provider: JavaProviders|string): IJavaProvider | null {
         switch(provider) {
             case JavaProviders.AdopOpenJdk:
                 return new AdopOpenJdkProvider(this.http, this.version, this.arch, this.javaPackage);
             case JavaProviders.Zulu:
-                return new ZuluProvider(this.http, this.version, this.arch, this.javaPackage, this.features);
+                return new ZuluProvider(this.http, this.version, this.arch, this.javaPackage);
             default:
                 return null;
         }
