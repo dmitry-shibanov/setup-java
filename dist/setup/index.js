@@ -34178,7 +34178,7 @@ function run() {
                 required: true
             });
             const arch = core.getInput(constants.INPUT_ARCHITECTURE, { required: true });
-            const javaDistributor = core.getInput('java-distro') || 'zulu';
+            const javaDistributor = core.getInput('distribution');
             const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
                 required: true
             });
