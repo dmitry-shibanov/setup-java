@@ -21,12 +21,9 @@ inputs:
     description: 'Path to where the compressed JDK is located. The path could
        be in your source repository or a local path on the agent.'
     required: false
-  java-distro:
-    description: 'Provider of java'
-    required: false
-  feature:
-    description: 'Features implemented for java. For now this field will work only for zulu provider.'
-    required: false
+  distribution:
+    description: 'Vendor providing of java distribution'
+    required: true
   server-id:
     description: 'ID of the distributionManagement repository in the pom.xml
        file. Default is `github`'

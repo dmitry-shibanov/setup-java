@@ -2,10 +2,10 @@ import * as tc from '@actions/tool-cache';
 import semver from 'semver';
 import path from 'path';
 
-export abstract class IJavaProvider {
-    protected provider: string;
-    constructor(provider: string) {
-        this.provider = provider;
+export abstract class IJavaVendor {
+    protected vendor: string;
+    constructor(vendor: string) {
+        this.vendor = vendor;
     }
 
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {

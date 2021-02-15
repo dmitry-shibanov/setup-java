@@ -6,11 +6,11 @@ import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
 
-import { IJavaInfo, IJavaProvider } from './IJavaProvider';
-import { IZulu, IZuluDetailed } from './IZulu';
+import { IJavaInfo, IJavaVendor } from './vendor-model';
+import { IZulu, IZuluDetailed } from './zulu-models';
 import { getJavaVersionsPath, IS_WINDOWS, IS_MACOS, PLATFORM, extraMacOs, parseFile, getJavaReleaseFileContent } from '../util';
 
-class ZuluProvider extends IJavaProvider {
+class ZuluVendor extends IJavaVendor {
     private implemetor: string;
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
@@ -24,7 +24,7 @@ class ZuluProvider extends IJavaProvider {
     public async getJava() {
         const range = new semver.Range(this.version);
         const majorVersion = await this.getAvailableMajor(range);
-        let javaInfo = this.findTool(`Java_${this.provider}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+        let javaInfo = this.findTool(`Java_${this.vendor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -102,12 +102,12 @@ class ZuluProvider extends IJavaProvider {
             throw new Error(`No zulu java was found for version ${javaVersion}`);
         }
 
-        core.info(`Downloading ${this.provider} java version ${javaVersion}`);
+        core.info(`Downloading ${this.vendor} java version ${javaVersion}`);
         core.info(`Zulu url is ${zuluJavaJson.url}`);
         const javaPath = await tc.downloadTool(zuluJavaJson.url);
         let downloadDir: string;
         
-        core.info(`Ectracting ${this.provider} java version ${javaVersion}`);
+        core.info(`Ectracting ${this.vendor} java version ${javaVersion}`);
         if(IS_WINDOWS) {
             downloadDir = await tc.extractZip(javaPath);
         } else {
@@ -116,7 +116,7 @@ class ZuluProvider extends IJavaProvider {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, javaVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.vendor}_${this.javaPackage}`, javaVersion, this.arch);
 
         return { javaPath: toolPath, javaVersion };
     }
@@ -145,4 +145,4 @@ class ZuluProvider extends IJavaProvider {
     
 }
 
-export default ZuluProvider;
+export default ZuluVendor;

@@ -7,10 +7,10 @@ import path from 'path';
 import semver from 'semver';
 
 import { IS_WINDOWS, PLATFORM, getJavaVersionsPath, IS_MACOS, extraMacOs, getJavaReleaseFileContent, parseFile } from "../util";
-import { IJavaInfo, IJavaProvider } from "./IJavaProvider";
-import { IRelease, IReleaseVersion } from './IAdoptOpenJdk'
+import { IJavaInfo, IJavaVendor } from "./vendor-model";
+import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
-class AdopOpenJdkProvider extends IJavaProvider {
+class AdopOpenJdkVendor extends IJavaVendor {
     private platform: string;
     private implemetor: string;
     
@@ -69,7 +69,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
         const range = new semver.Range(this.version);
         const majorVersion = await this.getAvailableReleases(range);
 
-        let javaInfo = this.findTool(`Java_${this.provider}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+        let javaInfo = this.findTool(`Java_${this.vendor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -108,7 +108,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
             throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
         }
 
-        core.info(`Downloading ${this.provider}, java version ${fullVersion.version_data.semver}`);
+        core.info(`Downloading ${this.vendor}, java version ${fullVersion.version_data.semver}`);
         const javaPath = await tc.downloadTool(fullVersion.binaries[0].package.link);
         let downloadDir: string;
         
@@ -120,7 +120,7 @@ class AdopOpenJdkProvider extends IJavaProvider {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.provider}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.vendor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
 
         if(process.platform === 'darwin') {
             toolPath = path.join(toolPath, extraMacOs);
@@ -130,4 +130,4 @@ class AdopOpenJdkProvider extends IJavaProvider {
     }
 }
 
-export default AdopOpenJdkProvider;
+export default AdopOpenJdkVendor;
