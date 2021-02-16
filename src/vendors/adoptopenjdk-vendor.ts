@@ -6,7 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { IS_WINDOWS, PLATFORM, getJavaVersionsPath, IS_MACOS, extraMacOs, getJavaReleaseFileContent, parseFile } from "../util";
+import { IS_WINDOWS, PLATFORM, getJavaPreInstalledPath, IS_MACOS, macOSJavaContentDir, getJavaReleaseFileContent, parseFile } from "../util";
 import { IJavaInfo, IJavaVendor } from "./vendor-model";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
@@ -16,50 +16,14 @@ class AdopOpenJdkVendor extends IJavaVendor {
     
     constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("adoptopenjdk");
-        this.platform = PLATFORM === 'darwin' ? 'mac' : PLATFORM;
+        this.platform = IS_MACOS ? 'mac' : PLATFORM;
         this.implemetor = "AdoptOpenJDK";
     }
 
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
         if(!javaInfo && this.javaPackage === 'jdk') {
-            const javaDist = getJavaVersionsPath();
-            const versionsDir = fs.readdirSync(javaDist);
-            const javaInformations = versionsDir.map(versionDir => {
-                let javaPath = path.join(javaDist, versionDir);
-                if(IS_MACOS) {
-                    javaPath = path.join(javaPath, extraMacOs);
-                }
-
-                const content: string | null = getJavaReleaseFileContent(javaPath);
-                if (!content) {
-                    return null;
-                }
-
-                const implemetation = parseFile("IMPLEMENTOR", content);
-
-                const re = new RegExp(/^[7,8]\./);
-                if(!re.test(version) && implemetation !== this.implemetor) {
-                    return null;
-                }
-
-                const javaVersion = parseFile("JAVA_VERSION", content);
-
-                if(!javaVersion) {
-                    return null;
-                }
-
-                core.info(`found java ${javaVersion} version for ${implemetation}`);
-
-                return javaInfo = {
-                    javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
-                    javaPath: javaPath
-                }
-            });
-
-            javaInfo = javaInformations.find(item => {
-                return item && semver.satisfies(item.javaVersion, new semver.Range(version));
-            }) || null;
+            javaInfo = getJavaPreInstalledPath(version, this.implemetor);
 
         }
         return javaInfo;
@@ -123,7 +87,7 @@ class AdopOpenJdkVendor extends IJavaVendor {
         toolPath = await tc.cacheDir(archivePath, `Java_${this.vendor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
 
         if(process.platform === 'darwin') {
-            toolPath = path.join(toolPath, extraMacOs);
+            toolPath = path.join(toolPath, macOSJavaContentDir);
         }
 
         return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };

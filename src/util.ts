@@ -1,6 +1,7 @@
 import * as httpm from '@actions/http-client';
 import * as core from '@actions/core';
 import fs from 'fs';
+import os from 'os';
 import * as path from 'path';
 import * as semver from 'semver';
 
@@ -8,30 +9,11 @@ export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
 export const IS_MACOS = process.platform === 'darwin';
 export const PLATFORM = IS_WINDOWS ? 'windows' : process.platform;
-
-const windowsPreInstalled = path.normalize('C:/Program Files/Java');
-const linuxPreInstalled = '/usr/lib/jvm';
-const macosPreInstalled = '/Library/Java/JavaVirtualMachines';
-export const extraMacOs = 'Contents/Home';
+export const macOSJavaContentDir = 'Contents/Home';
 
 export function getTempDir() {
-  let tempDirectory = process.env.RUNNER_TEMP;
-  if (tempDirectory === undefined) {
-    let baseLocation;
-    if (isWindows()) {
-      // On windows use the USERPROFILE env variable
-      baseLocation = process.env['USERPROFILE']
-        ? process.env['USERPROFILE']
-        : 'C:\\';
-    } else {
-      if (process.platform === 'darwin') {
-        baseLocation = '/Users';
-      } else {
-        baseLocation = '/home';
-      }
-    }
-    tempDirectory = path.join(baseLocation, 'actions', 'temp');
-  }
+  let tempDirectory = process.env['RUNNER_TEMP'] || os.tmpdir();
+
   return tempDirectory;
 }
 
@@ -44,11 +26,56 @@ export function createHttpClient() {
   return http;
 }
 
-export function isWindows() {
-  return process.platform === 'win32';
+export function getJavaPreInstalledPath(version: string, vendor: string) {
+  const javaDist = getJavaVersionsPath();
+  const versionsDir = fs.readdirSync(javaDist);
+  const javaInformations = versionsDir.map(versionDir => {
+    let javaPath = path.join(javaDist, versionDir);
+    if (IS_MACOS) {
+      javaPath = path.join(javaPath, macOSJavaContentDir);
+    }
+
+    const content: string | null = getJavaReleaseFileContent(javaPath);
+    if (!content) {
+      return null;
+    }
+
+    const implemetation = parseFile('IMPLEMENTOR', content);
+
+    const re = new RegExp(/^[7,8]\./);
+    if (!re.test(version) && implemetation !== vendor) {
+      return null;
+    }
+
+    const javaVersion = parseFile('JAVA_VERSION', content);
+
+    if (!javaVersion) {
+      return null;
+    }
+
+    core.info(`found java ${javaVersion} version for ${implemetation}`);
+
+    return {
+      javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
+      javaPath: javaPath
+    };
+  });
+
+  const javaInfo =
+    javaInformations.find(item => {
+      return (
+        item && semver.satisfies(item.javaVersion, new semver.Range(version))
+      );
+    }) || null;
+
+  return javaInfo;
 }
 
 export function getJavaVersionsPath() {
+  const windowsPreInstalled = path.normalize('C:/Program Files/Java');
+  const linuxPreInstalled = '/usr/lib/jvm';
+  const macosPreInstalled = '/Library/Java/JavaVirtualMachines';
+
   if (IS_WINDOWS) {
     return windowsPreInstalled;
   } else if (IS_LINUX) {

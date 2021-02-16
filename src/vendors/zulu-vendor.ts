@@ -8,7 +8,7 @@ import semver from 'semver';
 
 import { IJavaInfo, IJavaVendor } from './vendor-model';
 import { IZulu, IZuluDetailed } from './zulu-models';
-import { getJavaVersionsPath, IS_WINDOWS, IS_MACOS, PLATFORM, extraMacOs, parseFile, getJavaReleaseFileContent } from '../util';
+import { getJavaPreInstalledPath, IS_WINDOWS, IS_MACOS, PLATFORM, macOSJavaContentDir, parseFile, getJavaReleaseFileContent } from '../util';
 
 class ZuluVendor extends IJavaVendor {
     private implemetor: string;
@@ -17,7 +17,7 @@ class ZuluVendor extends IJavaVendor {
     constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
         this.arch = arch === 'x64' ? 'x86' : arch;
-        this.platform = PLATFORM === 'darwin' ? 'macos' : PLATFORM;
+        this.platform = IS_MACOS ? 'macos' : PLATFORM;
         this.implemetor = "Azul Systems, Inc.";
     }
 
@@ -36,37 +36,7 @@ class ZuluVendor extends IJavaVendor {
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
         let javaInfo = super.findTool(toolName, version, arch);
         if(!javaInfo && this.javaPackage === 'jdk') {
-            const javaDist = getJavaVersionsPath();
-            const versionsDir = fs.readdirSync(javaDist).filter(item => item.includes('zulu'));
-            const javaInformations = versionsDir.map(item => {
-                let javaPath = path.join(javaDist, item);
-                if(IS_MACOS) {
-                    javaPath = path.join(javaPath, extraMacOs);
-                }
-
-                const content: string | null = getJavaReleaseFileContent(javaPath);
-                if (!content) {
-                    return null;
-                }
-
-                const javaVersion = parseFile("JAVA_VERSION", content);
-
-                if(!javaVersion) {
-                    core.info('No match was found');
-                    return null;
-                }
-
-                core.debug(`javaVersion.split('_')[0] is ${javaVersion.split('_')[0]}`);
-
-                return javaInfo = {
-                    javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
-                    javaPath: javaPath
-                }
-            });
-
-            javaInfo = javaInformations.find(item => {
-                return item && semver.satisfies(item.javaVersion, new semver.Range(version));
-            }) || null;
+            javaInfo = getJavaPreInstalledPath(version, this.implemetor);
 
         }
         return javaInfo;
