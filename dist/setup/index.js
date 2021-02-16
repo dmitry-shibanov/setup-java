@@ -15582,6 +15582,8 @@ class ZuluVendor extends vendor_model_1.IJavaVendor {
             if (!zuluJavaJson) {
                 throw new Error(`No zulu java was found for all`);
             }
+            core.info(`url is ${url}`);
+            core.info(`range is ${range}`);
             const javaVersions = zuluJavaJson.map(item => semver_1.default.coerce(item.jdk_version.join('.')));
             const majorVersion = semver_1.default.maxSatisfying(javaVersions, range);
             if (!majorVersion) {

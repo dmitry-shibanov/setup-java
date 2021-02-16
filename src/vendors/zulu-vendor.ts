@@ -49,6 +49,8 @@ class ZuluVendor extends IJavaVendor {
             throw new Error(`No zulu java was found for all`);
         }
 
+        core.info(`url is ${url}`);
+        core.info(`range is ${range}`);
         const javaVersions = zuluJavaJson.map(item => semver.coerce(item.jdk_version.join('.'))!);
         const majorVersion = semver.maxSatisfying(javaVersions, range);
 
