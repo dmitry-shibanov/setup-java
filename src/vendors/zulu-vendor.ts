@@ -16,7 +16,6 @@ class ZuluVendor extends IJavaVendor {
     private platform: string;
     constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
         super("zulu");
-        this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
         this.implemetor = "Azul Systems, Inc.";
     }

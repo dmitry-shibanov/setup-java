@@ -15553,7 +15553,6 @@ class ZuluVendor extends vendor_model_1.IJavaVendor {
         this.arch = arch;
         this.javaPackage = javaPackage;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
-        this.arch = arch === 'x64' ? 'x86' : arch;
         this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
         this.implemetor = "Azul Systems, Inc.";
     }
