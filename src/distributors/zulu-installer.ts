@@ -8,40 +8,17 @@ import semver from 'semver';
 
 import { BaseFactory, IJavaInfo, JavaBase } from './vendor-model';
 import { IZulu, IZuluDetailed } from './zulu-models';
-import { getJavaPreInstalledPath, IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
+import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
 
 class ZuluDistributor extends JavaBase {
-    private implemetor: string;
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
-    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
-        super("zulu");
+    constructor(private http: httpm.HttpClient, version: string, arch: string, javaPackage: string = "jdk") {
+        super("Azul Systems, Inc.", version, arch, javaPackage);
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
-        this.implemetor = "Azul Systems, Inc.";
     }
 
-    public async getJava() {
-        const range = new semver.Range(this.version);
-        const majorVersion = await this.getAvailableMajor(range);
-        let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-
-        if(!javaInfo) {
-            javaInfo = await this.downloadTool(range);
-        }
-
-        return javaInfo;
-    }
-
-    protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
-        let javaInfo = super.findTool(toolName, version, arch);
-        if(!javaInfo && this.javaPackage === 'jdk') {
-            javaInfo = getJavaPreInstalledPath(version, this.implemetor);
-
-        }
-        return javaInfo;
-    }
-
-    private async getAvailableMajor(range: semver.Range) {
+    protected async getAvailableMajor(range: semver.Range) {
         const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
         const zuluJavaJson = (await this.http.getJson<Array<IZulu>>(url)).result;
         if(!zuluJavaJson) {

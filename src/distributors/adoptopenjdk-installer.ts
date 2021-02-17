@@ -6,48 +6,24 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { IS_WINDOWS, PLATFORM, getJavaPreInstalledPath, IS_MACOS, macOSJavaContentDir } from "../util";
+import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
 import { BaseFactory, IJavaInfo, JavaBase } from "./vendor-model";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
 class AdopOpenJdkDistributor extends JavaBase {
     private platform: string;
-    private implemetor: string;
     
-    constructor(private http: httpm.HttpClient, private version: string, private arch: string, private javaPackage: string = "jdk") {
-        super("adoptopenjdk");
+    constructor(private http: httpm.HttpClient, version: string, arch: string, javaPackage: string = "jdk") {
+        super("AdoptOpenJDK", version, arch, javaPackage);
         this.platform = IS_MACOS ? 'mac' : PLATFORM;
-        this.implemetor = "AdoptOpenJDK";
     }
 
-    protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
-        let javaInfo = super.findTool(toolName, version, arch);
-        if(!javaInfo && this.javaPackage === 'jdk') {
-            javaInfo = getJavaPreInstalledPath(version, this.implemetor);
-
-        }
-        return javaInfo;
-    }
-
-    public async getJava(): Promise<IJavaInfo> {
-        const range = new semver.Range(this.version);
-        const majorVersion = await this.getAvailableReleases(range);
-
-        let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-
-        if(!javaInfo) {
-            javaInfo = await this.downloadTool(range);
-        }
-
-        return javaInfo;
-    }
-
-    private async getAvailableReleases(range: semver.Range) {
+    protected async getAvailableMajor(range: semver.Range) {
         const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases"
         const javaVersionAvailable = (await this.http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
 
         if (!javaVersionAvailable) {
-            throw new Error(`No versions were found for ${this.implemetor}`)
+            throw new Error(`No versions were found for ${this.distributor}`)
         }
 
         const javaSemVer = javaVersionAvailable.available_releases.map(item => semver.coerce(item)!)!;
@@ -63,7 +39,7 @@ class AdopOpenJdkDistributor extends JavaBase {
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
         let toolPath: string;
 
-        const majorVersion = await this.getAvailableReleases(range);
+        const majorVersion = await this.getAvailableMajor(range);
         const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
         const javaRleasesVersion = ( await this.http.getJson<IRelease[]>(releasesUrl)).result;
         const fullVersion = javaRleasesVersion?.find(item => semver.satisfies(item.version_data.semver, range));

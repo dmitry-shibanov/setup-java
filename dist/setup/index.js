@@ -14178,39 +14178,17 @@ const util_1 = __webpack_require__(322);
 const vendor_model_1 = __webpack_require__(995);
 class AdopOpenJdkDistributor extends vendor_model_1.JavaBase {
     constructor(http, version, arch, javaPackage = "jdk") {
-        super("adoptopenjdk");
+        super("AdoptOpenJDK", version, arch, javaPackage);
         this.http = http;
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
         this.platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
-        this.implemetor = "AdoptOpenJDK";
     }
-    findTool(toolName, version, arch) {
-        let javaInfo = super.findTool(toolName, version, arch);
-        if (!javaInfo && this.javaPackage === 'jdk') {
-            javaInfo = util_1.getJavaPreInstalledPath(version, this.implemetor);
-        }
-        return javaInfo;
-    }
-    getJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const range = new semver_1.default.Range(this.version);
-            const majorVersion = yield this.getAvailableReleases(range);
-            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-            if (!javaInfo) {
-                javaInfo = yield this.downloadTool(range);
-            }
-            return javaInfo;
-        });
-    }
-    getAvailableReleases(range) {
+    getAvailableMajor(range) {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
             const javaVersionAvailable = (yield this.http.getJson(urlReleaseVersion)).result;
             if (!javaVersionAvailable) {
-                throw new Error(`No versions were found for ${this.implemetor}`);
+                throw new Error(`No versions were found for ${this.distributor}`);
             }
             const javaSemVer = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
             const majorVersion = (_a = semver_1.default.maxSatisfying(javaSemVer, range)) === null || _a === void 0 ? void 0 : _a.major;
@@ -14223,7 +14201,7 @@ class AdopOpenJdkDistributor extends vendor_model_1.JavaBase {
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
-            const majorVersion = yield this.getAvailableReleases(range);
+            const majorVersion = yield this.getAvailableMajor(range);
             const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
             const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
             const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
@@ -37995,32 +37973,10 @@ const vendor_model_1 = __webpack_require__(995);
 const util_1 = __webpack_require__(322);
 class ZuluDistributor extends vendor_model_1.JavaBase {
     constructor(http, version, arch, javaPackage = "jdk") {
-        super("zulu");
+        super("Azul Systems, Inc.", version, arch, javaPackage);
         this.http = http;
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
-        this.implemetor = "Azul Systems, Inc.";
-    }
-    getJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const range = new semver_1.default.Range(this.version);
-            const majorVersion = yield this.getAvailableMajor(range);
-            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-            if (!javaInfo) {
-                javaInfo = yield this.downloadTool(range);
-            }
-            return javaInfo;
-        });
-    }
-    findTool(toolName, version, arch) {
-        let javaInfo = super.findTool(toolName, version, arch);
-        if (!javaInfo && this.javaPackage === 'jdk') {
-            javaInfo = util_1.getJavaPreInstalledPath(version, this.implemetor);
-        }
-        return javaInfo;
     }
     getAvailableMajor(range) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -40953,22 +40909,40 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.BaseFactory = exports.JavaBase = void 0;
 const tc = __importStar(__webpack_require__(533));
+const semver_1 = __importDefault(__webpack_require__(280));
 const path_1 = __importDefault(__webpack_require__(622));
+const util_1 = __webpack_require__(322);
 class JavaBase {
-    constructor(distributor) {
+    constructor(distributor, version, arch, javaPackage) {
         this.distributor = distributor;
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
     }
     findTool(toolName, version, arch) {
         const toolPath = tc.find(toolName, version, arch);
+        let javaInfo = null;
         const javaVersion = this.getVersionFromPath(toolPath);
         if (!javaVersion) {
-            return null;
+            if (this.javaPackage === 'jdk') {
+                javaInfo = util_1.getJavaPreInstalledPath(version, this.distributor);
+            }
+            return javaInfo;
         }
         return {
             javaVersion,
@@ -40980,6 +40954,17 @@ class JavaBase {
             return path_1.default.basename(path_1.default.dirname(toolPath));
         }
         return toolPath;
+    }
+    getJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            const majorVersion = yield this.getAvailableMajor(range);
+            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            return javaInfo;
+        });
     }
 }
 exports.JavaBase = JavaBase;
