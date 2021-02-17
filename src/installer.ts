@@ -3,39 +3,23 @@ import * as httpm from '@actions/http-client';
 import * as path from 'path';
 
 import {normalizeVersion} from './util';
-import AdopOpenJdkVendor from './vendors/adoptopenjdk-vendor';
-import {IJavaVendor} from './vendors/vendor-model';
-import ZuluVendor from './vendors/zulu-vendor';
+import AdoptOpenJDKFactory from './distributors/adoptopenjdk-installer';
+import {BaseFactory, JavaBase} from './distributors/vendor-model';
+import ZuluDistributor from './distributors/zulu-installer';
 
-enum JavaVendors {
+enum JavaDistributor {
   AdopOpenJdk = 'adopOpenJdk',
   Zulu = 'zulu'
 }
 
 class JavaFactory {
-  constructor(
-    private http: httpm.HttpClient,
-    private version: string,
-    private arch: string,
-    private javaPackage: string = 'jdk'
-  ) {}
 
-  public getJavaVendor(vendor: JavaVendors | string): IJavaVendor | null {
-    switch (vendor) {
-      case JavaVendors.AdopOpenJdk:
-        return new AdopOpenJdkVendor(
-          this.http,
-          this.version,
-          this.arch,
-          this.javaPackage
-        );
-      case JavaVendors.Zulu:
-        return new ZuluVendor(
-          this.http,
-          this.version,
-          this.arch,
-          this.javaPackage
-        );
+  public getJavaDistributor(distributor: JavaDistributor | string): BaseFactory | null {
+    switch (distributor) {
+      case JavaDistributor.AdopOpenJdk:
+        return new AdoptOpenJDKFactory();
+      case JavaDistributor.Zulu:
+        return new ZuluDistributor();
       default:
         return null;
     }
@@ -46,7 +30,7 @@ export async function install(
   version: string,
   arch: string,
   javaPackage: string,
-  vendorName: string,
+  distributorName: string,
   jdkFile?: string
 ) {
   const http = new httpm.HttpClient('setup-java', undefined, {
@@ -54,18 +38,14 @@ export async function install(
     maxRetries: 3
   });
 
-  const javaFactory = new JavaFactory(
-    http,
-    normalizeVersion(version),
-    arch,
-    javaPackage
-  );
-  const vendor = javaFactory.getJavaVendor(vendorName);
-  if (!vendor) {
-    throw new Error('No vendor was found');
+  const javaFactory = new JavaFactory();
+  const distributorFactory = javaFactory.getJavaDistributor(distributorName);
+  const distributor = distributorFactory?.getJavaDistributor(http, normalizeVersion(version), arch, javaPackage);
+  if (!distributor) {
+    throw new Error('No distributor was found');
   }
 
-  const javaInfo = await vendor.getJava();
+  const javaInfo = await distributor.getJava();
   const {javaVersion, javaPath: toolPath} = javaInfo;
 
   const extendedJavaHome = `JAVA_HOME_${version}_${arch}`
@@ -77,5 +57,5 @@ export async function install(
   core.setOutput('path', toolPath);
   core.setOutput('version', javaVersion);
 
-  core.info(`Setuped up java ${javaVersion} from ${vendorName}`);
+  core.info(`Setuped up java ${javaVersion} from ${distributorName}`);
 }

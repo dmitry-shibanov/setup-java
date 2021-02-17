@@ -26,7 +26,7 @@ export function createHttpClient() {
   return http;
 }
 
-export function getJavaPreInstalledPath(version: string, vendor: string) {
+export function getJavaPreInstalledPath(version: string, distributor: string) {
   const javaDist = getJavaVersionsPath();
   const versionsDir = fs.readdirSync(javaDist);
   const javaInformations = versionsDir.map(versionDir => {
@@ -43,7 +43,7 @@ export function getJavaPreInstalledPath(version: string, vendor: string) {
     const implemetation = parseFile('IMPLEMENTOR', content);
 
     const re = new RegExp(/^[7,8]\./);
-    if (!re.test(version) && implemetation !== vendor) {
+    if (!re.test(version) && implemetation !== distributor) {
       return null;
     }
 

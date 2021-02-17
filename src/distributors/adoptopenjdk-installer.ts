@@ -6,11 +6,11 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { IS_WINDOWS, PLATFORM, getJavaPreInstalledPath, IS_MACOS, macOSJavaContentDir, getJavaReleaseFileContent, parseFile } from "../util";
-import { IJavaInfo, IJavaVendor } from "./vendor-model";
+import { IS_WINDOWS, PLATFORM, getJavaPreInstalledPath, IS_MACOS, macOSJavaContentDir } from "../util";
+import { BaseFactory, IJavaInfo, JavaBase } from "./vendor-model";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
-class AdopOpenJdkVendor extends IJavaVendor {
+class AdopOpenJdkDistributor extends JavaBase {
     private platform: string;
     private implemetor: string;
     
@@ -33,7 +33,7 @@ class AdopOpenJdkVendor extends IJavaVendor {
         const range = new semver.Range(this.version);
         const majorVersion = await this.getAvailableReleases(range);
 
-        let javaInfo = this.findTool(`Java_${this.vendor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+        let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
             javaInfo = await this.downloadTool(range);
@@ -72,7 +72,7 @@ class AdopOpenJdkVendor extends IJavaVendor {
             throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
         }
 
-        core.info(`Downloading ${this.vendor}, java version ${fullVersion.version_data.semver}`);
+        core.info(`Downloading ${this.distributor}, java version ${fullVersion.version_data.semver}`);
         const javaPath = await tc.downloadTool(fullVersion.binaries[0].package.link);
         let downloadDir: string;
         
@@ -84,7 +84,7 @@ class AdopOpenJdkVendor extends IJavaVendor {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.vendor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
 
         if(process.platform === 'darwin') {
             toolPath = path.join(toolPath, macOSJavaContentDir);
@@ -94,4 +94,21 @@ class AdopOpenJdkVendor extends IJavaVendor {
     }
 }
 
-export default AdopOpenJdkVendor;
+class AdoptOpenJDKFactory extends BaseFactory {
+    
+    getJavaDistributor(
+        http: httpm.HttpClient,
+        version: string,
+        arch: string,
+        javaPackage: string = 'jdk'): JavaBase {
+        return new AdopOpenJdkDistributor(
+            http,
+            version,
+            arch,
+            javaPackage
+          );
+    }
+    
+}
+
+export default AdoptOpenJDKFactory;
