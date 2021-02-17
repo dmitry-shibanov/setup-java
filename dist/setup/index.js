@@ -41,9 +41,9 @@ module.exports =
 /******/ 	return startup();
 /******/ })
 /************************************************************************/
-/******/ ([
-/* 0 */,
-/* 1 */
+/******/ ({
+
+/***/ 1:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -339,14 +339,8 @@ function copyFile(srcFile, destFile, force) {
 //# sourceMappingURL=io.js.map
 
 /***/ }),
-/* 2 */,
-/* 3 */,
-/* 4 */,
-/* 5 */,
-/* 6 */,
-/* 7 */,
-/* 8 */,
-/* 9 */
+
+/***/ 9:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -952,140 +946,107 @@ class ExecState extends events.EventEmitter {
 //# sourceMappingURL=toolrunner.js.map
 
 /***/ }),
-/* 10 */,
-/* 11 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+/***/ 11:
+/***/ (function(__unusedmodule, exports) {
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const tc = __importStar(__webpack_require__(533));
-const fs_1 = __importDefault(__webpack_require__(747));
-const path_1 = __importDefault(__webpack_require__(622));
-const semver_1 = __importDefault(__webpack_require__(280));
-const util_1 = __webpack_require__(322);
-const vendor_model_1 = __webpack_require__(570);
-class AdopOpenJdkVendor extends vendor_model_1.IJavaVendor {
-    constructor(http, version, arch, javaPackage = "jdk") {
-        super("adoptopenjdk");
-        this.http = http;
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
-        this.platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
-        this.implemetor = "AdoptOpenJDK";
-    }
-    findTool(toolName, version, arch) {
-        let javaInfo = super.findTool(toolName, version, arch);
-        if (!javaInfo && this.javaPackage === 'jdk') {
-            javaInfo = util_1.getJavaPreInstalledPath(version, this.implemetor);
-        }
-        return javaInfo;
-    }
-    getJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const range = new semver_1.default.Range(this.version);
-            const majorVersion = yield this.getAvailableReleases(range);
-            let javaInfo = this.findTool(`Java_${this.vendor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-            if (!javaInfo) {
-                javaInfo = yield this.downloadTool(range);
-            }
-            return javaInfo;
-        });
-    }
-    getAvailableReleases(range) {
-        var _a;
-        return __awaiter(this, void 0, void 0, function* () {
-            const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
-            const javaVersionAvailable = (yield this.http.getJson(urlReleaseVersion)).result;
-            if (!javaVersionAvailable) {
-                throw new Error(`No versions were found for ${this.implemetor}`);
-            }
-            const javaSemVer = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
-            const majorVersion = (_a = semver_1.default.maxSatisfying(javaSemVer, range)) === null || _a === void 0 ? void 0 : _a.major;
-            if (!majorVersion) {
-                throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
-            }
-            return majorVersion;
-        });
-    }
-    downloadTool(range) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let toolPath;
-            const majorVersion = yield this.getAvailableReleases(range);
-            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
-            const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
-            const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
-            if (!fullVersion) {
-                throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
-            }
-            core.info(`Downloading ${this.vendor}, java version ${fullVersion.version_data.semver}`);
-            const javaPath = yield tc.downloadTool(fullVersion.binaries[0].package.link);
-            let downloadDir;
-            if (util_1.IS_WINDOWS) {
-                downloadDir = yield tc.extractZip(javaPath);
-            }
-            else {
-                downloadDir = yield tc.extractTar(javaPath);
-            }
-            const archiveName = fs_1.default.readdirSync(downloadDir)[0];
-            const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.vendor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
-            if (process.platform === 'darwin') {
-                toolPath = path_1.default.join(toolPath, util_1.macOSJavaContentDir);
-            }
-            return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
-        });
-    }
-}
-exports.default = AdopOpenJdkVendor;
-
+/**
+ * A surrogate is a code point that is in the range U+D800 to U+DFFF, inclusive.
+ */
+exports.Surrogate = /[\uD800-\uDFFF]/;
+/**
+ * A scalar value is a code point that is not a surrogate.
+ */
+exports.ScalarValue = /[\uD800-\uDFFF]/;
+/**
+ * A noncharacter is a code point that is in the range U+FDD0 to U+FDEF,
+ * inclusive, or U+FFFE, U+FFFF, U+1FFFE, U+1FFFF, U+2FFFE, U+2FFFF, U+3FFFE,
+ * U+3FFFF, U+4FFFE, U+4FFFF, U+5FFFE, U+5FFFF, U+6FFFE, U+6FFFF, U+7FFFE,
+ * U+7FFFF, U+8FFFE, U+8FFFF, U+9FFFE, U+9FFFF, U+AFFFE, U+AFFFF, U+BFFFE,
+ * U+BFFFF, U+CFFFE, U+CFFFF, U+DFFFE, U+DFFFF, U+EFFFE, U+EFFFF, U+FFFFE,
+ * U+FFFFF, U+10FFFE, or U+10FFFF.
+ */
+exports.NonCharacter = /[\uFDD0-\uFDEF\uFFFE\uFFFF]|[\uD83F\uD87F\uD8BF\uD8FF\uD93F\uD97F\uD9BF\uD9FF\uDA3F\uDA7F\uDABF\uDAFF\uDB3F\uDB7F\uDBBF\uDBFF][\uDFFE\uDFFF]/;
+/**
+ * An ASCII code point is a code point in the range U+0000 NULL to U+007F
+ * DELETE, inclusive.
+ */
+exports.ASCIICodePoint = /[\u0000-\u007F]/;
+/**
+ * An ASCII tab or newline is U+0009 TAB, U+000A LF, or U+000D CR.
+ */
+exports.ASCIITabOrNewLine = /[\t\n\r]/;
+/**
+ * ASCII whitespace is U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or
+ * U+0020 SPACE.
+ */
+exports.ASCIIWhiteSpace = /[\t\n\f\r ]/;
+/**
+ * A C0 control is a code point in the range U+0000 NULL to U+001F
+ * INFORMATION SEPARATOR ONE, inclusive.
+ */
+exports.C0Control = /[\u0000-\u001F]/;
+/**
+ * A C0 control or space is a C0 control or U+0020 SPACE.
+ */
+exports.C0ControlOrSpace = /[\u0000-\u001F ]/;
+/**
+ * A control is a C0 control or a code point in the range U+007F DELETE to
+ * U+009F APPLICATION PROGRAM COMMAND, inclusive.
+ */
+exports.Control = /[\u0000-\u001F\u007F-\u009F]/;
+/**
+ * An ASCII digit is a code point in the range U+0030 (0) to U+0039 (9),
+ * inclusive.
+ */
+exports.ASCIIDigit = /[0-9]/;
+/**
+ * An ASCII upper hex digit is an ASCII digit or a code point in the range
+ * U+0041 (A) to U+0046 (F), inclusive.
+ */
+exports.ASCIIUpperHexDigit = /[0-9A-F]/;
+/**
+ * An ASCII lower hex digit is an ASCII digit or a code point in the range
+ * U+0061 (a) to U+0066 (f), inclusive.
+ */
+exports.ASCIILowerHexDigit = /[0-9a-f]/;
+/**
+ * An ASCII hex digit is an ASCII upper hex digit or ASCII lower hex digit.
+ */
+exports.ASCIIHexDigit = /[0-9A-Fa-f]/;
+/**
+ * An ASCII upper alpha is a code point in the range U+0041 (A) to U+005A (Z),
+ * inclusive.
+ */
+exports.ASCIIUpperAlpha = /[A-Z]/;
+/**
+ * An ASCII lower alpha is a code point in the range U+0061 (a) to U+007A (z),
+ * inclusive.
+ */
+exports.ASCIILowerAlpha = /[a-z]/;
+/**
+ * An ASCII alpha is an ASCII upper alpha or ASCII lower alpha.
+ */
+exports.ASCIIAlpha = /[A-Za-z]/;
+/**
+ * An ASCII alphanumeric is an ASCII digit or ASCII alpha.
+ */
+exports.ASCIIAlphanumeric = /[0-9A-Za-z]/;
+//# sourceMappingURL=CodePoints.js.map
 
 /***/ }),
-/* 12 */,
-/* 13 */,
-/* 14 */,
-/* 15 */,
-/* 16 */
+
+/***/ 16:
 /***/ (function(module) {
 
 module.exports = require("tls");
 
 /***/ }),
-/* 17 */,
-/* 18 */
+
+/***/ 18:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -1144,10 +1105,8 @@ exports.NonDocumentTypeChildNodeImpl = NonDocumentTypeChildNodeImpl;
 //# sourceMappingURL=NonDocumentTypeChildNodeImpl.js.map
 
 /***/ }),
-/* 19 */,
-/* 20 */,
-/* 21 */,
-/* 22 */
+
+/***/ 22:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -1982,7 +1941,8 @@ exports.range_getPartiallyContainedNodes = range_getPartiallyContainedNodes;
 //# sourceMappingURL=RangeAlgorithm.js.map
 
 /***/ }),
-/* 23 */
+
+/***/ 23:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -2001,7 +1961,7 @@ var byte = __importStar(__webpack_require__(782));
 exports.byte = byte;
 var byteSequence = __importStar(__webpack_require__(263));
 exports.byteSequence = byteSequence;
-var codePoint = __importStar(__webpack_require__(283));
+var codePoint = __importStar(__webpack_require__(11));
 exports.codePoint = codePoint;
 var json = __importStar(__webpack_require__(522));
 exports.json = json;
@@ -2022,10 +1982,8 @@ exports.string = string;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 24 */,
-/* 25 */,
-/* 26 */,
-/* 27 */
+
+/***/ 27:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -2171,10 +2129,8 @@ exports.characterData_substringData = characterData_substringData;
 //# sourceMappingURL=CharacterDataAlgorithm.js.map
 
 /***/ }),
-/* 28 */,
-/* 29 */,
-/* 30 */,
-/* 31 */
+
+/***/ 31:
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2286,8 +2242,8 @@ exports._readLinuxVersionFile = _readLinuxVersionFile;
 //# sourceMappingURL=manifest.js.map
 
 /***/ }),
-/* 32 */,
-/* 33 */
+
+/***/ 33:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -2901,8 +2857,8 @@ exports.element_insertAdjacent = element_insertAdjacent;
 //# sourceMappingURL=ElementAlgorithm.js.map
 
 /***/ }),
-/* 34 */,
-/* 35 */
+
+/***/ 35:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -3255,14 +3211,8 @@ exports.InvalidCharacterError = InvalidCharacterError;
 //# sourceMappingURL=DOMException.js.map
 
 /***/ }),
-/* 36 */,
-/* 37 */,
-/* 38 */,
-/* 39 */,
-/* 40 */,
-/* 41 */,
-/* 42 */,
-/* 43 */
+
+/***/ 43:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3400,7 +3350,8 @@ exports.CharacterDataImpl = CharacterDataImpl;
 //# sourceMappingURL=CharacterDataImpl.js.map
 
 /***/ }),
-/* 44 */
+
+/***/ 44:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -3580,9 +3531,8 @@ module.exports = new Type('tag:yaml.org,2002:int', {
 
 
 /***/ }),
-/* 45 */,
-/* 46 */,
-/* 47 */
+
+/***/ 47:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -3693,9 +3643,8 @@ exports.StringWalker = StringWalker;
 //# sourceMappingURL=StringWalker.js.map
 
 /***/ }),
-/* 48 */,
-/* 49 */,
-/* 50 */
+
+/***/ 50:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3868,10 +3817,8 @@ exports.ObjectReader = ObjectReader;
 //# sourceMappingURL=ObjectReader.js.map
 
 /***/ }),
-/* 51 */,
-/* 52 */,
-/* 53 */,
-/* 54 */
+
+/***/ 54:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3938,12 +3885,8 @@ exports.tokenList_serializeSteps = tokenList_serializeSteps;
 //# sourceMappingURL=DOMTokenListAlgorithm.js.map
 
 /***/ }),
-/* 55 */,
-/* 56 */,
-/* 57 */,
-/* 58 */,
-/* 59 */,
-/* 60 */
+
+/***/ 60:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -4018,21 +3961,8 @@ exports.parentNode_convertNodesIntoANode = parentNode_convertNodesIntoANode;
 //# sourceMappingURL=ParentNodeAlgorithm.js.map
 
 /***/ }),
-/* 61 */,
-/* 62 */,
-/* 63 */,
-/* 64 */,
-/* 65 */,
-/* 66 */,
-/* 67 */,
-/* 68 */,
-/* 69 */,
-/* 70 */,
-/* 71 */,
-/* 72 */,
-/* 73 */,
-/* 74 */,
-/* 75 */
+
+/***/ 75:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -4092,13 +4022,8 @@ module.exports = new Type('tag:yaml.org,2002:pairs', {
 
 
 /***/ }),
-/* 76 */,
-/* 77 */,
-/* 78 */,
-/* 79 */,
-/* 80 */,
-/* 81 */,
-/* 82 */
+
+/***/ 82:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -4123,10 +4048,8 @@ exports.toCommandValue = toCommandValue;
 //# sourceMappingURL=utils.js.map
 
 /***/ }),
-/* 83 */,
-/* 84 */,
-/* 85 */,
-/* 86 */
+
+/***/ 86:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -4435,13 +4358,15 @@ exports.create_domTokenList = create_domTokenList;
 //# sourceMappingURL=CreateAlgorithm.js.map
 
 /***/ }),
-/* 87 */
+
+/***/ 87:
 /***/ (function(module) {
 
 module.exports = require("os");
 
 /***/ }),
-/* 88 */
+
+/***/ 88:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -4559,8 +4484,8 @@ exports.NamedNodeMapImpl = NamedNodeMapImpl;
 //# sourceMappingURL=NamedNodeMapImpl.js.map
 
 /***/ }),
-/* 89 */,
-/* 90 */
+
+/***/ 90:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5215,8 +5140,8 @@ WebIDLAlgorithm_1.idl_defineConst(RangeImpl.prototype, "END_TO_START", 3);
 //# sourceMappingURL=RangeImpl.js.map
 
 /***/ }),
-/* 91 */,
-/* 92 */
+
+/***/ 92:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5446,7 +5371,8 @@ exports.JSONWriter = JSONWriter;
 //# sourceMappingURL=JSONWriter.js.map
 
 /***/ }),
-/* 93 */
+
+/***/ 93:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -5529,8 +5455,8 @@ module.exports = Mark;
 
 
 /***/ }),
-/* 94 */,
-/* 95 */
+
+/***/ 95:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5549,8 +5475,8 @@ exports.YAMLWriter = YAMLWriter_1.YAMLWriter;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 96 */,
-/* 97 */
+
+/***/ 97:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5567,7 +5493,7 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var CodePoints_1 = __webpack_require__(283);
+var CodePoints_1 = __webpack_require__(11);
 var ByteSequence_1 = __webpack_require__(263);
 var Byte_1 = __webpack_require__(782);
 var util_1 = __webpack_require__(592);
@@ -6028,7 +5954,8 @@ exports.concatenate = concatenate;
 //# sourceMappingURL=String.js.map
 
 /***/ }),
-/* 98 */
+
+/***/ 98:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -7513,8 +7440,8 @@ exports.XMLSerializerImpl = XMLSerializerImpl;
 //# sourceMappingURL=XMLSerializerImpl.js.map
 
 /***/ }),
-/* 99 */,
-/* 100 */
+
+/***/ 100:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -7550,8 +7477,8 @@ module.exports = new Type('tag:yaml.org,2002:set', {
 
 
 /***/ }),
-/* 101 */,
-/* 102 */
+
+/***/ 102:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -7586,10 +7513,8 @@ exports.issueCommand = issueCommand;
 //# sourceMappingURL=file-command.js.map
 
 /***/ }),
-/* 103 */,
-/* 104 */,
-/* 105 */,
-/* 106 */
+
+/***/ 106:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -7737,8 +7662,8 @@ exports.eventTarget_removeAllEventListeners = eventTarget_removeAllEventListener
 //# sourceMappingURL=EventTargetAlgorithm.js.map
 
 /***/ }),
-/* 107 */,
-/* 108 */
+
+/***/ 108:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -8739,10 +8664,8 @@ exports.event_deactivateAnEventHandler = event_deactivateAnEventHandler;
 //# sourceMappingURL=EventAlgorithm.js.map
 
 /***/ }),
-/* 109 */,
-/* 110 */,
-/* 111 */,
-/* 112 */
+
+/***/ 112:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -8786,7 +8709,8 @@ exports.JSONReader = JSONReader;
 //# sourceMappingURL=JSONReader.js.map
 
 /***/ }),
-/* 113 */
+
+/***/ 113:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -8894,32 +8818,15 @@ util_1.applyMixin(ElementImpl_1.ElementImpl, SlotableImpl_1.SlotableImpl);
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 114 */,
-/* 115 */,
-/* 116 */,
-/* 117 */,
-/* 118 */,
-/* 119 */,
-/* 120 */,
-/* 121 */,
-/* 122 */,
-/* 123 */,
-/* 124 */,
-/* 125 */,
-/* 126 */,
-/* 127 */,
-/* 128 */,
-/* 129 */
+
+/***/ 129:
 /***/ (function(module) {
 
 module.exports = require("child_process");
 
 /***/ }),
-/* 130 */,
-/* 131 */,
-/* 132 */,
-/* 133 */,
-/* 134 */
+
+/***/ 134:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -8947,11 +8854,8 @@ exports.pop = pop;
 //# sourceMappingURL=Stack.js.map
 
 /***/ }),
-/* 135 */,
-/* 136 */,
-/* 137 */,
-/* 138 */,
-/* 139 */
+
+/***/ 139:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 // Unique ID creation requires a high quality random # generator.  In node.js
@@ -8965,8 +8869,8 @@ module.exports = function nodeRNG() {
 
 
 /***/ }),
-/* 140 */,
-/* 141 */
+
+/***/ 141:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9237,11 +9141,8 @@ exports.debug = debug; // for test
 
 
 /***/ }),
-/* 142 */,
-/* 143 */,
-/* 144 */,
-/* 145 */,
-/* 146 */
+
+/***/ 146:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9372,11 +9273,8 @@ exports.orderedSet_contains = orderedSet_contains;
 //# sourceMappingURL=OrderedSetAlgorithm.js.map
 
 /***/ }),
-/* 147 */,
-/* 148 */,
-/* 149 */,
-/* 150 */,
-/* 151 */
+
+/***/ 151:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9658,9 +9556,8 @@ exports.observer_queueAttributeMutationRecord = observer_queueAttributeMutationR
 //# sourceMappingURL=MutationObserverAlgorithm.js.map
 
 /***/ }),
-/* 152 */,
-/* 153 */,
-/* 154 */
+
+/***/ 154:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9892,14 +9789,8 @@ exports.text_split = text_split;
 //# sourceMappingURL=TextAlgorithm.js.map
 
 /***/ }),
-/* 155 */,
-/* 156 */,
-/* 157 */,
-/* 158 */,
-/* 159 */,
-/* 160 */,
-/* 161 */,
-/* 162 */
+
+/***/ 162:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9928,7 +9819,8 @@ exports.attr_setAnExistingAttributeValue = attr_setAnExistingAttributeValue;
 //# sourceMappingURL=AttrAlgorithm.js.map
 
 /***/ }),
-/* 163 */
+
+/***/ 163:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9968,7 +9860,8 @@ __export(__webpack_require__(442));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 164 */
+
+/***/ 164:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10034,14 +9927,8 @@ exports.CustomEventImpl = CustomEventImpl;
 //# sourceMappingURL=CustomEventImpl.js.map
 
 /***/ }),
-/* 165 */,
-/* 166 */,
-/* 167 */,
-/* 168 */,
-/* 169 */,
-/* 170 */,
-/* 171 */,
-/* 172 */
+
+/***/ 172:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -10065,8 +9952,8 @@ var TokenType;
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-/* 173 */,
-/* 174 */
+
+/***/ 174:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10221,7 +10108,8 @@ WebIDLAlgorithm_1.idl_defineConst(DOMImplementationImpl.prototype, "_ID", "@oozc
 //# sourceMappingURL=DOMImplementationImpl.js.map
 
 /***/ }),
-/* 175 */
+
+/***/ 175:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10411,11 +10299,8 @@ exports.MutationObserverImpl = MutationObserverImpl;
 //# sourceMappingURL=MutationObserverImpl.js.map
 
 /***/ }),
-/* 176 */,
-/* 177 */,
-/* 178 */,
-/* 179 */,
-/* 180 */
+
+/***/ 180:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10737,16 +10622,8 @@ exports.shadowTree_assignASlot = shadowTree_assignASlot;
 //# sourceMappingURL=ShadowTreeAlgorithm.js.map
 
 /***/ }),
-/* 181 */,
-/* 182 */,
-/* 183 */,
-/* 184 */,
-/* 185 */,
-/* 186 */,
-/* 187 */,
-/* 188 */,
-/* 189 */,
-/* 190 */
+
+/***/ 190:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10917,20 +10794,8 @@ exports.XMLCBWriter = XMLCBWriter;
 //# sourceMappingURL=XMLCBWriter.js.map
 
 /***/ }),
-/* 191 */,
-/* 192 */,
-/* 193 */,
-/* 194 */,
-/* 195 */,
-/* 196 */,
-/* 197 */,
-/* 198 */,
-/* 199 */,
-/* 200 */,
-/* 201 */,
-/* 202 */,
-/* 203 */,
-/* 204 */
+
+/***/ 204:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11093,19 +10958,15 @@ exports.HTMLCollectionImpl = HTMLCollectionImpl;
 //# sourceMappingURL=HTMLCollectionImpl.js.map
 
 /***/ }),
-/* 205 */,
-/* 206 */,
-/* 207 */,
-/* 208 */,
-/* 209 */,
-/* 210 */,
-/* 211 */
+
+/***/ 211:
 /***/ (function(module) {
 
 module.exports = require("https");
 
 /***/ }),
-/* 212 */
+
+/***/ 212:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11117,22 +10978,8 @@ exports.DOMParser = DOMParserImpl_1.DOMParserImpl;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 213 */,
-/* 214 */,
-/* 215 */,
-/* 216 */,
-/* 217 */,
-/* 218 */,
-/* 219 */,
-/* 220 */,
-/* 221 */,
-/* 222 */,
-/* 223 */,
-/* 224 */,
-/* 225 */,
-/* 226 */,
-/* 227 */,
-/* 228 */
+
+/***/ 228:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -11174,25 +11021,8 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
 
 
 /***/ }),
-/* 229 */,
-/* 230 */,
-/* 231 */,
-/* 232 */,
-/* 233 */,
-/* 234 */,
-/* 235 */,
-/* 236 */,
-/* 237 */,
-/* 238 */,
-/* 239 */,
-/* 240 */,
-/* 241 */,
-/* 242 */,
-/* 243 */,
-/* 244 */,
-/* 245 */,
-/* 246 */,
-/* 247 */
+
+/***/ 247:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -11215,11 +11045,8 @@ exports.DocumentOrShadowRootImpl = DocumentOrShadowRootImpl;
 //# sourceMappingURL=DocumentOrShadowRootImpl.js.map
 
 /***/ }),
-/* 248 */,
-/* 249 */,
-/* 250 */,
-/* 251 */,
-/* 252 */
+
+/***/ 252:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11236,9 +11063,8 @@ exports.XMLSerializer = serializer_1.XMLSerializer;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 253 */,
-/* 254 */,
-/* 255 */
+
+/***/ 255:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11254,14 +11080,8 @@ exports.fragmentCB = builder_1.fragmentCB;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 256 */,
-/* 257 */,
-/* 258 */,
-/* 259 */,
-/* 260 */,
-/* 261 */,
-/* 262 */,
-/* 263 */
+
+/***/ 263:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -11438,8 +11258,8 @@ exports.isomorphicDecode = isomorphicDecode;
 //# sourceMappingURL=ByteSequence.js.map
 
 /***/ }),
-/* 264 */,
-/* 265 */
+
+/***/ 265:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -11463,7 +11283,8 @@ module.exports = new Schema({
 
 
 /***/ }),
-/* 266 */
+
+/***/ 266:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11657,12 +11478,8 @@ exports.NodeListStaticImpl = NodeListStaticImpl;
 //# sourceMappingURL=NodeListStaticImpl.js.map
 
 /***/ }),
-/* 267 */,
-/* 268 */,
-/* 269 */,
-/* 270 */,
-/* 271 */,
-/* 272 */
+
+/***/ 272:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11773,13 +11590,8 @@ exports.nodeIterator_iteratorList = nodeIterator_iteratorList;
 //# sourceMappingURL=NodeIteratorAlgorithm.js.map
 
 /***/ }),
-/* 273 */,
-/* 274 */,
-/* 275 */,
-/* 276 */,
-/* 277 */,
-/* 278 */,
-/* 279 */
+
+/***/ 279:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -12093,7 +11905,8 @@ exports.sortInDescendingOrder = sortInDescendingOrder;
 //# sourceMappingURL=Map.js.map
 
 /***/ }),
-/* 280 */
+
+/***/ 280:
 /***/ (function(module, exports) {
 
 exports = module.exports = SemVer
@@ -13695,102 +13508,8 @@ function coerce (version, options) {
 
 
 /***/ }),
-/* 281 */,
-/* 282 */,
-/* 283 */
-/***/ (function(__unusedmodule, exports) {
 
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * A surrogate is a code point that is in the range U+D800 to U+DFFF, inclusive.
- */
-exports.Surrogate = /[\uD800-\uDFFF]/;
-/**
- * A scalar value is a code point that is not a surrogate.
- */
-exports.ScalarValue = /[\uD800-\uDFFF]/;
-/**
- * A noncharacter is a code point that is in the range U+FDD0 to U+FDEF,
- * inclusive, or U+FFFE, U+FFFF, U+1FFFE, U+1FFFF, U+2FFFE, U+2FFFF, U+3FFFE,
- * U+3FFFF, U+4FFFE, U+4FFFF, U+5FFFE, U+5FFFF, U+6FFFE, U+6FFFF, U+7FFFE,
- * U+7FFFF, U+8FFFE, U+8FFFF, U+9FFFE, U+9FFFF, U+AFFFE, U+AFFFF, U+BFFFE,
- * U+BFFFF, U+CFFFE, U+CFFFF, U+DFFFE, U+DFFFF, U+EFFFE, U+EFFFF, U+FFFFE,
- * U+FFFFF, U+10FFFE, or U+10FFFF.
- */
-exports.NonCharacter = /[\uFDD0-\uFDEF\uFFFE\uFFFF]|[\uD83F\uD87F\uD8BF\uD8FF\uD93F\uD97F\uD9BF\uD9FF\uDA3F\uDA7F\uDABF\uDAFF\uDB3F\uDB7F\uDBBF\uDBFF][\uDFFE\uDFFF]/;
-/**
- * An ASCII code point is a code point in the range U+0000 NULL to U+007F
- * DELETE, inclusive.
- */
-exports.ASCIICodePoint = /[\u0000-\u007F]/;
-/**
- * An ASCII tab or newline is U+0009 TAB, U+000A LF, or U+000D CR.
- */
-exports.ASCIITabOrNewLine = /[\t\n\r]/;
-/**
- * ASCII whitespace is U+0009 TAB, U+000A LF, U+000C FF, U+000D CR, or
- * U+0020 SPACE.
- */
-exports.ASCIIWhiteSpace = /[\t\n\f\r ]/;
-/**
- * A C0 control is a code point in the range U+0000 NULL to U+001F
- * INFORMATION SEPARATOR ONE, inclusive.
- */
-exports.C0Control = /[\u0000-\u001F]/;
-/**
- * A C0 control or space is a C0 control or U+0020 SPACE.
- */
-exports.C0ControlOrSpace = /[\u0000-\u001F ]/;
-/**
- * A control is a C0 control or a code point in the range U+007F DELETE to
- * U+009F APPLICATION PROGRAM COMMAND, inclusive.
- */
-exports.Control = /[\u0000-\u001F\u007F-\u009F]/;
-/**
- * An ASCII digit is a code point in the range U+0030 (0) to U+0039 (9),
- * inclusive.
- */
-exports.ASCIIDigit = /[0-9]/;
-/**
- * An ASCII upper hex digit is an ASCII digit or a code point in the range
- * U+0041 (A) to U+0046 (F), inclusive.
- */
-exports.ASCIIUpperHexDigit = /[0-9A-F]/;
-/**
- * An ASCII lower hex digit is an ASCII digit or a code point in the range
- * U+0061 (a) to U+0066 (f), inclusive.
- */
-exports.ASCIILowerHexDigit = /[0-9a-f]/;
-/**
- * An ASCII hex digit is an ASCII upper hex digit or ASCII lower hex digit.
- */
-exports.ASCIIHexDigit = /[0-9A-Fa-f]/;
-/**
- * An ASCII upper alpha is a code point in the range U+0041 (A) to U+005A (Z),
- * inclusive.
- */
-exports.ASCIIUpperAlpha = /[A-Z]/;
-/**
- * An ASCII lower alpha is a code point in the range U+0061 (a) to U+007A (z),
- * inclusive.
- */
-exports.ASCIILowerAlpha = /[a-z]/;
-/**
- * An ASCII alpha is an ASCII upper alpha or ASCII lower alpha.
- */
-exports.ASCIIAlpha = /[A-Za-z]/;
-/**
- * An ASCII alphanumeric is an ASCII digit or ASCII alpha.
- */
-exports.ASCIIAlphanumeric = /[0-9A-Za-z]/;
-//# sourceMappingURL=CodePoints.js.map
-
-/***/ }),
-/* 284 */,
-/* 285 */,
-/* 286 */
+/***/ 286:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -13827,15 +13546,8 @@ exports.OpaqueOrigin = ["", "", null, null];
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-/* 287 */,
-/* 288 */,
-/* 289 */,
-/* 290 */,
-/* 291 */,
-/* 292 */,
-/* 293 */,
-/* 294 */,
-/* 295 */
+
+/***/ 295:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -13867,15 +13579,8 @@ exports.fragmentCB = fragmentCB;
 //# sourceMappingURL=BuilderFunctionsCB.js.map
 
 /***/ }),
-/* 296 */,
-/* 297 */,
-/* 298 */,
-/* 299 */,
-/* 300 */,
-/* 301 */,
-/* 302 */,
-/* 303 */,
-/* 304 */
+
+/***/ 304:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14169,7 +13874,8 @@ function updateAnElementID(element, localName, value, namespace) {
 //# sourceMappingURL=DOMAlgorithm.js.map
 
 /***/ }),
-/* 305 */
+
+/***/ 305:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -14301,13 +14007,8 @@ exports.BaseReader = BaseReader;
 //# sourceMappingURL=BaseReader.js.map
 
 /***/ }),
-/* 306 */,
-/* 307 */,
-/* 308 */,
-/* 309 */,
-/* 310 */,
-/* 311 */,
-/* 312 */
+
+/***/ 312:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -14430,16 +14131,135 @@ module.exports = new Type('tag:yaml.org,2002:float', {
 
 
 /***/ }),
-/* 313 */,
-/* 314 */,
-/* 315 */,
-/* 316 */,
-/* 317 */,
-/* 318 */,
-/* 319 */,
-/* 320 */,
-/* 321 */,
-/* 322 */
+
+/***/ 318:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+const tc = __importStar(__webpack_require__(533));
+const fs_1 = __importDefault(__webpack_require__(747));
+const path_1 = __importDefault(__webpack_require__(622));
+const semver_1 = __importDefault(__webpack_require__(280));
+const util_1 = __webpack_require__(322);
+const vendor_model_1 = __webpack_require__(995);
+class AdopOpenJdkDistributor extends vendor_model_1.JavaBase {
+    constructor(http, version, arch, javaPackage = "jdk") {
+        super("adoptopenjdk");
+        this.http = http;
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+        this.platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
+        this.implemetor = "AdoptOpenJDK";
+    }
+    findTool(toolName, version, arch) {
+        let javaInfo = super.findTool(toolName, version, arch);
+        if (!javaInfo && this.javaPackage === 'jdk') {
+            javaInfo = util_1.getJavaPreInstalledPath(version, this.implemetor);
+        }
+        return javaInfo;
+    }
+    getJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            const majorVersion = yield this.getAvailableReleases(range);
+            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            return javaInfo;
+        });
+    }
+    getAvailableReleases(range) {
+        var _a;
+        return __awaiter(this, void 0, void 0, function* () {
+            const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
+            const javaVersionAvailable = (yield this.http.getJson(urlReleaseVersion)).result;
+            if (!javaVersionAvailable) {
+                throw new Error(`No versions were found for ${this.implemetor}`);
+            }
+            const javaSemVer = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
+            const majorVersion = (_a = semver_1.default.maxSatisfying(javaSemVer, range)) === null || _a === void 0 ? void 0 : _a.major;
+            if (!majorVersion) {
+                throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
+            }
+            return majorVersion;
+        });
+    }
+    downloadTool(range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let toolPath;
+            const majorVersion = yield this.getAvailableReleases(range);
+            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
+            const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
+            const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
+            if (!fullVersion) {
+                throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
+            }
+            core.info(`Downloading ${this.distributor}, java version ${fullVersion.version_data.semver}`);
+            const javaPath = yield tc.downloadTool(fullVersion.binaries[0].package.link);
+            let downloadDir;
+            if (util_1.IS_WINDOWS) {
+                downloadDir = yield tc.extractZip(javaPath);
+            }
+            else {
+                downloadDir = yield tc.extractTar(javaPath);
+            }
+            const archiveName = fs_1.default.readdirSync(downloadDir)[0];
+            const archivePath = path_1.default.join(downloadDir, archiveName);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
+            if (process.platform === 'darwin') {
+                toolPath = path_1.default.join(toolPath, util_1.macOSJavaContentDir);
+            }
+            return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
+        });
+    }
+}
+class AdoptOpenJDKFactory extends vendor_model_1.BaseFactory {
+    getJavaDistributor(http, version, arch, javaPackage = 'jdk') {
+        return new AdopOpenJdkDistributor(http, version, arch, javaPackage);
+    }
+}
+exports.default = AdoptOpenJDKFactory;
+
+
+/***/ }),
+
+/***/ 322:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14492,7 +14312,7 @@ function createHttpClient() {
     return http;
 }
 exports.createHttpClient = createHttpClient;
-function getJavaPreInstalledPath(version, vendor) {
+function getJavaPreInstalledPath(version, distributor) {
     const javaDist = getJavaVersionsPath();
     const versionsDir = fs_1.default.readdirSync(javaDist);
     const javaInformations = versionsDir.map(versionDir => {
@@ -14506,7 +14326,7 @@ function getJavaPreInstalledPath(version, vendor) {
         }
         const implemetation = parseFile('IMPLEMENTOR', content);
         const re = new RegExp(/^[7,8]\./);
-        if (!re.test(version) && implemetation !== vendor) {
+        if (!re.test(version) && implemetation !== distributor) {
             return null;
         }
         const javaVersion = parseFile('JAVA_VERSION', content);
@@ -14597,9 +14417,8 @@ exports.normalizeVersion = normalizeVersion;
 
 
 /***/ }),
-/* 323 */,
-/* 324 */,
-/* 325 */
+
+/***/ 325:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14793,12 +14612,8 @@ exports.YAMLWriter = YAMLWriter;
 //# sourceMappingURL=YAMLWriter.js.map
 
 /***/ }),
-/* 326 */,
-/* 327 */,
-/* 328 */,
-/* 329 */,
-/* 330 */,
-/* 331 */
+
+/***/ 331:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14903,19 +14718,8 @@ function write(directory, settings) {
 
 
 /***/ }),
-/* 332 */,
-/* 333 */,
-/* 334 */,
-/* 335 */,
-/* 336 */,
-/* 337 */,
-/* 338 */,
-/* 339 */,
-/* 340 */,
-/* 341 */,
-/* 342 */,
-/* 343 */,
-/* 344 */
+
+/***/ 344:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -15029,12 +14833,8 @@ exports.customElement_lookUpACustomElementDefinition = customElement_lookUpACust
 //# sourceMappingURL=CustomElementAlgorithm.js.map
 
 /***/ }),
-/* 345 */,
-/* 346 */,
-/* 347 */,
-/* 348 */,
-/* 349 */,
-/* 350 */
+
+/***/ 350:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -15116,8 +14916,8 @@ exports.boundaryPoint_position = boundaryPoint_position;
 //# sourceMappingURL=BoundaryPointAlgorithm.js.map
 
 /***/ }),
-/* 351 */,
-/* 352 */
+
+/***/ 352:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -15217,45 +15017,15 @@ module.exports = new Type('tag:yaml.org,2002:js/function', {
 
 
 /***/ }),
-/* 353 */,
-/* 354 */,
-/* 355 */,
-/* 356 */,
-/* 357 */
+
+/***/ 357:
 /***/ (function(module) {
 
 module.exports = require("assert");
 
 /***/ }),
-/* 358 */,
-/* 359 */,
-/* 360 */,
-/* 361 */,
-/* 362 */,
-/* 363 */,
-/* 364 */,
-/* 365 */,
-/* 366 */,
-/* 367 */,
-/* 368 */,
-/* 369 */,
-/* 370 */,
-/* 371 */,
-/* 372 */,
-/* 373 */,
-/* 374 */,
-/* 375 */,
-/* 376 */,
-/* 377 */,
-/* 378 */,
-/* 379 */,
-/* 380 */,
-/* 381 */,
-/* 382 */,
-/* 383 */,
-/* 384 */,
-/* 385 */,
-/* 386 */
+
+/***/ 386:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -15290,12 +15060,8 @@ module.exports = new Type('tag:yaml.org,2002:js/undefined', {
 
 
 /***/ }),
-/* 387 */,
-/* 388 */,
-/* 389 */,
-/* 390 */,
-/* 391 */,
-/* 392 */
+
+/***/ 392:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -15452,34 +15218,16 @@ exports.NamespacePrefixMap = NamespacePrefixMap;
 //# sourceMappingURL=NamespacePrefixMap.js.map
 
 /***/ }),
-/* 393 */,
-/* 394 */,
-/* 395 */,
-/* 396 */,
-/* 397 */,
-/* 398 */,
-/* 399 */,
-/* 400 */,
-/* 401 */,
-/* 402 */,
-/* 403 */,
-/* 404 */,
-/* 405 */,
-/* 406 */,
-/* 407 */,
-/* 408 */,
-/* 409 */,
-/* 410 */,
-/* 411 */,
-/* 412 */,
-/* 413 */
+
+/***/ 413:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 module.exports = __webpack_require__(141);
 
 
 /***/ }),
-/* 414 */
+
+/***/ 414:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -15493,156 +15241,15 @@ module.exports = yaml;
 
 
 /***/ }),
-/* 415 */,
-/* 416 */,
-/* 417 */
+
+/***/ 417:
 /***/ (function(module) {
 
 module.exports = require("crypto");
 
 /***/ }),
-/* 418 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const tc = __importStar(__webpack_require__(533));
-const path_1 = __importDefault(__webpack_require__(622));
-const fs_1 = __importDefault(__webpack_require__(747));
-const semver_1 = __importDefault(__webpack_require__(280));
-const vendor_model_1 = __webpack_require__(570);
-const util_1 = __webpack_require__(322);
-class ZuluVendor extends vendor_model_1.IJavaVendor {
-    constructor(http, version, arch, javaPackage = "jdk") {
-        super("zulu");
-        this.http = http;
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
-        this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
-        this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
-        this.implemetor = "Azul Systems, Inc.";
-    }
-    getJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const range = new semver_1.default.Range(this.version);
-            const majorVersion = yield this.getAvailableMajor(range);
-            let javaInfo = this.findTool(`Java_${this.vendor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-            if (!javaInfo) {
-                javaInfo = yield this.downloadTool(range);
-            }
-            return javaInfo;
-        });
-    }
-    findTool(toolName, version, arch) {
-        let javaInfo = super.findTool(toolName, version, arch);
-        if (!javaInfo && this.javaPackage === 'jdk') {
-            javaInfo = util_1.getJavaPreInstalledPath(version, this.implemetor);
-        }
-        return javaInfo;
-    }
-    getAvailableMajor(range) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
-            const zuluJavaJson = (yield this.http.getJson(url)).result;
-            if (!zuluJavaJson) {
-                throw new Error(`No zulu java was found for all`);
-            }
-            core.info(`url is ${url}`);
-            core.info(`range is ${range}`);
-            const javaVersions = zuluJavaJson.map(item => semver_1.default.coerce(item.jdk_version.join('.')));
-            const majorVersion = semver_1.default.maxSatisfying(javaVersions, range);
-            if (!majorVersion) {
-                throw new Error(`No zulu major versions was found`);
-            }
-            return majorVersion.major;
-        });
-    }
-    downloadTool(range) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let toolPath;
-            const javaVersion = yield this.getJavaVersion(this.http, range);
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}&bundle_type=${this.javaPackage}`;
-            const zuluJavaJson = (yield this.http.getJson(url)).result;
-            core.debug(`url for initilial download tool is ${url}`);
-            core.debug(`zuluJavaJson for initilial download tool is ${zuluJavaJson}`);
-            if (!zuluJavaJson) {
-                throw new Error(`No zulu java was found for version ${javaVersion}`);
-            }
-            core.info(`Downloading ${this.vendor} java version ${javaVersion}`);
-            core.info(`Zulu url is ${zuluJavaJson.url}`);
-            const javaPath = yield tc.downloadTool(zuluJavaJson.url);
-            let downloadDir;
-            core.info(`Ectracting ${this.vendor} java version ${javaVersion}`);
-            if (util_1.IS_WINDOWS) {
-                downloadDir = yield tc.extractZip(javaPath);
-            }
-            else {
-                downloadDir = yield tc.extractTar(javaPath);
-            }
-            const archiveName = fs_1.default.readdirSync(downloadDir)[0];
-            const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.vendor}_${this.javaPackage}`, javaVersion, this.arch);
-            return { javaPath: toolPath, javaVersion };
-        });
-    }
-    getJavaVersion(http, range) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
-            core.debug(`url get all java versions: ${url}`);
-            const zuluJson = (yield http.getJson(url)).result;
-            if (!zuluJson || zuluJson.length === 0) {
-                throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
-            }
-            core.debug(`get id: ${zuluJson[0].id}`);
-            core.debug('Get the list of zulu java versions');
-            const zuluVersions = zuluJson.map(item => { var _a; return (_a = semver_1.default.coerce(item.jdk_version.join('.'))) !== null && _a !== void 0 ? _a : ""; });
-            const maxVersion = semver_1.default.maxSatisfying(zuluVersions, range);
-            if (!maxVersion) {
-                throw new Error('No versions are satisfying');
-            }
-            return maxVersion.raw;
-        });
-    }
-}
-exports.default = ZuluVendor;
-
-
-/***/ }),
-/* 419 */
+/***/ 419:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16132,12 +15739,8 @@ exports.ObjectWriter = ObjectWriter;
 //# sourceMappingURL=ObjectWriter.js.map
 
 /***/ }),
-/* 420 */,
-/* 421 */,
-/* 422 */,
-/* 423 */,
-/* 424 */,
-/* 425 */
+
+/***/ 425:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16455,8 +16058,8 @@ exports.DOMTokenListImpl = DOMTokenListImpl;
 //# sourceMappingURL=DOMTokenListImpl.js.map
 
 /***/ }),
-/* 426 */,
-/* 427 */
+
+/***/ 427:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16775,8 +16378,8 @@ WebIDLAlgorithm_1.idl_defineConst(EventImpl.prototype, "BUBBLING_PHASE", 3);
 //# sourceMappingURL=EventImpl.js.map
 
 /***/ }),
-/* 428 */,
-/* 429 */
+
+/***/ 429:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16817,8 +16420,8 @@ exports.SlotableImpl = SlotableImpl;
 //# sourceMappingURL=SlotableImpl.js.map
 
 /***/ }),
-/* 430 */,
-/* 431 */
+
+/***/ 431:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16903,17 +16506,8 @@ function escapeProperty(s) {
 //# sourceMappingURL=command.js.map
 
 /***/ }),
-/* 432 */,
-/* 433 */,
-/* 434 */,
-/* 435 */,
-/* 436 */,
-/* 437 */,
-/* 438 */,
-/* 439 */,
-/* 440 */,
-/* 441 */,
-/* 442 */
+
+/***/ 442:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -17083,14 +16677,8 @@ exports.xml_isPubidChar = xml_isPubidChar;
 //# sourceMappingURL=XMLAlgorithm.js.map
 
 /***/ }),
-/* 443 */,
-/* 444 */,
-/* 445 */,
-/* 446 */,
-/* 447 */,
-/* 448 */,
-/* 449 */,
-/* 450 */
+
+/***/ 450:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -17105,13 +16693,8 @@ module.exports = new Type('tag:yaml.org,2002:str', {
 
 
 /***/ }),
-/* 451 */,
-/* 452 */,
-/* 453 */,
-/* 454 */,
-/* 455 */,
-/* 456 */,
-/* 457 */
+
+/***/ 457:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -18762,11 +18345,8 @@ module.exports.safeLoad    = safeLoad;
 
 
 /***/ }),
-/* 458 */,
-/* 459 */,
-/* 460 */,
-/* 461 */,
-/* 462 */
+
+/***/ 462:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20409,8 +19989,8 @@ exports.BaseWriter = BaseWriter;
 //# sourceMappingURL=BaseWriter.js.map
 
 /***/ }),
-/* 463 */,
-/* 464 */
+
+/***/ 464:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20478,10 +20058,8 @@ exports.traversal_filter = traversal_filter;
 //# sourceMappingURL=TraversalAlgorithm.js.map
 
 /***/ }),
-/* 465 */,
-/* 466 */,
-/* 467 */,
-/* 468 */
+
+/***/ 468:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20707,8 +20285,8 @@ exports.XMLParserImpl = XMLParserImpl;
 //# sourceMappingURL=XMLParserImpl.js.map
 
 /***/ }),
-/* 469 */,
-/* 470 */
+
+/***/ 470:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20952,15 +20530,8 @@ exports.getState = getState;
 //# sourceMappingURL=core.js.map
 
 /***/ }),
-/* 471 */,
-/* 472 */,
-/* 473 */,
-/* 474 */,
-/* 475 */,
-/* 476 */,
-/* 477 */,
-/* 478 */,
-/* 479 */
+
+/***/ 479:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22139,10 +21710,8 @@ exports.mutation_remove = mutation_remove;
 //# sourceMappingURL=MutationAlgorithm.js.map
 
 /***/ }),
-/* 480 */,
-/* 481 */,
-/* 482 */,
-/* 483 */
+
+/***/ 483:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22169,10 +21738,8 @@ exports.selectors_scopeMatchASelectorsString = selectors_scopeMatchASelectorsStr
 //# sourceMappingURL=SelectorsAlgorithm.js.map
 
 /***/ }),
-/* 484 */,
-/* 485 */,
-/* 486 */,
-/* 487 */
+
+/***/ 487:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22219,7 +21786,8 @@ exports.TraverserImpl = TraverserImpl;
 //# sourceMappingURL=TraverserImpl.js.map
 
 /***/ }),
-/* 488 */
+
+/***/ 488:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22770,11 +22338,8 @@ WebIDLAlgorithm_1.idl_defineConst(DocumentImpl.prototype, "_nodeType", interface
 //# sourceMappingURL=DocumentImpl.js.map
 
 /***/ }),
-/* 489 */,
-/* 490 */,
-/* 491 */,
-/* 492 */,
-/* 493 */
+
+/***/ 493:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22941,8 +22506,8 @@ exports.document_adopt = document_adopt;
 //# sourceMappingURL=DocumentAlgorithm.js.map
 
 /***/ }),
-/* 494 */,
-/* 495 */
+
+/***/ 495:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -22962,7 +22527,8 @@ exports.idl_defineConst = idl_defineConst;
 //# sourceMappingURL=WebIDLAlgorithm.js.map
 
 /***/ }),
-/* 496 */
+
+/***/ 496:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23435,7 +23001,8 @@ exports.range = range;
 //# sourceMappingURL=Set.js.map
 
 /***/ }),
-/* 497 */
+
+/***/ 497:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23602,10 +23169,8 @@ exports.YAMLCBWriter = YAMLCBWriter;
 //# sourceMappingURL=YAMLCBWriter.js.map
 
 /***/ }),
-/* 498 */,
-/* 499 */,
-/* 500 */,
-/* 501 */
+
+/***/ 501:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23633,17 +23198,8 @@ exports.dequeue = dequeue;
 //# sourceMappingURL=Queue.js.map
 
 /***/ }),
-/* 502 */,
-/* 503 */,
-/* 504 */,
-/* 505 */,
-/* 506 */,
-/* 507 */,
-/* 508 */,
-/* 509 */,
-/* 510 */,
-/* 511 */,
-/* 512 */
+
+/***/ 512:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23672,16 +23228,8 @@ exports.BaseCBWriter = BaseCBWriter;
 //# sourceMappingURL=BaseCBWriter.js.map
 
 /***/ }),
-/* 513 */,
-/* 514 */,
-/* 515 */,
-/* 516 */,
-/* 517 */,
-/* 518 */,
-/* 519 */,
-/* 520 */,
-/* 521 */,
-/* 522 */
+
+/***/ 522:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23810,8 +23358,8 @@ exports.convertAJSONDerivedJavaScriptValueToAnInfraValue = convertAJSONDerivedJa
 //# sourceMappingURL=JSON.js.map
 
 /***/ }),
-/* 523 */,
-/* 524 */
+
+/***/ 524:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23876,15 +23424,8 @@ exports.CompareCache = CompareCache;
 //# sourceMappingURL=CompareCache.js.map
 
 /***/ }),
-/* 525 */,
-/* 526 */,
-/* 527 */,
-/* 528 */,
-/* 529 */,
-/* 530 */,
-/* 531 */,
-/* 532 */,
-/* 533 */
+
+/***/ 533:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -24458,8 +23999,8 @@ function _getGlobal(key, defaultValue) {
 //# sourceMappingURL=tool-cache.js.map
 
 /***/ }),
-/* 534 */,
-/* 535 */
+
+/***/ 535:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -24480,8 +24021,8 @@ exports.fragmentCB = BuilderFunctionsCB_1.fragmentCB;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 536 */,
-/* 537 */
+
+/***/ 537:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -24557,8 +24098,8 @@ exports.AbstractRangeImpl = AbstractRangeImpl;
 //# sourceMappingURL=AbstractRangeImpl.js.map
 
 /***/ }),
-/* 538 */,
-/* 539 */
+
+/***/ 539:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -25100,8 +24641,8 @@ exports.HttpClient = HttpClient;
 
 
 /***/ }),
-/* 540 */,
-/* 541 */
+
+/***/ 541:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -25650,16 +25191,8 @@ exports.node_locateANamespace = node_locateANamespace;
 //# sourceMappingURL=NodeAlgorithm.js.map
 
 /***/ }),
-/* 542 */,
-/* 543 */,
-/* 544 */,
-/* 545 */,
-/* 546 */,
-/* 547 */,
-/* 548 */,
-/* 549 */,
-/* 550 */,
-/* 551 */
+
+/***/ 551:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26456,11 +25989,8 @@ exports.XMLBuilderCBImpl = XMLBuilderCBImpl;
 //# sourceMappingURL=XMLBuilderCBImpl.js.map
 
 /***/ }),
-/* 552 */,
-/* 553 */,
-/* 554 */,
-/* 555 */,
-/* 556 */
+
+/***/ 556:
 /***/ (function(module) {
 
 "use strict";
@@ -26510,8 +26040,8 @@ module.exports = YAMLException;
 
 
 /***/ }),
-/* 557 */,
-/* 558 */
+
+/***/ 558:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26626,15 +26156,8 @@ WebIDLAlgorithm_1.idl_defineConst(DocumentTypeImpl.prototype, "_nodeType", inter
 //# sourceMappingURL=DocumentTypeImpl.js.map
 
 /***/ }),
-/* 559 */,
-/* 560 */,
-/* 561 */,
-/* 562 */,
-/* 563 */,
-/* 564 */,
-/* 565 */,
-/* 566 */,
-/* 567 */
+
+/***/ 567:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26651,69 +26174,8 @@ exports.YAMLReader = YAMLReader_1.YAMLReader;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 568 */,
-/* 569 */,
-/* 570 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.IJavaVendor = void 0;
-const tc = __importStar(__webpack_require__(533));
-const path_1 = __importDefault(__webpack_require__(622));
-class IJavaVendor {
-    constructor(vendor) {
-        this.vendor = vendor;
-    }
-    findTool(toolName, version, arch) {
-        const toolPath = tc.find(toolName, version, arch);
-        const javaVersion = this.getVersionFromPath(toolPath);
-        if (!javaVersion) {
-            return null;
-        }
-        return {
-            javaVersion,
-            javaPath: toolPath
-        };
-    }
-    getVersionFromPath(toolPath) {
-        if (toolPath) {
-            return path_1.default.basename(path_1.default.dirname(toolPath));
-        }
-        return toolPath;
-    }
-}
-exports.IJavaVendor = IJavaVendor;
-
-
-/***/ }),
-/* 571 */,
-/* 572 */,
-/* 573 */,
-/* 574 */
+/***/ 574:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26750,7 +26212,8 @@ exports.NonElementParentNodeImpl = NonElementParentNodeImpl;
 //# sourceMappingURL=NonElementParentNodeImpl.js.map
 
 /***/ }),
-/* 575 */
+
+/***/ 575:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -26812,12 +26275,8 @@ exports.LocalNameSet = LocalNameSet;
 //# sourceMappingURL=LocalNameSet.js.map
 
 /***/ }),
-/* 576 */,
-/* 577 */,
-/* 578 */,
-/* 579 */,
-/* 580 */,
-/* 581 */
+
+/***/ 581:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26905,17 +26364,8 @@ exports.ShadowRootImpl = ShadowRootImpl;
 //# sourceMappingURL=ShadowRootImpl.js.map
 
 /***/ }),
-/* 582 */,
-/* 583 */,
-/* 584 */,
-/* 585 */,
-/* 586 */,
-/* 587 */,
-/* 588 */,
-/* 589 */,
-/* 590 */,
-/* 591 */,
-/* 592 */
+
+/***/ 592:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -27360,9 +26810,8 @@ exports.utf8Decode = utf8Decode;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 593 */,
-/* 594 */,
-/* 595 */
+
+/***/ 595:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28169,8 +27618,8 @@ exports.XMLBuilderImpl = XMLBuilderImpl;
 //# sourceMappingURL=XMLBuilderImpl.js.map
 
 /***/ }),
-/* 596 */,
-/* 597 */
+
+/***/ 597:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28309,25 +27758,15 @@ exports.EventTargetImpl = EventTargetImpl;
 //# sourceMappingURL=EventTargetImpl.js.map
 
 /***/ }),
-/* 598 */,
-/* 599 */,
-/* 600 */,
-/* 601 */,
-/* 602 */,
-/* 603 */,
-/* 604 */,
-/* 605 */
+
+/***/ 605:
 /***/ (function(module) {
 
 module.exports = require("http");
 
 /***/ }),
-/* 606 */,
-/* 607 */,
-/* 608 */,
-/* 609 */,
-/* 610 */,
-/* 611 */
+
+/***/ 611:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -28352,19 +27791,15 @@ module.exports = new Schema({
 
 
 /***/ }),
-/* 612 */,
-/* 613 */,
-/* 614 */
+
+/***/ 614:
 /***/ (function(module) {
 
 module.exports = require("events");
 
 /***/ }),
-/* 615 */,
-/* 616 */,
-/* 617 */,
-/* 618 */,
-/* 619 */
+
+/***/ 619:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28429,17 +27864,15 @@ WebIDLAlgorithm_1.idl_defineConst(ProcessingInstructionImpl.prototype, "_nodeTyp
 //# sourceMappingURL=ProcessingInstructionImpl.js.map
 
 /***/ }),
-/* 620 */,
-/* 621 */,
-/* 622 */
+
+/***/ 622:
 /***/ (function(module) {
 
 module.exports = require("path");
 
 /***/ }),
-/* 623 */,
-/* 624 */,
-/* 625 */
+
+/***/ 625:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -28520,10 +27953,8 @@ exports.DefaultXMLBuilderCBOptions = {
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-/* 626 */,
-/* 627 */,
-/* 628 */,
-/* 629 */
+
+/***/ 629:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -28590,15 +28021,15 @@ module.exports = new Type('tag:yaml.org,2002:js/regexp', {
 
 
 /***/ }),
-/* 630 */,
-/* 631 */
+
+/***/ 631:
 /***/ (function(module) {
 
 module.exports = require("net");
 
 /***/ }),
-/* 632 */,
-/* 633 */
+
+/***/ 633:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -28617,9 +28048,8 @@ module.exports = new Type('tag:yaml.org,2002:merge', {
 
 
 /***/ }),
-/* 634 */,
-/* 635 */,
-/* 636 */
+
+/***/ 636:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28823,12 +28253,8 @@ exports.NodeListImpl = NodeListImpl;
 //# sourceMappingURL=NodeListImpl.js.map
 
 /***/ }),
-/* 637 */,
-/* 638 */,
-/* 639 */,
-/* 640 */,
-/* 641 */,
-/* 642 */
+
+/***/ 642:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28871,10 +28297,8 @@ exports.DOMParserImpl = DOMParserImpl;
 //# sourceMappingURL=DOMParserImpl.js.map
 
 /***/ }),
-/* 643 */,
-/* 644 */,
-/* 645 */,
-/* 646 */
+
+/***/ 646:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29129,8 +28553,8 @@ exports.TreeWalkerImpl = TreeWalkerImpl;
 //# sourceMappingURL=TreeWalkerImpl.js.map
 
 /***/ }),
-/* 647 */,
-/* 648 */
+
+/***/ 648:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29236,15 +28660,8 @@ exports.dom = DOMImpl.instance;
 //# sourceMappingURL=DOMImpl.js.map
 
 /***/ }),
-/* 649 */,
-/* 650 */,
-/* 651 */,
-/* 652 */,
-/* 653 */,
-/* 654 */,
-/* 655 */,
-/* 656 */,
-/* 657 */
+
+/***/ 657:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29575,10 +28992,8 @@ exports.sortInDescendingOrder = sortInDescendingOrder;
 //# sourceMappingURL=List.js.map
 
 /***/ }),
-/* 658 */,
-/* 659 */,
-/* 660 */,
-/* 661 */
+
+/***/ 661:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29615,9 +29030,8 @@ exports.XMLDocumentImpl = XMLDocumentImpl;
 //# sourceMappingURL=XMLDocumentImpl.js.map
 
 /***/ }),
-/* 662 */,
-/* 663 */,
-/* 664 */
+
+/***/ 664:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29708,19 +29122,15 @@ exports.namespace_extractQName = namespace_extractQName;
 //# sourceMappingURL=NamespaceAlgorithm.js.map
 
 /***/ }),
-/* 665 */,
-/* 666 */,
-/* 667 */,
-/* 668 */,
-/* 669 */
+
+/***/ 669:
 /***/ (function(module) {
 
 module.exports = require("util");
 
 /***/ }),
-/* 670 */,
-/* 671 */,
-/* 672 */
+
+/***/ 672:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29921,19 +29331,8 @@ function isUnixExecutable(stats) {
 //# sourceMappingURL=io-util.js.map
 
 /***/ }),
-/* 673 */,
-/* 674 */,
-/* 675 */,
-/* 676 */,
-/* 677 */,
-/* 678 */,
-/* 679 */,
-/* 680 */,
-/* 681 */,
-/* 682 */,
-/* 683 */,
-/* 684 */,
-/* 685 */
+
+/***/ 685:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -30790,7 +30189,8 @@ module.exports.safeDump = safeDump;
 
 
 /***/ }),
-/* 686 */
+
+/***/ 686:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -30802,8 +30202,8 @@ exports.XMLSerializer = XMLSerializerImpl_1.XMLSerializerImpl;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 687 */,
-/* 688 */
+
+/***/ 688:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -30857,12 +30257,8 @@ exports.StaticRangeImpl = StaticRangeImpl;
 //# sourceMappingURL=StaticRangeImpl.js.map
 
 /***/ }),
-/* 689 */,
-/* 690 */,
-/* 691 */,
-/* 692 */,
-/* 693 */,
-/* 694 */
+
+/***/ 694:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -30886,7 +30282,8 @@ exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = 'gpg-private-key-fingerprint';
 
 
 /***/ }),
-/* 695 */
+
+/***/ 695:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -31606,15 +31003,8 @@ WebIDLAlgorithm_1.idl_defineConst(ElementImpl.prototype, "_nodeType", interfaces
 //# sourceMappingURL=ElementImpl.js.map
 
 /***/ }),
-/* 696 */,
-/* 697 */,
-/* 698 */,
-/* 699 */,
-/* 700 */,
-/* 701 */,
-/* 702 */,
-/* 703 */,
-/* 704 */
+
+/***/ 704:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -31794,7 +31184,8 @@ exports.FixedSizeSet = FixedSizeSet;
 //# sourceMappingURL=FixedSizeSet.js.map
 
 /***/ }),
-/* 705 */
+
+/***/ 705:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -31947,11 +31338,8 @@ exports.treeWalker_traverseSiblings = treeWalker_traverseSiblings;
 //# sourceMappingURL=TreeWalkerAlgorithm.js.map
 
 /***/ }),
-/* 706 */,
-/* 707 */,
-/* 708 */,
-/* 709 */,
-/* 710 */
+
+/***/ 710:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32036,16 +31424,8 @@ exports.abort_signalAbort = abort_signalAbort;
 //# sourceMappingURL=AbortAlgorithm.js.map
 
 /***/ }),
-/* 711 */,
-/* 712 */,
-/* 713 */,
-/* 714 */,
-/* 715 */,
-/* 716 */,
-/* 717 */,
-/* 718 */,
-/* 719 */,
-/* 720 */
+
+/***/ 720:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -32077,8 +31457,8 @@ module.exports = new Schema({
 
 
 /***/ }),
-/* 721 */,
-/* 722 */
+
+/***/ 722:
 /***/ (function(module) {
 
 /**
@@ -32110,7 +31490,8 @@ module.exports = bytesToUuid;
 
 
 /***/ }),
-/* 723 */
+
+/***/ 723:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -32145,13 +31526,8 @@ module.exports = new Schema({
 
 
 /***/ }),
-/* 724 */,
-/* 725 */,
-/* 726 */,
-/* 727 */,
-/* 728 */,
-/* 729 */,
-/* 730 */
+
+/***/ 730:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -32273,9 +31649,8 @@ exports.MutationRecordImpl = MutationRecordImpl;
 //# sourceMappingURL=MutationRecordImpl.js.map
 
 /***/ }),
-/* 731 */,
-/* 732 */,
-/* 733 */
+
+/***/ 733:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -32390,13 +31765,8 @@ module.exports = Schema;
 
 
 /***/ }),
-/* 734 */,
-/* 735 */,
-/* 736 */,
-/* 737 */,
-/* 738 */,
-/* 739 */,
-/* 740 */
+
+/***/ 740:
 /***/ (function(module) {
 
 "use strict";
@@ -32462,9 +31832,8 @@ module.exports.extend         = extend;
 
 
 /***/ }),
-/* 741 */,
-/* 742 */,
-/* 743 */
+
+/***/ 743:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32537,18 +31906,15 @@ exports.sanitizeInput = sanitizeInput;
 //# sourceMappingURL=dom.js.map
 
 /***/ }),
-/* 744 */,
-/* 745 */,
-/* 746 */,
-/* 747 */
+
+/***/ 747:
 /***/ (function(module) {
 
 module.exports = require("fs");
 
 /***/ }),
-/* 748 */,
-/* 749 */,
-/* 750 */
+
+/***/ 750:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32640,16 +32006,8 @@ exports.MapWriter = MapWriter;
 //# sourceMappingURL=MapWriter.js.map
 
 /***/ }),
-/* 751 */,
-/* 752 */,
-/* 753 */,
-/* 754 */,
-/* 755 */,
-/* 756 */,
-/* 757 */,
-/* 758 */,
-/* 759 */,
-/* 760 */
+
+/***/ 760:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32707,15 +32065,14 @@ WebIDLAlgorithm_1.idl_defineConst(CommentImpl.prototype, "_nodeType", interfaces
 //# sourceMappingURL=CommentImpl.js.map
 
 /***/ }),
-/* 761 */,
-/* 762 */,
-/* 763 */
+
+/***/ 763:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var CodePoints_1 = __webpack_require__(283);
+var CodePoints_1 = __webpack_require__(11);
 /**
  * Base-64 encodes the given string.
  *
@@ -32797,7 +32154,8 @@ exports.forgivingBase64Decode = forgivingBase64Decode;
 //# sourceMappingURL=Base64.js.map
 
 /***/ }),
-/* 764 */
+
+/***/ 764:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33040,13 +32398,8 @@ exports.XMLWriter = XMLWriter;
 //# sourceMappingURL=XMLWriter.js.map
 
 /***/ }),
-/* 765 */,
-/* 766 */,
-/* 767 */,
-/* 768 */,
-/* 769 */,
-/* 770 */,
-/* 771 */
+
+/***/ 771:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33258,9 +32611,8 @@ exports.XMLReader = XMLReader;
 //# sourceMappingURL=XMLReader.js.map
 
 /***/ }),
-/* 772 */,
-/* 773 */,
-/* 774 */
+
+/***/ 774:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33330,13 +32682,8 @@ WebIDLAlgorithm_1.idl_defineConst(NodeFilterImpl.prototype, "SHOW_NOTATION", 0x8
 //# sourceMappingURL=NodeFilterImpl.js.map
 
 /***/ }),
-/* 775 */,
-/* 776 */,
-/* 777 */,
-/* 778 */,
-/* 779 */,
-/* 780 */,
-/* 781 */
+
+/***/ 781:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33514,7 +32861,8 @@ exports.JSONCBWriter = JSONCBWriter;
 //# sourceMappingURL=JSONCBWriter.js.map
 
 /***/ }),
-/* 782 */
+
+/***/ 782:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -33535,7 +32883,8 @@ exports.isASCIIByte = isASCIIByte;
 //# sourceMappingURL=Byte.js.map
 
 /***/ }),
-/* 783 */
+
+/***/ 783:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33733,7 +33082,8 @@ exports.Guard = Guard;
 //# sourceMappingURL=Guard.js.map
 
 /***/ }),
-/* 784 */
+
+/***/ 784:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33798,23 +33148,15 @@ exports.AbortSignalImpl = AbortSignalImpl;
 //# sourceMappingURL=AbortSignalImpl.js.map
 
 /***/ }),
-/* 785 */,
-/* 786 */,
-/* 787 */,
-/* 788 */,
-/* 789 */,
-/* 790 */,
-/* 791 */,
-/* 792 */,
-/* 793 */,
-/* 794 */
+
+/***/ 794:
 /***/ (function(module) {
 
 module.exports = require("stream");
 
 /***/ }),
-/* 795 */,
-/* 796 */
+
+/***/ 796:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33923,10 +33265,8 @@ WebIDLAlgorithm_1.idl_defineConst(DocumentFragmentImpl.prototype, "_nodeType", i
 //# sourceMappingURL=DocumentFragmentImpl.js.map
 
 /***/ }),
-/* 797 */,
-/* 798 */,
-/* 799 */,
-/* 800 */
+
+/***/ 800:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -34018,15 +33358,8 @@ exports.NodeIteratorImpl = NodeIteratorImpl;
 //# sourceMappingURL=NodeIteratorImpl.js.map
 
 /***/ }),
-/* 801 */,
-/* 802 */,
-/* 803 */,
-/* 804 */,
-/* 805 */,
-/* 806 */,
-/* 807 */,
-/* 808 */,
-/* 809 */
+
+/***/ 809:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -34067,8 +33400,8 @@ module.exports = new Type('tag:yaml.org,2002:null', {
 
 
 /***/ }),
-/* 810 */,
-/* 811 */
+
+/***/ 811:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -34158,8 +33491,8 @@ run();
 
 
 /***/ }),
-/* 812 */,
-/* 813 */
+
+/***/ 813:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -36923,12 +36256,8 @@ exports.asciiSerializationOfAnOrigin = asciiSerializationOfAnOrigin;
 //# sourceMappingURL=URLAlgorithm.js.map
 
 /***/ }),
-/* 814 */,
-/* 815 */,
-/* 816 */,
-/* 817 */,
-/* 818 */,
-/* 819 */
+
+/***/ 819:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -36974,7 +36303,8 @@ module.exports.addConstructor = deprecated('addConstructor');
 
 
 /***/ }),
-/* 820 */
+
+/***/ 820:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37089,12 +36419,8 @@ WebIDLAlgorithm_1.idl_defineConst(TextImpl.prototype, "_nodeType", interfaces_1.
 //# sourceMappingURL=TextImpl.js.map
 
 /***/ }),
-/* 821 */,
-/* 822 */,
-/* 823 */,
-/* 824 */,
-/* 825 */,
-/* 826 */
+
+/***/ 826:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 var rng = __webpack_require__(139);
@@ -37129,26 +36455,15 @@ module.exports = v4;
 
 
 /***/ }),
-/* 827 */,
-/* 828 */,
-/* 829 */,
-/* 830 */,
-/* 831 */,
-/* 832 */,
-/* 833 */,
-/* 834 */,
-/* 835 */
+
+/***/ 835:
 /***/ (function(module) {
 
 module.exports = require("url");
 
 /***/ }),
-/* 836 */,
-/* 837 */,
-/* 838 */,
-/* 839 */,
-/* 840 */,
-/* 841 */
+
+/***/ 841:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -37243,7 +36558,8 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 
 /***/ }),
-/* 842 */
+
+/***/ 842:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -37294,29 +36610,8 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 
 
 /***/ }),
-/* 843 */,
-/* 844 */,
-/* 845 */,
-/* 846 */,
-/* 847 */,
-/* 848 */,
-/* 849 */,
-/* 850 */,
-/* 851 */,
-/* 852 */,
-/* 853 */,
-/* 854 */,
-/* 855 */,
-/* 856 */,
-/* 857 */,
-/* 858 */,
-/* 859 */,
-/* 860 */,
-/* 861 */,
-/* 862 */,
-/* 863 */,
-/* 864 */,
-/* 865 */
+
+/***/ 865:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37366,7 +36661,8 @@ exports.YAMLReader = YAMLReader;
 //# sourceMappingURL=YAMLReader.js.map
 
 /***/ }),
-/* 866 */
+
+/***/ 866:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37490,13 +36786,8 @@ WebIDLAlgorithm_1.idl_defineConst(AttrImpl.prototype, "specified", true);
 //# sourceMappingURL=AttrImpl.js.map
 
 /***/ }),
-/* 867 */,
-/* 868 */,
-/* 869 */,
-/* 870 */,
-/* 871 */,
-/* 872 */,
-/* 873 */
+
+/***/ 873:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38355,17 +37646,8 @@ exports.tree_retarget = tree_retarget;
 //# sourceMappingURL=TreeAlgorithm.js.map
 
 /***/ }),
-/* 874 */,
-/* 875 */,
-/* 876 */,
-/* 877 */,
-/* 878 */,
-/* 879 */,
-/* 880 */,
-/* 881 */,
-/* 882 */,
-/* 883 */,
-/* 884 */
+
+/***/ 884:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38445,11 +37727,8 @@ exports.deleteKey = deleteKey;
 
 
 /***/ }),
-/* 885 */,
-/* 886 */,
-/* 887 */,
-/* 888 */,
-/* 889 */
+
+/***/ 889:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -38636,21 +37915,8 @@ exports.ObjectCache = ObjectCache;
 //# sourceMappingURL=ObjectCache.js.map
 
 /***/ }),
-/* 890 */,
-/* 891 */,
-/* 892 */,
-/* 893 */,
-/* 894 */,
-/* 895 */,
-/* 896 */,
-/* 897 */,
-/* 898 */,
-/* 899 */,
-/* 900 */,
-/* 901 */,
-/* 902 */,
-/* 903 */,
-/* 904 */
+
+/***/ 904:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38682,12 +37948,155 @@ exports.Cast = Cast;
 //# sourceMappingURL=Cast.js.map
 
 /***/ }),
-/* 905 */,
-/* 906 */,
-/* 907 */,
-/* 908 */,
-/* 909 */,
-/* 910 */
+
+/***/ 908:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+const tc = __importStar(__webpack_require__(533));
+const path_1 = __importDefault(__webpack_require__(622));
+const fs_1 = __importDefault(__webpack_require__(747));
+const semver_1 = __importDefault(__webpack_require__(280));
+const vendor_model_1 = __webpack_require__(995);
+const util_1 = __webpack_require__(322);
+class ZuluDistributor extends vendor_model_1.JavaBase {
+    constructor(http, version, arch, javaPackage = "jdk") {
+        super("zulu");
+        this.http = http;
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+        this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
+        this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
+        this.implemetor = "Azul Systems, Inc.";
+    }
+    getJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            const majorVersion = yield this.getAvailableMajor(range);
+            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            return javaInfo;
+        });
+    }
+    findTool(toolName, version, arch) {
+        let javaInfo = super.findTool(toolName, version, arch);
+        if (!javaInfo && this.javaPackage === 'jdk') {
+            javaInfo = util_1.getJavaPreInstalledPath(version, this.implemetor);
+        }
+        return javaInfo;
+    }
+    getAvailableMajor(range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
+            const zuluJavaJson = (yield this.http.getJson(url)).result;
+            if (!zuluJavaJson) {
+                throw new Error(`No zulu java was found for all`);
+            }
+            core.info(`url is ${url}`);
+            core.info(`range is ${range}`);
+            const javaVersions = zuluJavaJson.map(item => semver_1.default.coerce(item.jdk_version.join('.')));
+            const majorVersion = semver_1.default.maxSatisfying(javaVersions, range);
+            if (!majorVersion) {
+                throw new Error(`No zulu major versions was found`);
+            }
+            return majorVersion.major;
+        });
+    }
+    downloadTool(range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let toolPath;
+            const javaVersion = yield this.getJavaVersion(this.http, range);
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}&bundle_type=${this.javaPackage}`;
+            const zuluJavaJson = (yield this.http.getJson(url)).result;
+            core.debug(`url for initilial download tool is ${url}`);
+            core.debug(`zuluJavaJson for initilial download tool is ${zuluJavaJson}`);
+            if (!zuluJavaJson) {
+                throw new Error(`No zulu java was found for version ${javaVersion}`);
+            }
+            core.info(`Downloading ${this.distributor} java version ${javaVersion}`);
+            core.info(`Zulu url is ${zuluJavaJson.url}`);
+            const javaPath = yield tc.downloadTool(zuluJavaJson.url);
+            let downloadDir;
+            core.info(`Ectracting ${this.distributor} java version ${javaVersion}`);
+            if (util_1.IS_WINDOWS) {
+                downloadDir = yield tc.extractZip(javaPath);
+            }
+            else {
+                downloadDir = yield tc.extractTar(javaPath);
+            }
+            const archiveName = fs_1.default.readdirSync(downloadDir)[0];
+            const archivePath = path_1.default.join(downloadDir, archiveName);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaVersion, this.arch);
+            return { javaPath: toolPath, javaVersion };
+        });
+    }
+    getJavaVersion(http, range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
+            core.debug(`url get all java versions: ${url}`);
+            const zuluJson = (yield http.getJson(url)).result;
+            if (!zuluJson || zuluJson.length === 0) {
+                throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
+            }
+            core.debug(`get id: ${zuluJson[0].id}`);
+            core.debug('Get the list of zulu java versions');
+            const zuluVersions = zuluJson.map(item => { var _a; return (_a = semver_1.default.coerce(item.jdk_version.join('.'))) !== null && _a !== void 0 ? _a : ""; });
+            const maxVersion = semver_1.default.maxSatisfying(zuluVersions, range);
+            if (!maxVersion) {
+                throw new Error('No versions are satisfying');
+            }
+            return maxVersion.raw;
+        });
+    }
+}
+class ZuluFactory extends vendor_model_1.BaseFactory {
+    getJavaDistributor(http, version, arch, javaPackage = 'jdk') {
+        return new ZuluDistributor(http, version, arch, javaPackage);
+    }
+}
+exports.default = ZuluFactory;
+
+
+/***/ }),
+
+/***/ 910:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -38719,7 +38128,8 @@ module.exports = Schema.DEFAULT = new Schema({
 
 
 /***/ }),
-/* 911 */
+
+/***/ 911:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39237,8 +38647,8 @@ exports.XMLStringLexer = XMLStringLexer;
 //# sourceMappingURL=XMLStringLexer.js.map
 
 /***/ }),
-/* 912 */,
-/* 913 */
+
+/***/ 913:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -39383,9 +38793,8 @@ module.exports = new Type('tag:yaml.org,2002:binary', {
 
 
 /***/ }),
-/* 914 */,
-/* 915 */,
-/* 916 */
+
+/***/ 916:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -39400,8 +38809,8 @@ exports.XLink = "http://www.w3.org/1999/xlink";
 //# sourceMappingURL=Namespace.js.map
 
 /***/ }),
-/* 917 */,
-/* 918 */
+
+/***/ 918:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39416,8 +38825,8 @@ exports.EmptySet = EmptySet_1.EmptySet;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-/* 919 */,
-/* 920 */
+
+/***/ 920:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39474,7 +38883,8 @@ WebIDLAlgorithm_1.idl_defineConst(CDATASectionImpl.prototype, "_nodeType", inter
 //# sourceMappingURL=CDATASectionImpl.js.map
 
 /***/ }),
-/* 921 */
+
+/***/ 921:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -39489,8 +38899,8 @@ module.exports = new Type('tag:yaml.org,2002:seq', {
 
 
 /***/ }),
-/* 922 */,
-/* 923 */
+
+/***/ 923:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39532,43 +38942,38 @@ const core = __importStar(__webpack_require__(470));
 const httpm = __importStar(__webpack_require__(539));
 const path = __importStar(__webpack_require__(622));
 const util_1 = __webpack_require__(322);
-const adoptopenjdk_vendor_1 = __importDefault(__webpack_require__(11));
-const zulu_vendor_1 = __importDefault(__webpack_require__(418));
-var JavaVendors;
-(function (JavaVendors) {
-    JavaVendors["AdopOpenJdk"] = "adopOpenJdk";
-    JavaVendors["Zulu"] = "zulu";
-})(JavaVendors || (JavaVendors = {}));
+const adoptopenjdk_installer_1 = __importDefault(__webpack_require__(318));
+const zulu_installer_1 = __importDefault(__webpack_require__(908));
+var JavaDistributor;
+(function (JavaDistributor) {
+    JavaDistributor["AdopOpenJdk"] = "adopOpenJdk";
+    JavaDistributor["Zulu"] = "zulu";
+})(JavaDistributor || (JavaDistributor = {}));
 class JavaFactory {
-    constructor(http, version, arch, javaPackage = 'jdk') {
-        this.http = http;
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
-    }
-    getJavaVendor(vendor) {
-        switch (vendor) {
-            case JavaVendors.AdopOpenJdk:
-                return new adoptopenjdk_vendor_1.default(this.http, this.version, this.arch, this.javaPackage);
-            case JavaVendors.Zulu:
-                return new zulu_vendor_1.default(this.http, this.version, this.arch, this.javaPackage);
+    getJavaDistributor(distributor) {
+        switch (distributor) {
+            case JavaDistributor.AdopOpenJdk:
+                return new adoptopenjdk_installer_1.default();
+            case JavaDistributor.Zulu:
+                return new zulu_installer_1.default();
             default:
                 return null;
         }
     }
 }
-function install(version, arch, javaPackage, vendorName, jdkFile) {
+function install(version, arch, javaPackage, distributorName, jdkFile) {
     return __awaiter(this, void 0, void 0, function* () {
         const http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
         });
-        const javaFactory = new JavaFactory(http, util_1.normalizeVersion(version), arch, javaPackage);
-        const vendor = javaFactory.getJavaVendor(vendorName);
-        if (!vendor) {
-            throw new Error('No vendor was found');
+        const javaFactory = new JavaFactory();
+        const distributorFactory = javaFactory.getJavaDistributor(distributorName);
+        const distributor = distributorFactory === null || distributorFactory === void 0 ? void 0 : distributorFactory.getJavaDistributor(http, util_1.normalizeVersion(version), arch, javaPackage);
+        if (!distributor) {
+            throw new Error('No distributor was found');
         }
-        const javaInfo = yield vendor.getJava();
+        const javaInfo = yield distributor.getJava();
         const { javaVersion, javaPath: toolPath } = javaInfo;
         const extendedJavaHome = `JAVA_HOME_${version}_${arch}`
             .toUpperCase()
@@ -39578,22 +38983,15 @@ function install(version, arch, javaPackage, vendorName, jdkFile) {
         core.addPath(path.join(toolPath, 'bin'));
         core.setOutput('path', toolPath);
         core.setOutput('version', javaVersion);
-        core.info(`Setuped up java ${javaVersion} from ${vendorName}`);
+        core.info(`Setuped up java ${javaVersion} from ${distributorName}`);
     });
 }
 exports.install = install;
 
 
 /***/ }),
-/* 924 */,
-/* 925 */,
-/* 926 */,
-/* 927 */,
-/* 928 */,
-/* 929 */,
-/* 930 */,
-/* 931 */,
-/* 932 */
+
+/***/ 932:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39656,8 +39054,8 @@ exports.WindowImpl = WindowImpl;
 //# sourceMappingURL=WindowImpl.js.map
 
 /***/ }),
-/* 933 */,
-/* 934 */
+
+/***/ 934:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39821,7 +39219,8 @@ exports.ParentNodeImpl = ParentNodeImpl;
 //# sourceMappingURL=ParentNodeImpl.js.map
 
 /***/ }),
-/* 935 */
+
+/***/ 935:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40718,16 +40117,8 @@ WebIDLAlgorithm_1.idl_defineConst(NodeImpl.prototype, "DOCUMENT_POSITION_IMPLEME
 //# sourceMappingURL=NodeImpl.js.map
 
 /***/ }),
-/* 936 */,
-/* 937 */,
-/* 938 */,
-/* 939 */,
-/* 940 */,
-/* 941 */,
-/* 942 */,
-/* 943 */,
-/* 944 */,
-/* 945 */
+
+/***/ 945:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -40795,8 +40186,8 @@ module.exports = Type;
 
 
 /***/ }),
-/* 946 */,
-/* 947 */
+
+/***/ 947:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -40836,9 +40227,8 @@ exports.Lazy = Lazy;
 //# sourceMappingURL=Lazy.js.map
 
 /***/ }),
-/* 948 */,
-/* 949 */,
-/* 950 */
+
+/***/ 950:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -40902,17 +40292,8 @@ exports.checkBypass = checkBypass;
 
 
 /***/ }),
-/* 951 */,
-/* 952 */,
-/* 953 */,
-/* 954 */,
-/* 955 */,
-/* 956 */,
-/* 957 */,
-/* 958 */,
-/* 959 */,
-/* 960 */,
-/* 961 */
+
+/***/ 961:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -41026,13 +40407,8 @@ function setOptions(doc, options, isFragment) {
 //# sourceMappingURL=BuilderFunctions.js.map
 
 /***/ }),
-/* 962 */,
-/* 963 */,
-/* 964 */,
-/* 965 */,
-/* 966 */,
-/* 967 */,
-/* 968 */
+
+/***/ 968:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -41099,8 +40475,8 @@ var EmptySetIterator = /** @class */ (function () {
 //# sourceMappingURL=EmptySet.js.map
 
 /***/ }),
-/* 969 */,
-/* 970 */
+
+/***/ 970:
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -41197,15 +40573,8 @@ var HowToCompare;
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-/* 971 */,
-/* 972 */,
-/* 973 */,
-/* 974 */,
-/* 975 */,
-/* 976 */,
-/* 977 */,
-/* 978 */,
-/* 979 */
+
+/***/ 979:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -41281,10 +40650,8 @@ exports.RetryHelper = RetryHelper;
 //# sourceMappingURL=retry-helper.js.map
 
 /***/ }),
-/* 980 */,
-/* 981 */,
-/* 982 */,
-/* 983 */
+
+/***/ 983:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -41455,9 +40822,8 @@ exports.ChildNodeImpl = ChildNodeImpl;
 //# sourceMappingURL=ChildNodeImpl.js.map
 
 /***/ }),
-/* 984 */,
-/* 985 */,
-/* 986 */
+
+/***/ 986:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -41507,8 +40873,8 @@ exports.exec = exec;
 //# sourceMappingURL=exec.js.map
 
 /***/ }),
-/* 987 */,
-/* 988 */
+
+/***/ 988:
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -41523,8 +40889,8 @@ module.exports = new Type('tag:yaml.org,2002:map', {
 
 
 /***/ }),
-/* 989 */,
-/* 990 */
+
+/***/ 990:
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -41561,5 +40927,67 @@ var AbortControllerImpl = /** @class */ (function () {
 exports.AbortControllerImpl = AbortControllerImpl;
 //# sourceMappingURL=AbortControllerImpl.js.map
 
+/***/ }),
+
+/***/ 995:
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BaseFactory = exports.JavaBase = void 0;
+const tc = __importStar(__webpack_require__(533));
+const path_1 = __importDefault(__webpack_require__(622));
+class JavaBase {
+    constructor(distributor) {
+        this.distributor = distributor;
+    }
+    findTool(toolName, version, arch) {
+        const toolPath = tc.find(toolName, version, arch);
+        const javaVersion = this.getVersionFromPath(toolPath);
+        if (!javaVersion) {
+            return null;
+        }
+        return {
+            javaVersion,
+            javaPath: toolPath
+        };
+    }
+    getVersionFromPath(toolPath) {
+        if (toolPath) {
+            return path_1.default.basename(path_1.default.dirname(toolPath));
+        }
+        return toolPath;
+    }
+}
+exports.JavaBase = JavaBase;
+class BaseFactory {
+}
+exports.BaseFactory = BaseFactory;
+
+
 /***/ })
-/******/ ]);
+
+/******/ });

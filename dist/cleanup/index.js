@@ -3021,7 +3021,7 @@ function createHttpClient() {
     return http;
 }
 exports.createHttpClient = createHttpClient;
-function getJavaPreInstalledPath(version, vendor) {
+function getJavaPreInstalledPath(version, distributor) {
     const javaDist = getJavaVersionsPath();
     const versionsDir = fs_1.default.readdirSync(javaDist);
     const javaInformations = versionsDir.map(versionDir => {
@@ -3035,7 +3035,7 @@ function getJavaPreInstalledPath(version, vendor) {
         }
         const implemetation = parseFile('IMPLEMENTOR', content);
         const re = new RegExp(/^[7,8]\./);
-        if (!re.test(version) && implemetation !== vendor) {
+        if (!re.test(version) && implemetation !== distributor) {
             return null;
         }
         const javaVersion = parseFile('JAVA_VERSION', content);

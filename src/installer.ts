@@ -13,8 +13,9 @@ enum JavaDistributor {
 }
 
 class JavaFactory {
-
-  public getJavaDistributor(distributor: JavaDistributor | string): BaseFactory | null {
+  public getJavaDistributor(
+    distributor: JavaDistributor | string
+  ): BaseFactory | null {
     switch (distributor) {
       case JavaDistributor.AdopOpenJdk:
         return new AdoptOpenJDKFactory();
@@ -40,7 +41,12 @@ export async function install(
 
   const javaFactory = new JavaFactory();
   const distributorFactory = javaFactory.getJavaDistributor(distributorName);
-  const distributor = distributorFactory?.getJavaDistributor(http, normalizeVersion(version), arch, javaPackage);
+  const distributor = distributorFactory?.getJavaDistributor(
+    http,
+    normalizeVersion(version),
+    arch,
+    javaPackage
+  );
   if (!distributor) {
     throw new Error('No distributor was found');
   }
