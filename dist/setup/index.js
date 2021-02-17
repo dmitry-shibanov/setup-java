@@ -41,9 +41,9 @@ module.exports =
 /******/ 	return startup();
 /******/ })
 /************************************************************************/
-/******/ ({
-
-/***/ 1:
+/******/ ([
+/* 0 */,
+/* 1 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -339,8 +339,14 @@ function copyFile(srcFile, destFile, force) {
 //# sourceMappingURL=io.js.map
 
 /***/ }),
-
-/***/ 9:
+/* 2 */,
+/* 3 */,
+/* 4 */,
+/* 5 */,
+/* 6 */,
+/* 7 */,
+/* 8 */,
+/* 9 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -946,8 +952,8 @@ class ExecState extends events.EventEmitter {
 //# sourceMappingURL=toolrunner.js.map
 
 /***/ }),
-
-/***/ 11:
+/* 10 */,
+/* 11 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -1038,15 +1044,18 @@ exports.ASCIIAlphanumeric = /[0-9A-Za-z]/;
 //# sourceMappingURL=CodePoints.js.map
 
 /***/ }),
-
-/***/ 16:
+/* 12 */,
+/* 13 */,
+/* 14 */,
+/* 15 */,
+/* 16 */
 /***/ (function(module) {
 
 module.exports = require("tls");
 
 /***/ }),
-
-/***/ 18:
+/* 17 */,
+/* 18 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -1105,8 +1114,10 @@ exports.NonDocumentTypeChildNodeImpl = NonDocumentTypeChildNodeImpl;
 //# sourceMappingURL=NonDocumentTypeChildNodeImpl.js.map
 
 /***/ }),
-
-/***/ 22:
+/* 19 */,
+/* 20 */,
+/* 21 */,
+/* 22 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -1941,8 +1952,7 @@ exports.range_getPartiallyContainedNodes = range_getPartiallyContainedNodes;
 //# sourceMappingURL=RangeAlgorithm.js.map
 
 /***/ }),
-
-/***/ 23:
+/* 23 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -1982,8 +1992,10 @@ exports.string = string;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 27:
+/* 24 */,
+/* 25 */,
+/* 26 */,
+/* 27 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -2129,8 +2141,10 @@ exports.characterData_substringData = characterData_substringData;
 //# sourceMappingURL=CharacterDataAlgorithm.js.map
 
 /***/ }),
-
-/***/ 31:
+/* 28 */,
+/* 29 */,
+/* 30 */,
+/* 31 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -2242,8 +2256,8 @@ exports._readLinuxVersionFile = _readLinuxVersionFile;
 //# sourceMappingURL=manifest.js.map
 
 /***/ }),
-
-/***/ 33:
+/* 32 */,
+/* 33 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -2857,8 +2871,8 @@ exports.element_insertAdjacent = element_insertAdjacent;
 //# sourceMappingURL=ElementAlgorithm.js.map
 
 /***/ }),
-
-/***/ 35:
+/* 34 */,
+/* 35 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -3211,8 +3225,14 @@ exports.InvalidCharacterError = InvalidCharacterError;
 //# sourceMappingURL=DOMException.js.map
 
 /***/ }),
-
-/***/ 43:
+/* 36 */,
+/* 37 */,
+/* 38 */,
+/* 39 */,
+/* 40 */,
+/* 41 */,
+/* 42 */,
+/* 43 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3350,8 +3370,7 @@ exports.CharacterDataImpl = CharacterDataImpl;
 //# sourceMappingURL=CharacterDataImpl.js.map
 
 /***/ }),
-
-/***/ 44:
+/* 44 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -3531,8 +3550,9 @@ module.exports = new Type('tag:yaml.org,2002:int', {
 
 
 /***/ }),
-
-/***/ 47:
+/* 45 */,
+/* 46 */,
+/* 47 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -3643,8 +3663,9 @@ exports.StringWalker = StringWalker;
 //# sourceMappingURL=StringWalker.js.map
 
 /***/ }),
-
-/***/ 50:
+/* 48 */,
+/* 49 */,
+/* 50 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3817,8 +3838,10 @@ exports.ObjectReader = ObjectReader;
 //# sourceMappingURL=ObjectReader.js.map
 
 /***/ }),
-
-/***/ 54:
+/* 51 */,
+/* 52 */,
+/* 53 */,
+/* 54 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3885,8 +3908,12 @@ exports.tokenList_serializeSteps = tokenList_serializeSteps;
 //# sourceMappingURL=DOMTokenListAlgorithm.js.map
 
 /***/ }),
-
-/***/ 60:
+/* 55 */,
+/* 56 */,
+/* 57 */,
+/* 58 */,
+/* 59 */,
+/* 60 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -3961,8 +3988,21 @@ exports.parentNode_convertNodesIntoANode = parentNode_convertNodesIntoANode;
 //# sourceMappingURL=ParentNodeAlgorithm.js.map
 
 /***/ }),
-
-/***/ 75:
+/* 61 */,
+/* 62 */,
+/* 63 */,
+/* 64 */,
+/* 65 */,
+/* 66 */,
+/* 67 */,
+/* 68 */,
+/* 69 */,
+/* 70 */,
+/* 71 */,
+/* 72 */,
+/* 73 */,
+/* 74 */,
+/* 75 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -4022,8 +4062,13 @@ module.exports = new Type('tag:yaml.org,2002:pairs', {
 
 
 /***/ }),
-
-/***/ 82:
+/* 76 */,
+/* 77 */,
+/* 78 */,
+/* 79 */,
+/* 80 */,
+/* 81 */,
+/* 82 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -4048,8 +4093,10 @@ exports.toCommandValue = toCommandValue;
 //# sourceMappingURL=utils.js.map
 
 /***/ }),
-
-/***/ 86:
+/* 83 */,
+/* 84 */,
+/* 85 */,
+/* 86 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -4358,15 +4405,13 @@ exports.create_domTokenList = create_domTokenList;
 //# sourceMappingURL=CreateAlgorithm.js.map
 
 /***/ }),
-
-/***/ 87:
+/* 87 */
 /***/ (function(module) {
 
 module.exports = require("os");
 
 /***/ }),
-
-/***/ 88:
+/* 88 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -4484,8 +4529,8 @@ exports.NamedNodeMapImpl = NamedNodeMapImpl;
 //# sourceMappingURL=NamedNodeMapImpl.js.map
 
 /***/ }),
-
-/***/ 90:
+/* 89 */,
+/* 90 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5140,8 +5185,8 @@ WebIDLAlgorithm_1.idl_defineConst(RangeImpl.prototype, "END_TO_START", 3);
 //# sourceMappingURL=RangeImpl.js.map
 
 /***/ }),
-
-/***/ 92:
+/* 91 */,
+/* 92 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5371,8 +5416,7 @@ exports.JSONWriter = JSONWriter;
 //# sourceMappingURL=JSONWriter.js.map
 
 /***/ }),
-
-/***/ 93:
+/* 93 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -5455,8 +5499,8 @@ module.exports = Mark;
 
 
 /***/ }),
-
-/***/ 95:
+/* 94 */,
+/* 95 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5475,8 +5519,8 @@ exports.YAMLWriter = YAMLWriter_1.YAMLWriter;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 97:
+/* 96 */,
+/* 97 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -5954,8 +5998,7 @@ exports.concatenate = concatenate;
 //# sourceMappingURL=String.js.map
 
 /***/ }),
-
-/***/ 98:
+/* 98 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -7440,8 +7483,8 @@ exports.XMLSerializerImpl = XMLSerializerImpl;
 //# sourceMappingURL=XMLSerializerImpl.js.map
 
 /***/ }),
-
-/***/ 100:
+/* 99 */,
+/* 100 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -7477,8 +7520,8 @@ module.exports = new Type('tag:yaml.org,2002:set', {
 
 
 /***/ }),
-
-/***/ 102:
+/* 101 */,
+/* 102 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -7513,8 +7556,10 @@ exports.issueCommand = issueCommand;
 //# sourceMappingURL=file-command.js.map
 
 /***/ }),
-
-/***/ 106:
+/* 103 */,
+/* 104 */,
+/* 105 */,
+/* 106 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -7662,8 +7707,8 @@ exports.eventTarget_removeAllEventListeners = eventTarget_removeAllEventListener
 //# sourceMappingURL=EventTargetAlgorithm.js.map
 
 /***/ }),
-
-/***/ 108:
+/* 107 */,
+/* 108 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -8664,8 +8709,10 @@ exports.event_deactivateAnEventHandler = event_deactivateAnEventHandler;
 //# sourceMappingURL=EventAlgorithm.js.map
 
 /***/ }),
-
-/***/ 112:
+/* 109 */,
+/* 110 */,
+/* 111 */,
+/* 112 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -8709,8 +8756,7 @@ exports.JSONReader = JSONReader;
 //# sourceMappingURL=JSONReader.js.map
 
 /***/ }),
-
-/***/ 113:
+/* 113 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -8818,15 +8864,32 @@ util_1.applyMixin(ElementImpl_1.ElementImpl, SlotableImpl_1.SlotableImpl);
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 129:
+/* 114 */,
+/* 115 */,
+/* 116 */,
+/* 117 */,
+/* 118 */,
+/* 119 */,
+/* 120 */,
+/* 121 */,
+/* 122 */,
+/* 123 */,
+/* 124 */,
+/* 125 */,
+/* 126 */,
+/* 127 */,
+/* 128 */,
+/* 129 */
 /***/ (function(module) {
 
 module.exports = require("child_process");
 
 /***/ }),
-
-/***/ 134:
+/* 130 */,
+/* 131 */,
+/* 132 */,
+/* 133 */,
+/* 134 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -8854,8 +8917,11 @@ exports.pop = pop;
 //# sourceMappingURL=Stack.js.map
 
 /***/ }),
-
-/***/ 139:
+/* 135 */,
+/* 136 */,
+/* 137 */,
+/* 138 */,
+/* 139 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 // Unique ID creation requires a high quality random # generator.  In node.js
@@ -8869,8 +8935,8 @@ module.exports = function nodeRNG() {
 
 
 /***/ }),
-
-/***/ 141:
+/* 140 */,
+/* 141 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9141,8 +9207,11 @@ exports.debug = debug; // for test
 
 
 /***/ }),
-
-/***/ 146:
+/* 142 */,
+/* 143 */,
+/* 144 */,
+/* 145 */,
+/* 146 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9273,8 +9342,11 @@ exports.orderedSet_contains = orderedSet_contains;
 //# sourceMappingURL=OrderedSetAlgorithm.js.map
 
 /***/ }),
-
-/***/ 151:
+/* 147 */,
+/* 148 */,
+/* 149 */,
+/* 150 */,
+/* 151 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9556,8 +9628,9 @@ exports.observer_queueAttributeMutationRecord = observer_queueAttributeMutationR
 //# sourceMappingURL=MutationObserverAlgorithm.js.map
 
 /***/ }),
-
-/***/ 154:
+/* 152 */,
+/* 153 */,
+/* 154 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9789,8 +9862,14 @@ exports.text_split = text_split;
 //# sourceMappingURL=TextAlgorithm.js.map
 
 /***/ }),
-
-/***/ 162:
+/* 155 */,
+/* 156 */,
+/* 157 */,
+/* 158 */,
+/* 159 */,
+/* 160 */,
+/* 161 */,
+/* 162 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9819,8 +9898,7 @@ exports.attr_setAnExistingAttributeValue = attr_setAnExistingAttributeValue;
 //# sourceMappingURL=AttrAlgorithm.js.map
 
 /***/ }),
-
-/***/ 163:
+/* 163 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9860,8 +9938,7 @@ __export(__webpack_require__(442));
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 164:
+/* 164 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -9927,8 +10004,14 @@ exports.CustomEventImpl = CustomEventImpl;
 //# sourceMappingURL=CustomEventImpl.js.map
 
 /***/ }),
-
-/***/ 172:
+/* 165 */,
+/* 166 */,
+/* 167 */,
+/* 168 */,
+/* 169 */,
+/* 170 */,
+/* 171 */,
+/* 172 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -9952,8 +10035,8 @@ var TokenType;
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-
-/***/ 174:
+/* 173 */,
+/* 174 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10108,8 +10191,7 @@ WebIDLAlgorithm_1.idl_defineConst(DOMImplementationImpl.prototype, "_ID", "@oozc
 //# sourceMappingURL=DOMImplementationImpl.js.map
 
 /***/ }),
-
-/***/ 175:
+/* 175 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10299,8 +10381,11 @@ exports.MutationObserverImpl = MutationObserverImpl;
 //# sourceMappingURL=MutationObserverImpl.js.map
 
 /***/ }),
-
-/***/ 180:
+/* 176 */,
+/* 177 */,
+/* 178 */,
+/* 179 */,
+/* 180 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10622,8 +10707,16 @@ exports.shadowTree_assignASlot = shadowTree_assignASlot;
 //# sourceMappingURL=ShadowTreeAlgorithm.js.map
 
 /***/ }),
-
-/***/ 190:
+/* 181 */,
+/* 182 */,
+/* 183 */,
+/* 184 */,
+/* 185 */,
+/* 186 */,
+/* 187 */,
+/* 188 */,
+/* 189 */,
+/* 190 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10794,8 +10887,20 @@ exports.XMLCBWriter = XMLCBWriter;
 //# sourceMappingURL=XMLCBWriter.js.map
 
 /***/ }),
-
-/***/ 204:
+/* 191 */,
+/* 192 */,
+/* 193 */,
+/* 194 */,
+/* 195 */,
+/* 196 */,
+/* 197 */,
+/* 198 */,
+/* 199 */,
+/* 200 */,
+/* 201 */,
+/* 202 */,
+/* 203 */,
+/* 204 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10958,15 +11063,19 @@ exports.HTMLCollectionImpl = HTMLCollectionImpl;
 //# sourceMappingURL=HTMLCollectionImpl.js.map
 
 /***/ }),
-
-/***/ 211:
+/* 205 */,
+/* 206 */,
+/* 207 */,
+/* 208 */,
+/* 209 */,
+/* 210 */,
+/* 211 */
 /***/ (function(module) {
 
 module.exports = require("https");
 
 /***/ }),
-
-/***/ 212:
+/* 212 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -10978,8 +11087,22 @@ exports.DOMParser = DOMParserImpl_1.DOMParserImpl;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 228:
+/* 213 */,
+/* 214 */,
+/* 215 */,
+/* 216 */,
+/* 217 */,
+/* 218 */,
+/* 219 */,
+/* 220 */,
+/* 221 */,
+/* 222 */,
+/* 223 */,
+/* 224 */,
+/* 225 */,
+/* 226 */,
+/* 227 */,
+/* 228 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -11021,8 +11144,25 @@ module.exports = new Type('tag:yaml.org,2002:bool', {
 
 
 /***/ }),
-
-/***/ 247:
+/* 229 */,
+/* 230 */,
+/* 231 */,
+/* 232 */,
+/* 233 */,
+/* 234 */,
+/* 235 */,
+/* 236 */,
+/* 237 */,
+/* 238 */,
+/* 239 */,
+/* 240 */,
+/* 241 */,
+/* 242 */,
+/* 243 */,
+/* 244 */,
+/* 245 */,
+/* 246 */,
+/* 247 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -11045,8 +11185,11 @@ exports.DocumentOrShadowRootImpl = DocumentOrShadowRootImpl;
 //# sourceMappingURL=DocumentOrShadowRootImpl.js.map
 
 /***/ }),
-
-/***/ 252:
+/* 248 */,
+/* 249 */,
+/* 250 */,
+/* 251 */,
+/* 252 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11063,8 +11206,9 @@ exports.XMLSerializer = serializer_1.XMLSerializer;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 255:
+/* 253 */,
+/* 254 */,
+/* 255 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11080,8 +11224,14 @@ exports.fragmentCB = builder_1.fragmentCB;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 263:
+/* 256 */,
+/* 257 */,
+/* 258 */,
+/* 259 */,
+/* 260 */,
+/* 261 */,
+/* 262 */,
+/* 263 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -11258,8 +11408,8 @@ exports.isomorphicDecode = isomorphicDecode;
 //# sourceMappingURL=ByteSequence.js.map
 
 /***/ }),
-
-/***/ 265:
+/* 264 */,
+/* 265 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -11283,8 +11433,7 @@ module.exports = new Schema({
 
 
 /***/ }),
-
-/***/ 266:
+/* 266 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11478,8 +11627,12 @@ exports.NodeListStaticImpl = NodeListStaticImpl;
 //# sourceMappingURL=NodeListStaticImpl.js.map
 
 /***/ }),
-
-/***/ 272:
+/* 267 */,
+/* 268 */,
+/* 269 */,
+/* 270 */,
+/* 271 */,
+/* 272 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11590,8 +11743,13 @@ exports.nodeIterator_iteratorList = nodeIterator_iteratorList;
 //# sourceMappingURL=NodeIteratorAlgorithm.js.map
 
 /***/ }),
-
-/***/ 279:
+/* 273 */,
+/* 274 */,
+/* 275 */,
+/* 276 */,
+/* 277 */,
+/* 278 */,
+/* 279 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -11905,8 +12063,7 @@ exports.sortInDescendingOrder = sortInDescendingOrder;
 //# sourceMappingURL=Map.js.map
 
 /***/ }),
-
-/***/ 280:
+/* 280 */
 /***/ (function(module, exports) {
 
 exports = module.exports = SemVer
@@ -13508,8 +13665,12 @@ function coerce (version, options) {
 
 
 /***/ }),
-
-/***/ 286:
+/* 281 */,
+/* 282 */,
+/* 283 */,
+/* 284 */,
+/* 285 */,
+/* 286 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -13546,8 +13707,15 @@ exports.OpaqueOrigin = ["", "", null, null];
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-
-/***/ 295:
+/* 287 */,
+/* 288 */,
+/* 289 */,
+/* 290 */,
+/* 291 */,
+/* 292 */,
+/* 293 */,
+/* 294 */,
+/* 295 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -13579,8 +13747,15 @@ exports.fragmentCB = fragmentCB;
 //# sourceMappingURL=BuilderFunctionsCB.js.map
 
 /***/ }),
-
-/***/ 304:
+/* 296 */,
+/* 297 */,
+/* 298 */,
+/* 299 */,
+/* 300 */,
+/* 301 */,
+/* 302 */,
+/* 303 */,
+/* 304 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -13874,8 +14049,7 @@ function updateAnElementID(element, localName, value, namespace) {
 //# sourceMappingURL=DOMAlgorithm.js.map
 
 /***/ }),
-
-/***/ 305:
+/* 305 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -14007,8 +14181,13 @@ exports.BaseReader = BaseReader;
 //# sourceMappingURL=BaseReader.js.map
 
 /***/ }),
-
-/***/ 312:
+/* 306 */,
+/* 307 */,
+/* 308 */,
+/* 309 */,
+/* 310 */,
+/* 311 */,
+/* 312 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -14131,8 +14310,12 @@ module.exports = new Type('tag:yaml.org,2002:float', {
 
 
 /***/ }),
-
-/***/ 318:
+/* 313 */,
+/* 314 */,
+/* 315 */,
+/* 316 */,
+/* 317 */,
+/* 318 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14175,8 +14358,8 @@ const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const semver_1 = __importDefault(__webpack_require__(280));
 const util_1 = __webpack_require__(322);
-const vendor_model_1 = __webpack_require__(995);
-class AdopOpenJdkDistributor extends vendor_model_1.JavaBase {
+const base_installer_1 = __webpack_require__(534);
+class AdopOpenJdkDistributor extends base_installer_1.JavaBase {
     constructor(http, version, arch, javaPackage = "jdk") {
         super("AdoptOpenJDK", version, arch, javaPackage);
         this.http = http;
@@ -14227,7 +14410,7 @@ class AdopOpenJdkDistributor extends vendor_model_1.JavaBase {
         });
     }
 }
-class AdoptOpenJDKFactory extends vendor_model_1.BaseFactory {
+class AdoptOpenJDKFactory extends base_installer_1.BaseFactory {
     getJavaDistributor(http, version, arch, javaPackage = 'jdk') {
         return new AdopOpenJdkDistributor(http, version, arch, javaPackage);
     }
@@ -14236,8 +14419,10 @@ exports.default = AdoptOpenJDKFactory;
 
 
 /***/ }),
-
-/***/ 322:
+/* 319 */,
+/* 320 */,
+/* 321 */,
+/* 322 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14395,8 +14580,9 @@ exports.normalizeVersion = normalizeVersion;
 
 
 /***/ }),
-
-/***/ 325:
+/* 323 */,
+/* 324 */,
+/* 325 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14590,8 +14776,12 @@ exports.YAMLWriter = YAMLWriter;
 //# sourceMappingURL=YAMLWriter.js.map
 
 /***/ }),
-
-/***/ 331:
+/* 326 */,
+/* 327 */,
+/* 328 */,
+/* 329 */,
+/* 330 */,
+/* 331 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14696,8 +14886,19 @@ function write(directory, settings) {
 
 
 /***/ }),
-
-/***/ 344:
+/* 332 */,
+/* 333 */,
+/* 334 */,
+/* 335 */,
+/* 336 */,
+/* 337 */,
+/* 338 */,
+/* 339 */,
+/* 340 */,
+/* 341 */,
+/* 342 */,
+/* 343 */,
+/* 344 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -14811,8 +15012,12 @@ exports.customElement_lookUpACustomElementDefinition = customElement_lookUpACust
 //# sourceMappingURL=CustomElementAlgorithm.js.map
 
 /***/ }),
-
-/***/ 350:
+/* 345 */,
+/* 346 */,
+/* 347 */,
+/* 348 */,
+/* 349 */,
+/* 350 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -14894,8 +15099,8 @@ exports.boundaryPoint_position = boundaryPoint_position;
 //# sourceMappingURL=BoundaryPointAlgorithm.js.map
 
 /***/ }),
-
-/***/ 352:
+/* 351 */,
+/* 352 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -14995,15 +15200,45 @@ module.exports = new Type('tag:yaml.org,2002:js/function', {
 
 
 /***/ }),
-
-/***/ 357:
+/* 353 */,
+/* 354 */,
+/* 355 */,
+/* 356 */,
+/* 357 */
 /***/ (function(module) {
 
 module.exports = require("assert");
 
 /***/ }),
-
-/***/ 386:
+/* 358 */,
+/* 359 */,
+/* 360 */,
+/* 361 */,
+/* 362 */,
+/* 363 */,
+/* 364 */,
+/* 365 */,
+/* 366 */,
+/* 367 */,
+/* 368 */,
+/* 369 */,
+/* 370 */,
+/* 371 */,
+/* 372 */,
+/* 373 */,
+/* 374 */,
+/* 375 */,
+/* 376 */,
+/* 377 */,
+/* 378 */,
+/* 379 */,
+/* 380 */,
+/* 381 */,
+/* 382 */,
+/* 383 */,
+/* 384 */,
+/* 385 */,
+/* 386 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -15038,8 +15273,12 @@ module.exports = new Type('tag:yaml.org,2002:js/undefined', {
 
 
 /***/ }),
-
-/***/ 392:
+/* 387 */,
+/* 388 */,
+/* 389 */,
+/* 390 */,
+/* 391 */,
+/* 392 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -15196,16 +15435,34 @@ exports.NamespacePrefixMap = NamespacePrefixMap;
 //# sourceMappingURL=NamespacePrefixMap.js.map
 
 /***/ }),
-
-/***/ 413:
+/* 393 */,
+/* 394 */,
+/* 395 */,
+/* 396 */,
+/* 397 */,
+/* 398 */,
+/* 399 */,
+/* 400 */,
+/* 401 */,
+/* 402 */,
+/* 403 */,
+/* 404 */,
+/* 405 */,
+/* 406 */,
+/* 407 */,
+/* 408 */,
+/* 409 */,
+/* 410 */,
+/* 411 */,
+/* 412 */,
+/* 413 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 module.exports = __webpack_require__(141);
 
 
 /***/ }),
-
-/***/ 414:
+/* 414 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -15219,15 +15476,16 @@ module.exports = yaml;
 
 
 /***/ }),
-
-/***/ 417:
+/* 415 */,
+/* 416 */,
+/* 417 */
 /***/ (function(module) {
 
 module.exports = require("crypto");
 
 /***/ }),
-
-/***/ 419:
+/* 418 */,
+/* 419 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -15717,8 +15975,12 @@ exports.ObjectWriter = ObjectWriter;
 //# sourceMappingURL=ObjectWriter.js.map
 
 /***/ }),
-
-/***/ 425:
+/* 420 */,
+/* 421 */,
+/* 422 */,
+/* 423 */,
+/* 424 */,
+/* 425 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16036,8 +16298,8 @@ exports.DOMTokenListImpl = DOMTokenListImpl;
 //# sourceMappingURL=DOMTokenListImpl.js.map
 
 /***/ }),
-
-/***/ 427:
+/* 426 */,
+/* 427 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16356,8 +16618,8 @@ WebIDLAlgorithm_1.idl_defineConst(EventImpl.prototype, "BUBBLING_PHASE", 3);
 //# sourceMappingURL=EventImpl.js.map
 
 /***/ }),
-
-/***/ 429:
+/* 428 */,
+/* 429 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16398,8 +16660,8 @@ exports.SlotableImpl = SlotableImpl;
 //# sourceMappingURL=SlotableImpl.js.map
 
 /***/ }),
-
-/***/ 431:
+/* 430 */,
+/* 431 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -16484,8 +16746,17 @@ function escapeProperty(s) {
 //# sourceMappingURL=command.js.map
 
 /***/ }),
-
-/***/ 442:
+/* 432 */,
+/* 433 */,
+/* 434 */,
+/* 435 */,
+/* 436 */,
+/* 437 */,
+/* 438 */,
+/* 439 */,
+/* 440 */,
+/* 441 */,
+/* 442 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -16655,8 +16926,14 @@ exports.xml_isPubidChar = xml_isPubidChar;
 //# sourceMappingURL=XMLAlgorithm.js.map
 
 /***/ }),
-
-/***/ 450:
+/* 443 */,
+/* 444 */,
+/* 445 */,
+/* 446 */,
+/* 447 */,
+/* 448 */,
+/* 449 */,
+/* 450 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -16671,8 +16948,13 @@ module.exports = new Type('tag:yaml.org,2002:str', {
 
 
 /***/ }),
-
-/***/ 457:
+/* 451 */,
+/* 452 */,
+/* 453 */,
+/* 454 */,
+/* 455 */,
+/* 456 */,
+/* 457 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -18323,8 +18605,11 @@ module.exports.safeLoad    = safeLoad;
 
 
 /***/ }),
-
-/***/ 462:
+/* 458 */,
+/* 459 */,
+/* 460 */,
+/* 461 */,
+/* 462 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -19967,8 +20252,8 @@ exports.BaseWriter = BaseWriter;
 //# sourceMappingURL=BaseWriter.js.map
 
 /***/ }),
-
-/***/ 464:
+/* 463 */,
+/* 464 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20036,8 +20321,10 @@ exports.traversal_filter = traversal_filter;
 //# sourceMappingURL=TraversalAlgorithm.js.map
 
 /***/ }),
-
-/***/ 468:
+/* 465 */,
+/* 466 */,
+/* 467 */,
+/* 468 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20263,8 +20550,8 @@ exports.XMLParserImpl = XMLParserImpl;
 //# sourceMappingURL=XMLParserImpl.js.map
 
 /***/ }),
-
-/***/ 470:
+/* 469 */,
+/* 470 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -20508,8 +20795,15 @@ exports.getState = getState;
 //# sourceMappingURL=core.js.map
 
 /***/ }),
-
-/***/ 479:
+/* 471 */,
+/* 472 */,
+/* 473 */,
+/* 474 */,
+/* 475 */,
+/* 476 */,
+/* 477 */,
+/* 478 */,
+/* 479 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -21688,8 +21982,10 @@ exports.mutation_remove = mutation_remove;
 //# sourceMappingURL=MutationAlgorithm.js.map
 
 /***/ }),
-
-/***/ 483:
+/* 480 */,
+/* 481 */,
+/* 482 */,
+/* 483 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -21716,8 +22012,10 @@ exports.selectors_scopeMatchASelectorsString = selectors_scopeMatchASelectorsStr
 //# sourceMappingURL=SelectorsAlgorithm.js.map
 
 /***/ }),
-
-/***/ 487:
+/* 484 */,
+/* 485 */,
+/* 486 */,
+/* 487 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -21764,8 +22062,7 @@ exports.TraverserImpl = TraverserImpl;
 //# sourceMappingURL=TraverserImpl.js.map
 
 /***/ }),
-
-/***/ 488:
+/* 488 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22316,8 +22613,11 @@ WebIDLAlgorithm_1.idl_defineConst(DocumentImpl.prototype, "_nodeType", interface
 //# sourceMappingURL=DocumentImpl.js.map
 
 /***/ }),
-
-/***/ 493:
+/* 489 */,
+/* 490 */,
+/* 491 */,
+/* 492 */,
+/* 493 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22484,8 +22784,8 @@ exports.document_adopt = document_adopt;
 //# sourceMappingURL=DocumentAlgorithm.js.map
 
 /***/ }),
-
-/***/ 495:
+/* 494 */,
+/* 495 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -22505,8 +22805,7 @@ exports.idl_defineConst = idl_defineConst;
 //# sourceMappingURL=WebIDLAlgorithm.js.map
 
 /***/ }),
-
-/***/ 496:
+/* 496 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -22979,8 +23278,7 @@ exports.range = range;
 //# sourceMappingURL=Set.js.map
 
 /***/ }),
-
-/***/ 497:
+/* 497 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23147,8 +23445,10 @@ exports.YAMLCBWriter = YAMLCBWriter;
 //# sourceMappingURL=YAMLCBWriter.js.map
 
 /***/ }),
-
-/***/ 501:
+/* 498 */,
+/* 499 */,
+/* 500 */,
+/* 501 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23176,8 +23476,17 @@ exports.dequeue = dequeue;
 //# sourceMappingURL=Queue.js.map
 
 /***/ }),
-
-/***/ 512:
+/* 502 */,
+/* 503 */,
+/* 504 */,
+/* 505 */,
+/* 506 */,
+/* 507 */,
+/* 508 */,
+/* 509 */,
+/* 510 */,
+/* 511 */,
+/* 512 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23206,8 +23515,16 @@ exports.BaseCBWriter = BaseCBWriter;
 //# sourceMappingURL=BaseCBWriter.js.map
 
 /***/ }),
-
-/***/ 522:
+/* 513 */,
+/* 514 */,
+/* 515 */,
+/* 516 */,
+/* 517 */,
+/* 518 */,
+/* 519 */,
+/* 520 */,
+/* 521 */,
+/* 522 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23336,8 +23653,8 @@ exports.convertAJSONDerivedJavaScriptValueToAnInfraValue = convertAJSONDerivedJa
 //# sourceMappingURL=JSON.js.map
 
 /***/ }),
-
-/***/ 524:
+/* 523 */,
+/* 524 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -23402,8 +23719,15 @@ exports.CompareCache = CompareCache;
 //# sourceMappingURL=CompareCache.js.map
 
 /***/ }),
-
-/***/ 533:
+/* 525 */,
+/* 526 */,
+/* 527 */,
+/* 528 */,
+/* 529 */,
+/* 530 */,
+/* 531 */,
+/* 532 */,
+/* 533 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23977,8 +24301,96 @@ function _getGlobal(key, defaultValue) {
 //# sourceMappingURL=tool-cache.js.map
 
 /***/ }),
+/* 534 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-/***/ 535:
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.BaseFactory = exports.JavaBase = void 0;
+const tc = __importStar(__webpack_require__(533));
+const semver_1 = __importDefault(__webpack_require__(280));
+const path_1 = __importDefault(__webpack_require__(622));
+const util_1 = __webpack_require__(322);
+class JavaBase {
+    constructor(distributor, version, arch, javaPackage) {
+        this.distributor = distributor;
+        this.version = version;
+        this.arch = arch;
+        this.javaPackage = javaPackage;
+    }
+    findTool(toolName, version, arch) {
+        const toolPath = tc.find(toolName, version, arch);
+        let javaInfo = null;
+        const javaVersion = this.getVersionFromPath(toolPath);
+        if (!javaVersion) {
+            if (this.javaPackage === 'jdk') {
+                javaInfo = util_1.getJavaPreInstalledPath(version, this.distributor);
+            }
+            return javaInfo;
+        }
+        return {
+            javaVersion,
+            javaPath: toolPath
+        };
+    }
+    getVersionFromPath(toolPath) {
+        if (toolPath) {
+            return path_1.default.basename(path_1.default.dirname(toolPath));
+        }
+        return toolPath;
+    }
+    getJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            const majorVersion = yield this.getAvailableMajor(range);
+            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            return javaInfo;
+        });
+    }
+}
+exports.JavaBase = JavaBase;
+class BaseFactory {
+}
+exports.BaseFactory = BaseFactory;
+
+
+/***/ }),
+/* 535 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -23999,8 +24411,8 @@ exports.fragmentCB = BuilderFunctionsCB_1.fragmentCB;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 537:
+/* 536 */,
+/* 537 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -24076,8 +24488,8 @@ exports.AbstractRangeImpl = AbstractRangeImpl;
 //# sourceMappingURL=AbstractRangeImpl.js.map
 
 /***/ }),
-
-/***/ 539:
+/* 538 */,
+/* 539 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -24619,8 +25031,8 @@ exports.HttpClient = HttpClient;
 
 
 /***/ }),
-
-/***/ 541:
+/* 540 */,
+/* 541 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -25169,8 +25581,16 @@ exports.node_locateANamespace = node_locateANamespace;
 //# sourceMappingURL=NodeAlgorithm.js.map
 
 /***/ }),
-
-/***/ 551:
+/* 542 */,
+/* 543 */,
+/* 544 */,
+/* 545 */,
+/* 546 */,
+/* 547 */,
+/* 548 */,
+/* 549 */,
+/* 550 */,
+/* 551 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -25967,8 +26387,11 @@ exports.XMLBuilderCBImpl = XMLBuilderCBImpl;
 //# sourceMappingURL=XMLBuilderCBImpl.js.map
 
 /***/ }),
-
-/***/ 556:
+/* 552 */,
+/* 553 */,
+/* 554 */,
+/* 555 */,
+/* 556 */
 /***/ (function(module) {
 
 "use strict";
@@ -26018,8 +26441,8 @@ module.exports = YAMLException;
 
 
 /***/ }),
-
-/***/ 558:
+/* 557 */,
+/* 558 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26134,8 +26557,15 @@ WebIDLAlgorithm_1.idl_defineConst(DocumentTypeImpl.prototype, "_nodeType", inter
 //# sourceMappingURL=DocumentTypeImpl.js.map
 
 /***/ }),
-
-/***/ 567:
+/* 559 */,
+/* 560 */,
+/* 561 */,
+/* 562 */,
+/* 563 */,
+/* 564 */,
+/* 565 */,
+/* 566 */,
+/* 567 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26152,8 +26582,13 @@ exports.YAMLReader = YAMLReader_1.YAMLReader;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 574:
+/* 568 */,
+/* 569 */,
+/* 570 */,
+/* 571 */,
+/* 572 */,
+/* 573 */,
+/* 574 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26190,8 +26625,7 @@ exports.NonElementParentNodeImpl = NonElementParentNodeImpl;
 //# sourceMappingURL=NonElementParentNodeImpl.js.map
 
 /***/ }),
-
-/***/ 575:
+/* 575 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -26253,8 +26687,12 @@ exports.LocalNameSet = LocalNameSet;
 //# sourceMappingURL=LocalNameSet.js.map
 
 /***/ }),
-
-/***/ 581:
+/* 576 */,
+/* 577 */,
+/* 578 */,
+/* 579 */,
+/* 580 */,
+/* 581 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26342,8 +26780,17 @@ exports.ShadowRootImpl = ShadowRootImpl;
 //# sourceMappingURL=ShadowRootImpl.js.map
 
 /***/ }),
-
-/***/ 592:
+/* 582 */,
+/* 583 */,
+/* 584 */,
+/* 585 */,
+/* 586 */,
+/* 587 */,
+/* 588 */,
+/* 589 */,
+/* 590 */,
+/* 591 */,
+/* 592 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -26788,8 +27235,9 @@ exports.utf8Decode = utf8Decode;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 595:
+/* 593 */,
+/* 594 */,
+/* 595 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -27596,8 +28044,8 @@ exports.XMLBuilderImpl = XMLBuilderImpl;
 //# sourceMappingURL=XMLBuilderImpl.js.map
 
 /***/ }),
-
-/***/ 597:
+/* 596 */,
+/* 597 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -27736,15 +28184,25 @@ exports.EventTargetImpl = EventTargetImpl;
 //# sourceMappingURL=EventTargetImpl.js.map
 
 /***/ }),
-
-/***/ 605:
+/* 598 */,
+/* 599 */,
+/* 600 */,
+/* 601 */,
+/* 602 */,
+/* 603 */,
+/* 604 */,
+/* 605 */
 /***/ (function(module) {
 
 module.exports = require("http");
 
 /***/ }),
-
-/***/ 611:
+/* 606 */,
+/* 607 */,
+/* 608 */,
+/* 609 */,
+/* 610 */,
+/* 611 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -27769,15 +28227,19 @@ module.exports = new Schema({
 
 
 /***/ }),
-
-/***/ 614:
+/* 612 */,
+/* 613 */,
+/* 614 */
 /***/ (function(module) {
 
 module.exports = require("events");
 
 /***/ }),
-
-/***/ 619:
+/* 615 */,
+/* 616 */,
+/* 617 */,
+/* 618 */,
+/* 619 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -27842,15 +28304,17 @@ WebIDLAlgorithm_1.idl_defineConst(ProcessingInstructionImpl.prototype, "_nodeTyp
 //# sourceMappingURL=ProcessingInstructionImpl.js.map
 
 /***/ }),
-
-/***/ 622:
+/* 620 */,
+/* 621 */,
+/* 622 */
 /***/ (function(module) {
 
 module.exports = require("path");
 
 /***/ }),
-
-/***/ 625:
+/* 623 */,
+/* 624 */,
+/* 625 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -27931,8 +28395,10 @@ exports.DefaultXMLBuilderCBOptions = {
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-
-/***/ 629:
+/* 626 */,
+/* 627 */,
+/* 628 */,
+/* 629 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -27999,15 +28465,15 @@ module.exports = new Type('tag:yaml.org,2002:js/regexp', {
 
 
 /***/ }),
-
-/***/ 631:
+/* 630 */,
+/* 631 */
 /***/ (function(module) {
 
 module.exports = require("net");
 
 /***/ }),
-
-/***/ 633:
+/* 632 */,
+/* 633 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -28026,8 +28492,9 @@ module.exports = new Type('tag:yaml.org,2002:merge', {
 
 
 /***/ }),
-
-/***/ 636:
+/* 634 */,
+/* 635 */,
+/* 636 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28231,8 +28698,12 @@ exports.NodeListImpl = NodeListImpl;
 //# sourceMappingURL=NodeListImpl.js.map
 
 /***/ }),
-
-/***/ 642:
+/* 637 */,
+/* 638 */,
+/* 639 */,
+/* 640 */,
+/* 641 */,
+/* 642 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28275,8 +28746,10 @@ exports.DOMParserImpl = DOMParserImpl;
 //# sourceMappingURL=DOMParserImpl.js.map
 
 /***/ }),
-
-/***/ 646:
+/* 643 */,
+/* 644 */,
+/* 645 */,
+/* 646 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28531,8 +29004,8 @@ exports.TreeWalkerImpl = TreeWalkerImpl;
 //# sourceMappingURL=TreeWalkerImpl.js.map
 
 /***/ }),
-
-/***/ 648:
+/* 647 */,
+/* 648 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28638,8 +29111,15 @@ exports.dom = DOMImpl.instance;
 //# sourceMappingURL=DOMImpl.js.map
 
 /***/ }),
-
-/***/ 657:
+/* 649 */,
+/* 650 */,
+/* 651 */,
+/* 652 */,
+/* 653 */,
+/* 654 */,
+/* 655 */,
+/* 656 */,
+/* 657 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -28970,8 +29450,10 @@ exports.sortInDescendingOrder = sortInDescendingOrder;
 //# sourceMappingURL=List.js.map
 
 /***/ }),
-
-/***/ 661:
+/* 658 */,
+/* 659 */,
+/* 660 */,
+/* 661 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29008,8 +29490,9 @@ exports.XMLDocumentImpl = XMLDocumentImpl;
 //# sourceMappingURL=XMLDocumentImpl.js.map
 
 /***/ }),
-
-/***/ 664:
+/* 662 */,
+/* 663 */,
+/* 664 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29100,15 +29583,19 @@ exports.namespace_extractQName = namespace_extractQName;
 //# sourceMappingURL=NamespaceAlgorithm.js.map
 
 /***/ }),
-
-/***/ 669:
+/* 665 */,
+/* 666 */,
+/* 667 */,
+/* 668 */,
+/* 669 */
 /***/ (function(module) {
 
 module.exports = require("util");
 
 /***/ }),
-
-/***/ 672:
+/* 670 */,
+/* 671 */,
+/* 672 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -29309,8 +29796,19 @@ function isUnixExecutable(stats) {
 //# sourceMappingURL=io-util.js.map
 
 /***/ }),
-
-/***/ 685:
+/* 673 */,
+/* 674 */,
+/* 675 */,
+/* 676 */,
+/* 677 */,
+/* 678 */,
+/* 679 */,
+/* 680 */,
+/* 681 */,
+/* 682 */,
+/* 683 */,
+/* 684 */,
+/* 685 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -30167,8 +30665,7 @@ module.exports.safeDump = safeDump;
 
 
 /***/ }),
-
-/***/ 686:
+/* 686 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -30180,8 +30677,8 @@ exports.XMLSerializer = XMLSerializerImpl_1.XMLSerializerImpl;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 688:
+/* 687 */,
+/* 688 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -30235,8 +30732,12 @@ exports.StaticRangeImpl = StaticRangeImpl;
 //# sourceMappingURL=StaticRangeImpl.js.map
 
 /***/ }),
-
-/***/ 694:
+/* 689 */,
+/* 690 */,
+/* 691 */,
+/* 692 */,
+/* 693 */,
+/* 694 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -30260,8 +30761,7 @@ exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = 'gpg-private-key-fingerprint';
 
 
 /***/ }),
-
-/***/ 695:
+/* 695 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -30981,8 +31481,15 @@ WebIDLAlgorithm_1.idl_defineConst(ElementImpl.prototype, "_nodeType", interfaces
 //# sourceMappingURL=ElementImpl.js.map
 
 /***/ }),
-
-/***/ 704:
+/* 696 */,
+/* 697 */,
+/* 698 */,
+/* 699 */,
+/* 700 */,
+/* 701 */,
+/* 702 */,
+/* 703 */,
+/* 704 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -31162,8 +31669,7 @@ exports.FixedSizeSet = FixedSizeSet;
 //# sourceMappingURL=FixedSizeSet.js.map
 
 /***/ }),
-
-/***/ 705:
+/* 705 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -31316,8 +31822,11 @@ exports.treeWalker_traverseSiblings = treeWalker_traverseSiblings;
 //# sourceMappingURL=TreeWalkerAlgorithm.js.map
 
 /***/ }),
-
-/***/ 710:
+/* 706 */,
+/* 707 */,
+/* 708 */,
+/* 709 */,
+/* 710 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -31402,8 +31911,16 @@ exports.abort_signalAbort = abort_signalAbort;
 //# sourceMappingURL=AbortAlgorithm.js.map
 
 /***/ }),
-
-/***/ 720:
+/* 711 */,
+/* 712 */,
+/* 713 */,
+/* 714 */,
+/* 715 */,
+/* 716 */,
+/* 717 */,
+/* 718 */,
+/* 719 */,
+/* 720 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -31435,8 +31952,8 @@ module.exports = new Schema({
 
 
 /***/ }),
-
-/***/ 722:
+/* 721 */,
+/* 722 */
 /***/ (function(module) {
 
 /**
@@ -31468,8 +31985,7 @@ module.exports = bytesToUuid;
 
 
 /***/ }),
-
-/***/ 723:
+/* 723 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -31504,8 +32020,13 @@ module.exports = new Schema({
 
 
 /***/ }),
-
-/***/ 730:
+/* 724 */,
+/* 725 */,
+/* 726 */,
+/* 727 */,
+/* 728 */,
+/* 729 */,
+/* 730 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -31627,8 +32148,9 @@ exports.MutationRecordImpl = MutationRecordImpl;
 //# sourceMappingURL=MutationRecordImpl.js.map
 
 /***/ }),
-
-/***/ 733:
+/* 731 */,
+/* 732 */,
+/* 733 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -31743,8 +32265,13 @@ module.exports = Schema;
 
 
 /***/ }),
-
-/***/ 740:
+/* 734 */,
+/* 735 */,
+/* 736 */,
+/* 737 */,
+/* 738 */,
+/* 739 */,
+/* 740 */
 /***/ (function(module) {
 
 "use strict";
@@ -31810,8 +32337,9 @@ module.exports.extend         = extend;
 
 
 /***/ }),
-
-/***/ 743:
+/* 741 */,
+/* 742 */,
+/* 743 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -31884,15 +32412,18 @@ exports.sanitizeInput = sanitizeInput;
 //# sourceMappingURL=dom.js.map
 
 /***/ }),
-
-/***/ 747:
+/* 744 */,
+/* 745 */,
+/* 746 */,
+/* 747 */
 /***/ (function(module) {
 
 module.exports = require("fs");
 
 /***/ }),
-
-/***/ 750:
+/* 748 */,
+/* 749 */,
+/* 750 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -31984,8 +32515,16 @@ exports.MapWriter = MapWriter;
 //# sourceMappingURL=MapWriter.js.map
 
 /***/ }),
-
-/***/ 760:
+/* 751 */,
+/* 752 */,
+/* 753 */,
+/* 754 */,
+/* 755 */,
+/* 756 */,
+/* 757 */,
+/* 758 */,
+/* 759 */,
+/* 760 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32043,8 +32582,9 @@ WebIDLAlgorithm_1.idl_defineConst(CommentImpl.prototype, "_nodeType", interfaces
 //# sourceMappingURL=CommentImpl.js.map
 
 /***/ }),
-
-/***/ 763:
+/* 761 */,
+/* 762 */,
+/* 763 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32132,8 +32672,7 @@ exports.forgivingBase64Decode = forgivingBase64Decode;
 //# sourceMappingURL=Base64.js.map
 
 /***/ }),
-
-/***/ 764:
+/* 764 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32376,8 +32915,13 @@ exports.XMLWriter = XMLWriter;
 //# sourceMappingURL=XMLWriter.js.map
 
 /***/ }),
-
-/***/ 771:
+/* 765 */,
+/* 766 */,
+/* 767 */,
+/* 768 */,
+/* 769 */,
+/* 770 */,
+/* 771 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32589,8 +33133,9 @@ exports.XMLReader = XMLReader;
 //# sourceMappingURL=XMLReader.js.map
 
 /***/ }),
-
-/***/ 774:
+/* 772 */,
+/* 773 */,
+/* 774 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32660,8 +33205,13 @@ WebIDLAlgorithm_1.idl_defineConst(NodeFilterImpl.prototype, "SHOW_NOTATION", 0x8
 //# sourceMappingURL=NodeFilterImpl.js.map
 
 /***/ }),
-
-/***/ 781:
+/* 775 */,
+/* 776 */,
+/* 777 */,
+/* 778 */,
+/* 779 */,
+/* 780 */,
+/* 781 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -32839,8 +33389,7 @@ exports.JSONCBWriter = JSONCBWriter;
 //# sourceMappingURL=JSONCBWriter.js.map
 
 /***/ }),
-
-/***/ 782:
+/* 782 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -32861,8 +33410,7 @@ exports.isASCIIByte = isASCIIByte;
 //# sourceMappingURL=Byte.js.map
 
 /***/ }),
-
-/***/ 783:
+/* 783 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33060,8 +33608,7 @@ exports.Guard = Guard;
 //# sourceMappingURL=Guard.js.map
 
 /***/ }),
-
-/***/ 784:
+/* 784 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33126,15 +33673,23 @@ exports.AbortSignalImpl = AbortSignalImpl;
 //# sourceMappingURL=AbortSignalImpl.js.map
 
 /***/ }),
-
-/***/ 794:
+/* 785 */,
+/* 786 */,
+/* 787 */,
+/* 788 */,
+/* 789 */,
+/* 790 */,
+/* 791 */,
+/* 792 */,
+/* 793 */,
+/* 794 */
 /***/ (function(module) {
 
 module.exports = require("stream");
 
 /***/ }),
-
-/***/ 796:
+/* 795 */,
+/* 796 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33243,8 +33798,10 @@ WebIDLAlgorithm_1.idl_defineConst(DocumentFragmentImpl.prototype, "_nodeType", i
 //# sourceMappingURL=DocumentFragmentImpl.js.map
 
 /***/ }),
-
-/***/ 800:
+/* 797 */,
+/* 798 */,
+/* 799 */,
+/* 800 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33336,8 +33893,15 @@ exports.NodeIteratorImpl = NodeIteratorImpl;
 //# sourceMappingURL=NodeIteratorImpl.js.map
 
 /***/ }),
-
-/***/ 809:
+/* 801 */,
+/* 802 */,
+/* 803 */,
+/* 804 */,
+/* 805 */,
+/* 806 */,
+/* 807 */,
+/* 808 */,
+/* 809 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -33378,8 +33942,8 @@ module.exports = new Type('tag:yaml.org,2002:null', {
 
 
 /***/ }),
-
-/***/ 811:
+/* 810 */,
+/* 811 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -33469,8 +34033,8 @@ run();
 
 
 /***/ }),
-
-/***/ 813:
+/* 812 */,
+/* 813 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -36234,8 +36798,12 @@ exports.asciiSerializationOfAnOrigin = asciiSerializationOfAnOrigin;
 //# sourceMappingURL=URLAlgorithm.js.map
 
 /***/ }),
-
-/***/ 819:
+/* 814 */,
+/* 815 */,
+/* 816 */,
+/* 817 */,
+/* 818 */,
+/* 819 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -36281,8 +36849,7 @@ module.exports.addConstructor = deprecated('addConstructor');
 
 
 /***/ }),
-
-/***/ 820:
+/* 820 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -36397,8 +36964,12 @@ WebIDLAlgorithm_1.idl_defineConst(TextImpl.prototype, "_nodeType", interfaces_1.
 //# sourceMappingURL=TextImpl.js.map
 
 /***/ }),
-
-/***/ 826:
+/* 821 */,
+/* 822 */,
+/* 823 */,
+/* 824 */,
+/* 825 */,
+/* 826 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 var rng = __webpack_require__(139);
@@ -36433,15 +37004,26 @@ module.exports = v4;
 
 
 /***/ }),
-
-/***/ 835:
+/* 827 */,
+/* 828 */,
+/* 829 */,
+/* 830 */,
+/* 831 */,
+/* 832 */,
+/* 833 */,
+/* 834 */,
+/* 835 */
 /***/ (function(module) {
 
 module.exports = require("url");
 
 /***/ }),
-
-/***/ 841:
+/* 836 */,
+/* 837 */,
+/* 838 */,
+/* 839 */,
+/* 840 */,
+/* 841 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -36536,8 +37118,7 @@ module.exports = new Type('tag:yaml.org,2002:timestamp', {
 
 
 /***/ }),
-
-/***/ 842:
+/* 842 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -36588,8 +37169,29 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 
 
 /***/ }),
-
-/***/ 865:
+/* 843 */,
+/* 844 */,
+/* 845 */,
+/* 846 */,
+/* 847 */,
+/* 848 */,
+/* 849 */,
+/* 850 */,
+/* 851 */,
+/* 852 */,
+/* 853 */,
+/* 854 */,
+/* 855 */,
+/* 856 */,
+/* 857 */,
+/* 858 */,
+/* 859 */,
+/* 860 */,
+/* 861 */,
+/* 862 */,
+/* 863 */,
+/* 864 */,
+/* 865 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -36639,8 +37241,7 @@ exports.YAMLReader = YAMLReader;
 //# sourceMappingURL=YAMLReader.js.map
 
 /***/ }),
-
-/***/ 866:
+/* 866 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -36764,8 +37365,13 @@ WebIDLAlgorithm_1.idl_defineConst(AttrImpl.prototype, "specified", true);
 //# sourceMappingURL=AttrImpl.js.map
 
 /***/ }),
-
-/***/ 873:
+/* 867 */,
+/* 868 */,
+/* 869 */,
+/* 870 */,
+/* 871 */,
+/* 872 */,
+/* 873 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37624,8 +38230,17 @@ exports.tree_retarget = tree_retarget;
 //# sourceMappingURL=TreeAlgorithm.js.map
 
 /***/ }),
-
-/***/ 884:
+/* 874 */,
+/* 875 */,
+/* 876 */,
+/* 877 */,
+/* 878 */,
+/* 879 */,
+/* 880 */,
+/* 881 */,
+/* 882 */,
+/* 883 */,
+/* 884 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37705,8 +38320,11 @@ exports.deleteKey = deleteKey;
 
 
 /***/ }),
-
-/***/ 889:
+/* 885 */,
+/* 886 */,
+/* 887 */,
+/* 888 */,
+/* 889 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -37893,8 +38511,21 @@ exports.ObjectCache = ObjectCache;
 //# sourceMappingURL=ObjectCache.js.map
 
 /***/ }),
-
-/***/ 904:
+/* 890 */,
+/* 891 */,
+/* 892 */,
+/* 893 */,
+/* 894 */,
+/* 895 */,
+/* 896 */,
+/* 897 */,
+/* 898 */,
+/* 899 */,
+/* 900 */,
+/* 901 */,
+/* 902 */,
+/* 903 */,
+/* 904 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37926,8 +38557,10 @@ exports.Cast = Cast;
 //# sourceMappingURL=Cast.js.map
 
 /***/ }),
-
-/***/ 908:
+/* 905 */,
+/* 906 */,
+/* 907 */,
+/* 908 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -37969,9 +38602,9 @@ const tc = __importStar(__webpack_require__(533));
 const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
-const vendor_model_1 = __webpack_require__(995);
+const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
-class ZuluDistributor extends vendor_model_1.JavaBase {
+class ZuluDistributor extends base_installer_1.JavaBase {
     constructor(http, version, arch, javaPackage = "jdk") {
         super("Azul Systems, Inc.", version, arch, javaPackage);
         this.http = http;
@@ -38019,7 +38652,7 @@ class ZuluDistributor extends vendor_model_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaVersion, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor.replace(' ', '')}_${this.javaPackage}`, javaVersion, this.arch);
             return { javaPath: toolPath, javaVersion };
         });
     }
@@ -38042,7 +38675,7 @@ class ZuluDistributor extends vendor_model_1.JavaBase {
         });
     }
 }
-class ZuluFactory extends vendor_model_1.BaseFactory {
+class ZuluFactory extends base_installer_1.BaseFactory {
     getJavaDistributor(http, version, arch, javaPackage = 'jdk') {
         return new ZuluDistributor(http, version, arch, javaPackage);
     }
@@ -38051,8 +38684,8 @@ exports.default = ZuluFactory;
 
 
 /***/ }),
-
-/***/ 910:
+/* 909 */,
+/* 910 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -38084,8 +38717,7 @@ module.exports = Schema.DEFAULT = new Schema({
 
 
 /***/ }),
-
-/***/ 911:
+/* 911 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38603,8 +39235,8 @@ exports.XMLStringLexer = XMLStringLexer;
 //# sourceMappingURL=XMLStringLexer.js.map
 
 /***/ }),
-
-/***/ 913:
+/* 912 */,
+/* 913 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -38749,8 +39381,9 @@ module.exports = new Type('tag:yaml.org,2002:binary', {
 
 
 /***/ }),
-
-/***/ 916:
+/* 914 */,
+/* 915 */,
+/* 916 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -38765,8 +39398,8 @@ exports.XLink = "http://www.w3.org/1999/xlink";
 //# sourceMappingURL=Namespace.js.map
 
 /***/ }),
-
-/***/ 918:
+/* 917 */,
+/* 918 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38781,8 +39414,8 @@ exports.EmptySet = EmptySet_1.EmptySet;
 //# sourceMappingURL=index.js.map
 
 /***/ }),
-
-/***/ 920:
+/* 919 */,
+/* 920 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38839,8 +39472,7 @@ WebIDLAlgorithm_1.idl_defineConst(CDATASectionImpl.prototype, "_nodeType", inter
 //# sourceMappingURL=CDATASectionImpl.js.map
 
 /***/ }),
-
-/***/ 921:
+/* 921 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -38855,8 +39487,8 @@ module.exports = new Type('tag:yaml.org,2002:seq', {
 
 
 /***/ }),
-
-/***/ 923:
+/* 922 */,
+/* 923 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -38946,8 +39578,15 @@ exports.install = install;
 
 
 /***/ }),
-
-/***/ 932:
+/* 924 */,
+/* 925 */,
+/* 926 */,
+/* 927 */,
+/* 928 */,
+/* 929 */,
+/* 930 */,
+/* 931 */,
+/* 932 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39010,8 +39649,8 @@ exports.WindowImpl = WindowImpl;
 //# sourceMappingURL=WindowImpl.js.map
 
 /***/ }),
-
-/***/ 934:
+/* 933 */,
+/* 934 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -39175,8 +39814,7 @@ exports.ParentNodeImpl = ParentNodeImpl;
 //# sourceMappingURL=ParentNodeImpl.js.map
 
 /***/ }),
-
-/***/ 935:
+/* 935 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40073,8 +40711,16 @@ WebIDLAlgorithm_1.idl_defineConst(NodeImpl.prototype, "DOCUMENT_POSITION_IMPLEME
 //# sourceMappingURL=NodeImpl.js.map
 
 /***/ }),
-
-/***/ 945:
+/* 936 */,
+/* 937 */,
+/* 938 */,
+/* 939 */,
+/* 940 */,
+/* 941 */,
+/* 942 */,
+/* 943 */,
+/* 944 */,
+/* 945 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -40142,8 +40788,8 @@ module.exports = Type;
 
 
 /***/ }),
-
-/***/ 947:
+/* 946 */,
+/* 947 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -40183,8 +40829,9 @@ exports.Lazy = Lazy;
 //# sourceMappingURL=Lazy.js.map
 
 /***/ }),
-
-/***/ 950:
+/* 948 */,
+/* 949 */,
+/* 950 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -40248,8 +40895,17 @@ exports.checkBypass = checkBypass;
 
 
 /***/ }),
-
-/***/ 961:
+/* 951 */,
+/* 952 */,
+/* 953 */,
+/* 954 */,
+/* 955 */,
+/* 956 */,
+/* 957 */,
+/* 958 */,
+/* 959 */,
+/* 960 */,
+/* 961 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40363,8 +41019,13 @@ function setOptions(doc, options, isFragment) {
 //# sourceMappingURL=BuilderFunctions.js.map
 
 /***/ }),
-
-/***/ 968:
+/* 962 */,
+/* 963 */,
+/* 964 */,
+/* 965 */,
+/* 966 */,
+/* 967 */,
+/* 968 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -40431,8 +41092,8 @@ var EmptySetIterator = /** @class */ (function () {
 //# sourceMappingURL=EmptySet.js.map
 
 /***/ }),
-
-/***/ 970:
+/* 969 */,
+/* 970 */
 /***/ (function(__unusedmodule, exports) {
 
 "use strict";
@@ -40529,8 +41190,15 @@ var HowToCompare;
 //# sourceMappingURL=interfaces.js.map
 
 /***/ }),
-
-/***/ 979:
+/* 971 */,
+/* 972 */,
+/* 973 */,
+/* 974 */,
+/* 975 */,
+/* 976 */,
+/* 977 */,
+/* 978 */,
+/* 979 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40606,8 +41274,10 @@ exports.RetryHelper = RetryHelper;
 //# sourceMappingURL=retry-helper.js.map
 
 /***/ }),
-
-/***/ 983:
+/* 980 */,
+/* 981 */,
+/* 982 */,
+/* 983 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40778,8 +41448,9 @@ exports.ChildNodeImpl = ChildNodeImpl;
 //# sourceMappingURL=ChildNodeImpl.js.map
 
 /***/ }),
-
-/***/ 986:
+/* 984 */,
+/* 985 */,
+/* 986 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40829,8 +41500,8 @@ exports.exec = exec;
 //# sourceMappingURL=exec.js.map
 
 /***/ }),
-
-/***/ 988:
+/* 987 */,
+/* 988 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
@@ -40845,8 +41516,8 @@ module.exports = new Type('tag:yaml.org,2002:map', {
 
 
 /***/ }),
-
-/***/ 990:
+/* 989 */,
+/* 990 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
 "use strict";
@@ -40883,96 +41554,5 @@ var AbortControllerImpl = /** @class */ (function () {
 exports.AbortControllerImpl = AbortControllerImpl;
 //# sourceMappingURL=AbortControllerImpl.js.map
 
-/***/ }),
-
-/***/ 995:
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseFactory = exports.JavaBase = void 0;
-const tc = __importStar(__webpack_require__(533));
-const semver_1 = __importDefault(__webpack_require__(280));
-const path_1 = __importDefault(__webpack_require__(622));
-const util_1 = __webpack_require__(322);
-class JavaBase {
-    constructor(distributor, version, arch, javaPackage) {
-        this.distributor = distributor;
-        this.version = version;
-        this.arch = arch;
-        this.javaPackage = javaPackage;
-    }
-    findTool(toolName, version, arch) {
-        const toolPath = tc.find(toolName, version, arch);
-        let javaInfo = null;
-        const javaVersion = this.getVersionFromPath(toolPath);
-        if (!javaVersion) {
-            if (this.javaPackage === 'jdk') {
-                javaInfo = util_1.getJavaPreInstalledPath(version, this.distributor);
-            }
-            return javaInfo;
-        }
-        return {
-            javaVersion,
-            javaPath: toolPath
-        };
-    }
-    getVersionFromPath(toolPath) {
-        if (toolPath) {
-            return path_1.default.basename(path_1.default.dirname(toolPath));
-        }
-        return toolPath;
-    }
-    getJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const range = new semver_1.default.Range(this.version);
-            const majorVersion = yield this.getAvailableMajor(range);
-            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-            if (!javaInfo) {
-                javaInfo = yield this.downloadTool(range);
-            }
-            return javaInfo;
-        });
-    }
-}
-exports.JavaBase = JavaBase;
-class BaseFactory {
-}
-exports.BaseFactory = BaseFactory;
-
-
 /***/ })
-
-/******/ });
+/******/ ]);

@@ -7,7 +7,7 @@ import path from 'path';
 import semver from 'semver';
 
 import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
-import { BaseFactory, IJavaInfo, JavaBase } from "./vendor-model";
+import { BaseFactory, IJavaInfo, JavaBase } from "./base-installer";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
 class AdopOpenJdkDistributor extends JavaBase {

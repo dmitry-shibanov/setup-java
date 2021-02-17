@@ -50,7 +50,8 @@ export abstract class JavaBase {
 }
 
 export abstract class BaseFactory {
-    abstract getJavaDistributor(        http: httpm.HttpClient,
+    abstract getJavaDistributor(        
+        http: httpm.HttpClient,
         version: string,
         arch: string,
         javaPackage: string) : JavaBase;

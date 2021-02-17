@@ -6,7 +6,7 @@ import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
 
-import { BaseFactory, IJavaInfo, JavaBase } from './vendor-model';
+import { BaseFactory, IJavaInfo, JavaBase } from './base-installer';
 import { IZulu, IZuluDetailed } from './zulu-models';
 import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
 
@@ -64,7 +64,7 @@ class ZuluDistributor extends JavaBase {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor.replace(' ', '')}_${this.javaPackage}`, javaVersion, this.arch);
 
         return { javaPath: toolPath, javaVersion };
     }

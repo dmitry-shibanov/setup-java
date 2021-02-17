@@ -4,7 +4,7 @@ import * as path from 'path';
 
 import {normalizeVersion} from './util';
 import AdoptOpenJDKFactory from './distributors/adoptopenjdk-installer';
-import {BaseFactory} from './distributors/vendor-model';
+import {BaseFactory} from './distributors/base-installer';
 import ZuluDistributor from './distributors/zulu-installer';
 
 enum JavaDistributor {
