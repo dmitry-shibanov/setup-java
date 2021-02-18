@@ -1,11 +1,10 @@
 import * as core from '@actions/core';
-import * as installer from './installer';
 import * as auth from './auth';
 import * as gpg from './gpg';
 import * as constants from './constants';
 import * as path from 'path';
-import { JavaInitOptions } from './distributors/base-installer';
-import { getJavaDistributor } from './distributors/distributor-factory';
+import {JavaInitOptions} from './distributors/base-installer';
+import {getJavaDistributor} from './distributors/distributor-factory';
 
 async function run() {
   try {
@@ -29,8 +28,9 @@ async function run() {
       throw new Error('No distributor was found');
     }
 
-    const result = distributor.getJava();
-    // add output of version
+    const result = await distributor.getJava();
+    core.info(`${javaDistributor} java version is ${result.javaVersion}`);
+    core.info(`Java version path is ${result.javaPath}`);
 
     const matchersPath = path.join(__dirname, '..', '..', '.github');
     core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);

@@ -347,609 +347,49 @@ function copyFile(srcFile, destFile, force) {
 /* 7 */,
 /* 8 */,
 /* 9 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-const os = __importStar(__webpack_require__(87));
-const events = __importStar(__webpack_require__(614));
-const child = __importStar(__webpack_require__(129));
-const path = __importStar(__webpack_require__(622));
-const io = __importStar(__webpack_require__(1));
-const ioUtil = __importStar(__webpack_require__(672));
-/* eslint-disable @typescript-eslint/unbound-method */
-const IS_WINDOWS = process.platform === 'win32';
-/*
- * Class for running command line tools. Handles quoting and arg parsing in a platform agnostic way.
- */
-class ToolRunner extends events.EventEmitter {
-    constructor(toolPath, args, options) {
-        super();
-        if (!toolPath) {
-            throw new Error("Parameter 'toolPath' cannot be null or empty.");
-        }
-        this.toolPath = toolPath;
-        this.args = args || [];
-        this.options = options || {};
-    }
-    _debug(message) {
-        if (this.options.listeners && this.options.listeners.debug) {
-            this.options.listeners.debug(message);
-        }
-    }
-    _getCommandString(options, noPrefix) {
-        const toolPath = this._getSpawnFileName();
-        const args = this._getSpawnArgs(options);
-        let cmd = noPrefix ? '' : '[command]'; // omit prefix when piped to a second tool
-        if (IS_WINDOWS) {
-            // Windows + cmd file
-            if (this._isCmdFile()) {
-                cmd += toolPath;
-                for (const a of args) {
-                    cmd += ` ${a}`;
-                }
-            }
-            // Windows + verbatim
-            else if (options.windowsVerbatimArguments) {
-                cmd += `"${toolPath}"`;
-                for (const a of args) {
-                    cmd += ` ${a}`;
-                }
-            }
-            // Windows (regular)
-            else {
-                cmd += this._windowsQuoteCmdArg(toolPath);
-                for (const a of args) {
-                    cmd += ` ${this._windowsQuoteCmdArg(a)}`;
-                }
-            }
-        }
-        else {
-            // OSX/Linux - this can likely be improved with some form of quoting.
-            // creating processes on Unix is fundamentally different than Windows.
-            // on Unix, execvp() takes an arg array.
-            cmd += toolPath;
-            for (const a of args) {
-                cmd += ` ${a}`;
-            }
-        }
-        return cmd;
-    }
-    _processLineBuffer(data, strBuffer, onLine) {
-        try {
-            let s = strBuffer + data.toString();
-            let n = s.indexOf(os.EOL);
-            while (n > -1) {
-                const line = s.substring(0, n);
-                onLine(line);
-                // the rest of the string ...
-                s = s.substring(n + os.EOL.length);
-                n = s.indexOf(os.EOL);
-            }
-            strBuffer = s;
-        }
-        catch (err) {
-            // streaming lines to console is best effort.  Don't fail a build.
-            this._debug(`error processing line. Failed with error ${err}`);
-        }
-    }
-    _getSpawnFileName() {
-        if (IS_WINDOWS) {
-            if (this._isCmdFile()) {
-                return process.env['COMSPEC'] || 'cmd.exe';
-            }
-        }
-        return this.toolPath;
-    }
-    _getSpawnArgs(options) {
-        if (IS_WINDOWS) {
-            if (this._isCmdFile()) {
-                let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
-                for (const a of this.args) {
-                    argline += ' ';
-                    argline += options.windowsVerbatimArguments
-                        ? a
-                        : this._windowsQuoteCmdArg(a);
-                }
-                argline += '"';
-                return [argline];
-            }
-        }
-        return this.args;
-    }
-    _endsWith(str, end) {
-        return str.endsWith(end);
-    }
-    _isCmdFile() {
-        const upperToolPath = this.toolPath.toUpperCase();
-        return (this._endsWith(upperToolPath, '.CMD') ||
-            this._endsWith(upperToolPath, '.BAT'));
-    }
-    _windowsQuoteCmdArg(arg) {
-        // for .exe, apply the normal quoting rules that libuv applies
-        if (!this._isCmdFile()) {
-            return this._uvQuoteCmdArg(arg);
-        }
-        // otherwise apply quoting rules specific to the cmd.exe command line parser.
-        // the libuv rules are generic and are not designed specifically for cmd.exe
-        // command line parser.
-        //
-        // for a detailed description of the cmd.exe command line parser, refer to
-        // http://stackoverflow.com/questions/4094699/how-does-the-windows-command-interpreter-cmd-exe-parse-scripts/7970912#7970912
-        // need quotes for empty arg
-        if (!arg) {
-            return '""';
-        }
-        // determine whether the arg needs to be quoted
-        const cmdSpecialChars = [
-            ' ',
-            '\t',
-            '&',
-            '(',
-            ')',
-            '[',
-            ']',
-            '{',
-            '}',
-            '^',
-            '=',
-            ';',
-            '!',
-            "'",
-            '+',
-            ',',
-            '`',
-            '~',
-            '|',
-            '<',
-            '>',
-            '"'
-        ];
-        let needsQuotes = false;
-        for (const char of arg) {
-            if (cmdSpecialChars.some(x => x === char)) {
-                needsQuotes = true;
-                break;
-            }
-        }
-        // short-circuit if quotes not needed
-        if (!needsQuotes) {
-            return arg;
-        }
-        // the following quoting rules are very similar to the rules that by libuv applies.
-        //
-        // 1) wrap the string in quotes
-        //
-        // 2) double-up quotes - i.e. " => ""
-        //
-        //    this is different from the libuv quoting rules. libuv replaces " with \", which unfortunately
-        //    doesn't work well with a cmd.exe command line.
-        //
-        //    note, replacing " with "" also works well if the arg is passed to a downstream .NET console app.
-        //    for example, the command line:
-        //          foo.exe "myarg:""my val"""
-        //    is parsed by a .NET console app into an arg array:
-        //          [ "myarg:\"my val\"" ]
-        //    which is the same end result when applying libuv quoting rules. although the actual
-        //    command line from libuv quoting rules would look like:
-        //          foo.exe "myarg:\"my val\""
-        //
-        // 3) double-up slashes that precede a quote,
-        //    e.g.  hello \world    => "hello \world"
-        //          hello\"world    => "hello\\""world"
-        //          hello\\"world   => "hello\\\\""world"
-        //          hello world\    => "hello world\\"
-        //
-        //    technically this is not required for a cmd.exe command line, or the batch argument parser.
-        //    the reasons for including this as a .cmd quoting rule are:
-        //
-        //    a) this is optimized for the scenario where the argument is passed from the .cmd file to an
-        //       external program. many programs (e.g. .NET console apps) rely on the slash-doubling rule.
-        //
-        //    b) it's what we've been doing previously (by deferring to node default behavior) and we
-        //       haven't heard any complaints about that aspect.
-        //
-        // note, a weakness of the quoting rules chosen here, is that % is not escaped. in fact, % cannot be
-        // escaped when used on the command line directly - even though within a .cmd file % can be escaped
-        // by using %%.
-        //
-        // the saving grace is, on the command line, %var% is left as-is if var is not defined. this contrasts
-        // the line parsing rules within a .cmd file, where if var is not defined it is replaced with nothing.
-        //
-        // one option that was explored was replacing % with ^% - i.e. %var% => ^%var^%. this hack would
-        // often work, since it is unlikely that var^ would exist, and the ^ character is removed when the
-        // variable is used. the problem, however, is that ^ is not removed when %* is used to pass the args
-        // to an external program.
-        //
-        // an unexplored potential solution for the % escaping problem, is to create a wrapper .cmd file.
-        // % can be escaped within a .cmd file.
-        let reverse = '"';
-        let quoteHit = true;
-        for (let i = arg.length; i > 0; i--) {
-            // walk the string in reverse
-            reverse += arg[i - 1];
-            if (quoteHit && arg[i - 1] === '\\') {
-                reverse += '\\'; // double the slash
-            }
-            else if (arg[i - 1] === '"') {
-                quoteHit = true;
-                reverse += '"'; // double the quote
-            }
-            else {
-                quoteHit = false;
-            }
-        }
-        reverse += '"';
-        return reverse
-            .split('')
-            .reverse()
-            .join('');
-    }
-    _uvQuoteCmdArg(arg) {
-        // Tool runner wraps child_process.spawn() and needs to apply the same quoting as
-        // Node in certain cases where the undocumented spawn option windowsVerbatimArguments
-        // is used.
-        //
-        // Since this function is a port of quote_cmd_arg from Node 4.x (technically, lib UV,
-        // see https://github.com/nodejs/node/blob/v4.x/deps/uv/src/win/process.c for details),
-        // pasting copyright notice from Node within this function:
-        //
-        //      Copyright Joyent, Inc. and other Node contributors. All rights reserved.
-        //
-        //      Permission is hereby granted, free of charge, to any person obtaining a copy
-        //      of this software and associated documentation files (the "Software"), to
-        //      deal in the Software without restriction, including without limitation the
-        //      rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-        //      sell copies of the Software, and to permit persons to whom the Software is
-        //      furnished to do so, subject to the following conditions:
-        //
-        //      The above copyright notice and this permission notice shall be included in
-        //      all copies or substantial portions of the Software.
-        //
-        //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-        //      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-        //      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-        //      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-        //      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-        //      FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-        //      IN THE SOFTWARE.
-        if (!arg) {
-            // Need double quotation for empty argument
-            return '""';
-        }
-        if (!arg.includes(' ') && !arg.includes('\t') && !arg.includes('"')) {
-            // No quotation needed
-            return arg;
-        }
-        if (!arg.includes('"') && !arg.includes('\\')) {
-            // No embedded double quotes or backslashes, so I can just wrap
-            // quote marks around the whole thing.
-            return `"${arg}"`;
-        }
-        // Expected input/output:
-        //   input : hello"world
-        //   output: "hello\"world"
-        //   input : hello""world
-        //   output: "hello\"\"world"
-        //   input : hello\world
-        //   output: hello\world
-        //   input : hello\\world
-        //   output: hello\\world
-        //   input : hello\"world
-        //   output: "hello\\\"world"
-        //   input : hello\\"world
-        //   output: "hello\\\\\"world"
-        //   input : hello world\
-        //   output: "hello world\\" - note the comment in libuv actually reads "hello world\"
-        //                             but it appears the comment is wrong, it should be "hello world\\"
-        let reverse = '"';
-        let quoteHit = true;
-        for (let i = arg.length; i > 0; i--) {
-            // walk the string in reverse
-            reverse += arg[i - 1];
-            if (quoteHit && arg[i - 1] === '\\') {
-                reverse += '\\';
-            }
-            else if (arg[i - 1] === '"') {
-                quoteHit = true;
-                reverse += '\\';
-            }
-            else {
-                quoteHit = false;
-            }
-        }
-        reverse += '"';
-        return reverse
-            .split('')
-            .reverse()
-            .join('');
-    }
-    _cloneExecOptions(options) {
-        options = options || {};
-        const result = {
-            cwd: options.cwd || process.cwd(),
-            env: options.env || process.env,
-            silent: options.silent || false,
-            windowsVerbatimArguments: options.windowsVerbatimArguments || false,
-            failOnStdErr: options.failOnStdErr || false,
-            ignoreReturnCode: options.ignoreReturnCode || false,
-            delay: options.delay || 10000
-        };
-        result.outStream = options.outStream || process.stdout;
-        result.errStream = options.errStream || process.stderr;
-        return result;
-    }
-    _getSpawnOptions(options, toolPath) {
-        options = options || {};
-        const result = {};
-        result.cwd = options.cwd;
-        result.env = options.env;
-        result['windowsVerbatimArguments'] =
-            options.windowsVerbatimArguments || this._isCmdFile();
-        if (options.windowsVerbatimArguments) {
-            result.argv0 = `"${toolPath}"`;
-        }
-        return result;
-    }
-    /**
-     * Exec a tool.
-     * Output will be streamed to the live console.
-     * Returns promise with return code
-     *
-     * @param     tool     path to tool to exec
-     * @param     options  optional exec options.  See ExecOptions
-     * @returns   number
-     */
-    exec() {
-        return __awaiter(this, void 0, void 0, function* () {
-            // root the tool path if it is unrooted and contains relative pathing
-            if (!ioUtil.isRooted(this.toolPath) &&
-                (this.toolPath.includes('/') ||
-                    (IS_WINDOWS && this.toolPath.includes('\\')))) {
-                // prefer options.cwd if it is specified, however options.cwd may also need to be rooted
-                this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
-            }
-            // if the tool is only a file name, then resolve it from the PATH
-            // otherwise verify it exists (add extension on Windows if necessary)
-            this.toolPath = yield io.which(this.toolPath, true);
-            return new Promise((resolve, reject) => {
-                this._debug(`exec tool: ${this.toolPath}`);
-                this._debug('arguments:');
-                for (const arg of this.args) {
-                    this._debug(`   ${arg}`);
-                }
-                const optionsNonNull = this._cloneExecOptions(this.options);
-                if (!optionsNonNull.silent && optionsNonNull.outStream) {
-                    optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
-                }
-                const state = new ExecState(optionsNonNull, this.toolPath);
-                state.on('debug', (message) => {
-                    this._debug(message);
-                });
-                const fileName = this._getSpawnFileName();
-                const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
-                const stdbuffer = '';
-                if (cp.stdout) {
-                    cp.stdout.on('data', (data) => {
-                        if (this.options.listeners && this.options.listeners.stdout) {
-                            this.options.listeners.stdout(data);
-                        }
-                        if (!optionsNonNull.silent && optionsNonNull.outStream) {
-                            optionsNonNull.outStream.write(data);
-                        }
-                        this._processLineBuffer(data, stdbuffer, (line) => {
-                            if (this.options.listeners && this.options.listeners.stdline) {
-                                this.options.listeners.stdline(line);
-                            }
-                        });
-                    });
-                }
-                const errbuffer = '';
-                if (cp.stderr) {
-                    cp.stderr.on('data', (data) => {
-                        state.processStderr = true;
-                        if (this.options.listeners && this.options.listeners.stderr) {
-                            this.options.listeners.stderr(data);
-                        }
-                        if (!optionsNonNull.silent &&
-                            optionsNonNull.errStream &&
-                            optionsNonNull.outStream) {
-                            const s = optionsNonNull.failOnStdErr
-                                ? optionsNonNull.errStream
-                                : optionsNonNull.outStream;
-                            s.write(data);
-                        }
-                        this._processLineBuffer(data, errbuffer, (line) => {
-                            if (this.options.listeners && this.options.listeners.errline) {
-                                this.options.listeners.errline(line);
-                            }
-                        });
-                    });
-                }
-                cp.on('error', (err) => {
-                    state.processError = err.message;
-                    state.processExited = true;
-                    state.processClosed = true;
-                    state.CheckComplete();
-                });
-                cp.on('exit', (code) => {
-                    state.processExitCode = code;
-                    state.processExited = true;
-                    this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
-                    state.CheckComplete();
-                });
-                cp.on('close', (code) => {
-                    state.processExitCode = code;
-                    state.processExited = true;
-                    state.processClosed = true;
-                    this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
-                    state.CheckComplete();
-                });
-                state.on('done', (error, exitCode) => {
-                    if (stdbuffer.length > 0) {
-                        this.emit('stdline', stdbuffer);
-                    }
-                    if (errbuffer.length > 0) {
-                        this.emit('errline', errbuffer);
-                    }
-                    cp.removeAllListeners();
-                    if (error) {
-                        reject(error);
-                    }
-                    else {
-                        resolve(exitCode);
-                    }
-                });
-                if (this.options.input) {
-                    if (!cp.stdin) {
-                        throw new Error('child process missing stdin');
-                    }
-                    cp.stdin.end(this.options.input);
-                }
-            });
-        });
-    }
+
+
+var loader = __webpack_require__(457);
+var dumper = __webpack_require__(685);
+
+
+function deprecated(name) {
+  return function () {
+    throw new Error('Function ' + name + ' is deprecated and cannot be used.');
+  };
 }
-exports.ToolRunner = ToolRunner;
-/**
- * Convert an arg string to an array of args. Handles escaping
- *
- * @param    argString   string of arguments
- * @returns  string[]    array of arguments
- */
-function argStringToArray(argString) {
-    const args = [];
-    let inQuotes = false;
-    let escaped = false;
-    let arg = '';
-    function append(c) {
-        // we only escape double quotes.
-        if (escaped && c !== '"') {
-            arg += '\\';
-        }
-        arg += c;
-        escaped = false;
-    }
-    for (let i = 0; i < argString.length; i++) {
-        const c = argString.charAt(i);
-        if (c === '"') {
-            if (!escaped) {
-                inQuotes = !inQuotes;
-            }
-            else {
-                append(c);
-            }
-            continue;
-        }
-        if (c === '\\' && escaped) {
-            append(c);
-            continue;
-        }
-        if (c === '\\' && inQuotes) {
-            escaped = true;
-            continue;
-        }
-        if (c === ' ' && !inQuotes) {
-            if (arg.length > 0) {
-                args.push(arg);
-                arg = '';
-            }
-            continue;
-        }
-        append(c);
-    }
-    if (arg.length > 0) {
-        args.push(arg.trim());
-    }
-    return args;
-}
-exports.argStringToArray = argStringToArray;
-class ExecState extends events.EventEmitter {
-    constructor(options, toolPath) {
-        super();
-        this.processClosed = false; // tracks whether the process has exited and stdio is closed
-        this.processError = '';
-        this.processExitCode = 0;
-        this.processExited = false; // tracks whether the process has exited
-        this.processStderr = false; // tracks whether stderr was written to
-        this.delay = 10000; // 10 seconds
-        this.done = false;
-        this.timeout = null;
-        if (!toolPath) {
-            throw new Error('toolPath must not be empty');
-        }
-        this.options = options;
-        this.toolPath = toolPath;
-        if (options.delay) {
-            this.delay = options.delay;
-        }
-    }
-    CheckComplete() {
-        if (this.done) {
-            return;
-        }
-        if (this.processClosed) {
-            this._setResult();
-        }
-        else if (this.processExited) {
-            this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
-        }
-    }
-    _debug(message) {
-        this.emit('debug', message);
-    }
-    _setResult() {
-        // determine whether there is an error
-        let error;
-        if (this.processExited) {
-            if (this.processError) {
-                error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
-            }
-            else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
-                error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
-            }
-            else if (this.processStderr && this.options.failOnStdErr) {
-                error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
-            }
-        }
-        // clear the timeout
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-        }
-        this.done = true;
-        this.emit('done', error, this.processExitCode);
-    }
-    static HandleTimeout(state) {
-        if (state.done) {
-            return;
-        }
-        if (!state.processClosed && state.processExited) {
-            const message = `The STDIO streams did not close within ${state.delay /
-                1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
-            state._debug(message);
-        }
-        state._setResult();
-    }
-}
-//# sourceMappingURL=toolrunner.js.map
+
+
+module.exports.Type                = __webpack_require__(945);
+module.exports.Schema              = __webpack_require__(733);
+module.exports.FAILSAFE_SCHEMA     = __webpack_require__(265);
+module.exports.JSON_SCHEMA         = __webpack_require__(720);
+module.exports.CORE_SCHEMA         = __webpack_require__(611);
+module.exports.DEFAULT_SAFE_SCHEMA = __webpack_require__(723);
+module.exports.DEFAULT_FULL_SCHEMA = __webpack_require__(910);
+module.exports.load                = loader.load;
+module.exports.loadAll             = loader.loadAll;
+module.exports.safeLoad            = loader.safeLoad;
+module.exports.safeLoadAll         = loader.safeLoadAll;
+module.exports.dump                = dumper.dump;
+module.exports.safeDump            = dumper.safeDump;
+module.exports.YAMLException       = __webpack_require__(556);
+
+// Deprecated schema names from JS-YAML 2.0.x
+module.exports.MINIMAL_SCHEMA = __webpack_require__(265);
+module.exports.SAFE_SCHEMA    = __webpack_require__(723);
+module.exports.DEFAULT_SCHEMA = __webpack_require__(910);
+
+// Deprecated functions from JS-YAML 1.x.x
+module.exports.scan           = deprecated('scan');
+module.exports.parse          = deprecated('parse');
+module.exports.compose        = deprecated('compose');
+module.exports.addConstructor = deprecated('addConstructor');
+
 
 /***/ }),
 /* 10 */,
@@ -2871,7 +2311,12 @@ exports.element_insertAdjacent = element_insertAdjacent;
 //# sourceMappingURL=ElementAlgorithm.js.map
 
 /***/ }),
-/* 34 */,
+/* 34 */
+/***/ (function(module) {
+
+module.exports = require("https");
+
+/***/ }),
 /* 35 */
 /***/ (function(__unusedmodule, exports) {
 
@@ -3911,7 +3356,20 @@ exports.tokenList_serializeSteps = tokenList_serializeSteps;
 /* 55 */,
 /* 56 */,
 /* 57 */,
-/* 58 */,
+/* 58 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+// Unique ID creation requires a high quality random # generator.  In node.js
+// this is pretty straight-forward - we use the crypto API.
+
+var crypto = __webpack_require__(373);
+
+module.exports = function nodeRNG() {
+  return crypto.randomBytes(16);
+};
+
+
+/***/ }),
 /* 59 */,
 /* 60 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -4562,7 +4020,7 @@ var __values = (this && this.__values) || function(o) {
 Object.defineProperty(exports, "__esModule", { value: true });
 var DOMImpl_1 = __webpack_require__(648);
 var interfaces_1 = __webpack_require__(970);
-var AbstractRangeImpl_1 = __webpack_require__(537);
+var AbstractRangeImpl_1 = __webpack_require__(413);
 var DOMException_1 = __webpack_require__(35);
 var algorithm_1 = __webpack_require__(163);
 var WebIDLAlgorithm_1 = __webpack_require__(495);
@@ -7708,1007 +7166,7 @@ exports.eventTarget_removeAllEventListeners = eventTarget_removeAllEventListener
 
 /***/ }),
 /* 107 */,
-/* 108 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __values = (this && this.__values) || function(o) {
-    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
-    if (m) return m.call(o);
-    if (o && typeof o.length === "number") return {
-        next: function () {
-            if (o && i >= o.length) o = void 0;
-            return { value: o && o[i++], done: !o };
-        }
-    };
-    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
-};
-var __read = (this && this.__read) || function (o, n) {
-    var m = typeof Symbol === "function" && o[Symbol.iterator];
-    if (!m) return o;
-    var i = m.call(o), r, ar = [], e;
-    try {
-        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
-    }
-    catch (error) { e = { error: error }; }
-    finally {
-        try {
-            if (r && !r.done && (m = i["return"])) m.call(i);
-        }
-        finally { if (e) throw e.error; }
-    }
-    return ar;
-};
-var __spread = (this && this.__spread) || function () {
-    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
-    return ar;
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-var DOMImpl_1 = __webpack_require__(648);
-var interfaces_1 = __webpack_require__(970);
-var util_1 = __webpack_require__(918);
-var CustomEventImpl_1 = __webpack_require__(164);
-var EventImpl_1 = __webpack_require__(427);
-var DOMException_1 = __webpack_require__(35);
-var TreeAlgorithm_1 = __webpack_require__(873);
-var ShadowTreeAlgorithm_1 = __webpack_require__(180);
-var DOMAlgorithm_1 = __webpack_require__(304);
-/**
- * Sets the canceled flag of an event.
- *
- * @param event - an event
- */
-function event_setTheCanceledFlag(event) {
-    if (event._cancelable && !event._inPassiveListenerFlag) {
-        event._canceledFlag = true;
-    }
-}
-exports.event_setTheCanceledFlag = event_setTheCanceledFlag;
-/**
- * Initializes the value of an event.
- *
- * @param event - an event to initialize
- * @param type - the type of event
- * @param bubbles - whether the event propagates in reverse
- * @param cancelable - whether the event can be cancelled
- */
-function event_initialize(event, type, bubbles, cancelable) {
-    event._initializedFlag = true;
-    event._stopPropagationFlag = false;
-    event._stopImmediatePropagationFlag = false;
-    event._canceledFlag = false;
-    event._isTrusted = false;
-    event._target = null;
-    event._type = type;
-    event._bubbles = bubbles;
-    event._cancelable = cancelable;
-}
-exports.event_initialize = event_initialize;
-/**
- * Creates a new event.
- *
- * @param eventInterface - event interface
- * @param realm - realm
- */
-function event_createAnEvent(eventInterface, realm) {
-    if (realm === void 0) { realm = undefined; }
-    /**
-     * 1. If realm is not given, then set it to null.
-     * 2. Let dictionary be the result of converting the JavaScript value
-     * undefined to the dictionary type accepted by eventInterface’s
-     * constructor. (This dictionary type will either be EventInit or a
-     * dictionary that inherits from it.)
-     * 3. Let event be the result of running the inner event creation steps with
-     * eventInterface, realm, the time of the occurrence that the event is
-     * signaling, and dictionary.
-     * 4. Initialize event’s isTrusted attribute to true.
-     * 5. Return event.
-     */
-    if (realm === undefined)
-        realm = null;
-    var dictionary = {};
-    var event = event_innerEventCreationSteps(eventInterface, realm, new Date(), dictionary);
-    event._isTrusted = true;
-    return event;
-}
-exports.event_createAnEvent = event_createAnEvent;
-/**
- * Performs event creation steps.
- *
- * @param eventInterface - event interface
- * @param realm - realm
- * @param time - time of occurrance
- * @param dictionary - event attributes
- *
- */
-function event_innerEventCreationSteps(eventInterface, realm, time, dictionary) {
-    /**
-     * 1. Let event be the result of creating a new object using eventInterface.
-     * TODO: Implement realms
-     * If realm is non-null, then use that Realm; otherwise, use the default
-     * behavior defined in Web IDL.
-     */
-    var event = new eventInterface("");
-    /**
-     * 2. Set event’s initialized flag.
-     * 3. Initialize event’s timeStamp attribute to a DOMHighResTimeStamp
-     * representing the high resolution time from the time origin to time.
-     * 4. For each member → value in dictionary, if event has an attribute
-     * whose identifier is member, then initialize that attribute to value.
-     * 5. Run the event constructing steps with event.
-     * 6. Return event.
-     */
-    event._initializedFlag = true;
-    event._timeStamp = time.getTime();
-    Object.assign(event, dictionary);
-    if (DOMImpl_1.dom.features.steps) {
-        DOMAlgorithm_1.dom_runEventConstructingSteps(event);
-    }
-    return event;
-}
-exports.event_innerEventCreationSteps = event_innerEventCreationSteps;
-/**
- * Dispatches an event to an event target.
- *
- * @param event - the event to dispatch
- * @param target - event target
- * @param legacyTargetOverrideFlag - legacy target override flag
- * @param legacyOutputDidListenersThrowFlag - legacy output flag that returns
- * whether the event listener's callback threw an exception
- */
-function event_dispatch(event, target, legacyTargetOverrideFlag, legacyOutputDidListenersThrowFlag) {
-    var e_1, _a, e_2, _b;
-    if (legacyTargetOverrideFlag === void 0) { legacyTargetOverrideFlag = false; }
-    if (legacyOutputDidListenersThrowFlag === void 0) { legacyOutputDidListenersThrowFlag = { value: false }; }
-    var clearTargets = false;
-    /**
-     * 1. Set event's dispatch flag.
-     */
-    event._dispatchFlag = true;
-    /**
-     * 2. Let targetOverride be target, if legacy target override flag is not
-     * given, and target's associated Document otherwise.
-     *
-     * _Note:_ legacy target override flag is only used by HTML and only when
-     * target is a Window object.
-     */
-    var targetOverride = target;
-    if (legacyTargetOverrideFlag) {
-        var doc = target._associatedDocument;
-        if (util_1.Guard.isDocumentNode(doc)) {
-            targetOverride = doc;
-        }
-    }
-    /**
-     * 3. Let activationTarget be null.
-     * 4. Let relatedTarget be the result of retargeting event's relatedTarget
-     * against target.
-     * 5. If target is not relatedTarget or target is event's relatedTarget,
-     * then:
-    */
-    var activationTarget = null;
-    var relatedTarget = TreeAlgorithm_1.tree_retarget(event._relatedTarget, target);
-    if (target !== relatedTarget || target === event._relatedTarget) {
-        /**
-         * 5.1. Let touchTargets be a new list.
-         * 5.2. For each touchTarget of event's touch target list, append the
-         * result of retargeting touchTarget against target to touchTargets.
-         * 5.3. Append to an event path with event, target, targetOverride,
-         * relatedTarget, touchTargets, and false.
-         * 5.4. Let isActivationEvent be true, if event is a MouseEvent object
-         * and event's type attribute is "click", and false otherwise.
-         * 5.5. If isActivationEvent is true and target has activation behavior,
-         * then set activationTarget to target.
-         * 5.6. Let slotable be target, if target is a slotable and is assigned,
-         * and null otherwise.
-         * 5.7. Let slot-in-closed-tree be false.
-         * 5.8. Let parent be the result of invoking target's get the parent with
-         * event.
-         */
-        var touchTargets = [];
-        try {
-            for (var _c = __values(event._touchTargetList), _d = _c.next(); !_d.done; _d = _c.next()) {
-                var touchTarget = _d.value;
-                touchTargets.push(TreeAlgorithm_1.tree_retarget(touchTarget, target));
-            }
-        }
-        catch (e_1_1) { e_1 = { error: e_1_1 }; }
-        finally {
-            try {
-                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
-            }
-            finally { if (e_1) throw e_1.error; }
-        }
-        event_appendToAnEventPath(event, target, targetOverride, relatedTarget, touchTargets, false);
-        var isActivationEvent = (util_1.Guard.isMouseEvent(event) && event._type === "click");
-        if (isActivationEvent && target._activationBehavior !== undefined) {
-            activationTarget = target;
-        }
-        var slotable = (util_1.Guard.isSlotable(target) && ShadowTreeAlgorithm_1.shadowTree_isAssigned(target)) ?
-            target : null;
-        var slotInClosedTree = false;
-        var parent = target._getTheParent(event);
-        /**
-         * 5.9. While parent is non-null:
-         */
-        while (parent !== null && util_1.Guard.isNode(parent)) {
-            /**
-             * 5.9.1 If slotable is non-null:
-             * 5.9.1.1. Assert: parent is a slot.
-             * 5.9.1.2. Set slotable to null.
-             * 5.9.1.3. If parent's root is a shadow root whose mode is "closed",
-             * then set slot-in-closed-tree to true.
-             */
-            if (slotable !== null) {
-                if (!util_1.Guard.isSlot(parent)) {
-                    throw new Error("Parent node of a slotable should be a slot.");
-                }
-                slotable = null;
-                var root = TreeAlgorithm_1.tree_rootNode(parent, true);
-                if (util_1.Guard.isShadowRoot(root) && root._mode === "closed") {
-                    slotInClosedTree = true;
-                }
-            }
-            /**
-             * 5.9.2 If parent is a slotable and is assigned, then set slotable to
-             * parent.
-             * 5.9.3. Let relatedTarget be the result of retargeting event's
-             * relatedTarget against parent.
-             * 5.9.4. Let touchTargets be a new list.
-             * 5.9.4. For each touchTarget of event's touch target list, append the
-             * result of retargeting touchTarget against parent to touchTargets.
-             */
-            if (util_1.Guard.isSlotable(parent) && ShadowTreeAlgorithm_1.shadowTree_isAssigned(parent)) {
-                slotable = parent;
-            }
-            relatedTarget = TreeAlgorithm_1.tree_retarget(event._relatedTarget, parent);
-            touchTargets = [];
-            try {
-                for (var _e = (e_2 = void 0, __values(event._touchTargetList)), _f = _e.next(); !_f.done; _f = _e.next()) {
-                    var touchTarget = _f.value;
-                    touchTargets.push(TreeAlgorithm_1.tree_retarget(touchTarget, parent));
-                }
-            }
-            catch (e_2_1) { e_2 = { error: e_2_1 }; }
-            finally {
-                try {
-                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
-                }
-                finally { if (e_2) throw e_2.error; }
-            }
-            /**
-             * 5.9.6. If parent is a Window object, or parent is a node and target's
-             * root is a shadow-including inclusive ancestor of parent, then:
-             */
-            if (util_1.Guard.isWindow(parent) || (util_1.Guard.isNode(parent) && util_1.Guard.isNode(target) &&
-                TreeAlgorithm_1.tree_isAncestorOf(TreeAlgorithm_1.tree_rootNode(target, true), parent, true, true))) {
-                /**
-                 * 5.9.6.1. If isActivationEvent is true, event's bubbles attribute
-                 * is true, activationTarget is null, and parent has activation
-                 * behavior, then set activationTarget to parent.
-                 * 5.9.6.2. Append to an event path with event, parent, null,
-                 * relatedTarget, touchTargets, and slot-in-closed-tree.
-                 */
-                if (isActivationEvent && event._bubbles && activationTarget === null &&
-                    parent._activationBehavior) {
-                    activationTarget = parent;
-                }
-                event_appendToAnEventPath(event, parent, null, relatedTarget, touchTargets, slotInClosedTree);
-            }
-            else if (parent === relatedTarget) {
-                /**
-                 * 5.9.7. Otherwise, if parent is relatedTarget,
-                 * then set parent to null.
-                 */
-                parent = null;
-            }
-            else {
-                /**
-                 * 5.9.8. Otherwise, set target to parent and then:
-                 * 5.9.8.1. If isActivationEvent is true, activationTarget is null,
-                 * and target has activation behavior, then set activationTarget
-                 * to target.
-                 * 5.9.8.2. Append to an event path with event, parent, target,
-                 * relatedTarget, touchTargets, and slot-in-closed-tree.
-                 */
-                target = parent;
-                if (isActivationEvent && activationTarget === null &&
-                    target._activationBehavior) {
-                    activationTarget = target;
-                }
-                event_appendToAnEventPath(event, parent, target, relatedTarget, touchTargets, slotInClosedTree);
-            }
-            /**
-             * 5.9.9. If parent is non-null, then set parent to the result of
-             * invoking parent's get the parent with event.
-             * 5.9.10. Set slot-in-closed-tree to false.
-             */
-            if (parent !== null) {
-                parent = parent._getTheParent(event);
-            }
-            slotInClosedTree = false;
-        }
-        /**
-         * 5.10. Let clearTargetsStruct be the last struct in event's path whose
-         * shadow-adjusted target is non-null.
-         */
-        var clearTargetsStruct = null;
-        var path = event._path;
-        for (var i = path.length - 1; i >= 0; i--) {
-            var struct = path[i];
-            if (struct.shadowAdjustedTarget !== null) {
-                clearTargetsStruct = struct;
-                break;
-            }
-        }
-        /**
-         * 5.11. Let clearTargets be true if clearTargetsStruct's shadow-adjusted
-         * target, clearTargetsStruct's relatedTarget, or an EventTarget object
-         * in clearTargetsStruct's touch target list is a node and its root is
-         * a shadow root, and false otherwise.
-         */
-        if (clearTargetsStruct !== null) {
-            if (util_1.Guard.isNode(clearTargetsStruct.shadowAdjustedTarget) &&
-                util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(clearTargetsStruct.shadowAdjustedTarget, true))) {
-                clearTargets = true;
-            }
-            else if (util_1.Guard.isNode(clearTargetsStruct.relatedTarget) &&
-                util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(clearTargetsStruct.relatedTarget, true))) {
-                clearTargets = true;
-            }
-            else {
-                for (var j = 0; j < clearTargetsStruct.touchTargetList.length; j++) {
-                    var struct = clearTargetsStruct.touchTargetList[j];
-                    if (util_1.Guard.isNode(struct) &&
-                        util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(struct, true))) {
-                        clearTargets = true;
-                        break;
-                    }
-                }
-            }
-        }
-        /**
-         * 5.12. If activationTarget is non-null and activationTarget has
-         * legacy-pre-activation behavior, then run activationTarget's
-         * legacy-pre-activation behavior.
-         */
-        if (activationTarget !== null &&
-            activationTarget._legacyPreActivationBehavior !== undefined) {
-            activationTarget._legacyPreActivationBehavior(event);
-        }
-        /**
-         * 5.13. For each struct in event's path, in reverse order:
-         */
-        for (var i = path.length - 1; i >= 0; i--) {
-            var struct = path[i];
-            /**
-             * 5.13.1. If struct's shadow-adjusted target is non-null, then set
-             * event's eventPhase attribute to AT_TARGET.
-             * 5.13.2. Otherwise, set event's eventPhase attribute to
-             * CAPTURING_PHASE.
-             * 5.13.3. Invoke with struct, event, "capturing", and
-             * legacyOutputDidListenersThrowFlag if given.
-             */
-            if (struct.shadowAdjustedTarget !== null) {
-                event._eventPhase = interfaces_1.EventPhase.AtTarget;
-            }
-            else {
-                event._eventPhase = interfaces_1.EventPhase.Capturing;
-            }
-            event_invoke(struct, event, "capturing", legacyOutputDidListenersThrowFlag);
-        }
-        /**
-         * 5.14. For each struct in event's path
-         */
-        for (var i = 0; i < path.length; i++) {
-            var struct = path[i];
-            /**
-             * 5.14.1. If struct's shadow-adjusted target is non-null, then set
-             * event's eventPhase attribute to AT_TARGET.
-             * 5.14.2. Otherwise:
-             * 5.14.2.1. If event's bubbles attribute is false, then continue.
-             * 5.14.2.2. Set event's eventPhase attribute to BUBBLING_PHASE.
-             * 5.14.3. Invoke with struct, event, "bubbling", and
-             * legacyOutputDidListenersThrowFlag if given.
-             */
-            if (struct.shadowAdjustedTarget !== null) {
-                event._eventPhase = interfaces_1.EventPhase.AtTarget;
-            }
-            else {
-                if (!event._bubbles)
-                    continue;
-                event._eventPhase = interfaces_1.EventPhase.Bubbling;
-            }
-            event_invoke(struct, event, "bubbling", legacyOutputDidListenersThrowFlag);
-        }
-    }
-    /**
-     * 6. Set event's eventPhase attribute to NONE.
-     * 7. Set event's currentTarget attribute to null.
-     * 8. Set event's path to the empty list.
-     * 9. Unset event's dispatch flag, stop propagation flag, and stop
-     * immediate propagation flag.
-     */
-    event._eventPhase = interfaces_1.EventPhase.None;
-    event._currentTarget = null;
-    event._path = [];
-    event._dispatchFlag = false;
-    event._stopPropagationFlag = false;
-    event._stopImmediatePropagationFlag = false;
-    /**
-     * 10. If clearTargets, then:
-     * 10.1. Set event's target to null.
-     * 10.2. Set event's relatedTarget to null.
-     * 10.3. Set event's touch target list to the empty list.
-     */
-    if (clearTargets) {
-        event._target = null;
-        event._relatedTarget = null;
-        event._touchTargetList = [];
-    }
-    /**
-     * 11. If activationTarget is non-null, then:
-     * 11.1. If event's canceled flag is unset, then run activationTarget's
-     * activation behavior with event.
-     * 11.2. Otherwise, if activationTarget has legacy-canceled-activation
-     * behavior, then run activationTarget's legacy-canceled-activation
-     * behavior.
-     */
-    if (activationTarget !== null) {
-        if (!event._canceledFlag && activationTarget._activationBehavior !== undefined) {
-            activationTarget._activationBehavior(event);
-        }
-        else if (activationTarget._legacyCanceledActivationBehavior !== undefined) {
-            activationTarget._legacyCanceledActivationBehavior(event);
-        }
-    }
-    /**
-     * 12. Return false if event's canceled flag is set, and true otherwise.
-     */
-    return !event._canceledFlag;
-}
-exports.event_dispatch = event_dispatch;
-/**
- * Appends a new struct to an event's path.
- *
- * @param event - an event
- * @param invocationTarget - the target of the invocation
- * @param shadowAdjustedTarget - shadow-root adjusted event target
- * @param relatedTarget - related event target
- * @param touchTargets - a list of touch targets
- * @param slotInClosedTree - if the target's parent is a closed shadow root
- */
-function event_appendToAnEventPath(event, invocationTarget, shadowAdjustedTarget, relatedTarget, touchTargets, slotInClosedTree) {
-    /**
-     * 1. Let invocationTargetInShadowTree be false.
-     * 2. If invocationTarget is a node and its root is a shadow root, then
-     * set invocationTargetInShadowTree to true.
-     */
-    var invocationTargetInShadowTree = false;
-    if (util_1.Guard.isNode(invocationTarget) &&
-        util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(invocationTarget))) {
-        invocationTargetInShadowTree = true;
-    }
-    /**
-     * 3. Let root-of-closed-tree be false.
-     * 4. If invocationTarget is a shadow root whose mode is "closed", then
-     * set root-of-closed-tree to true.
-     */
-    var rootOfClosedTree = false;
-    if (util_1.Guard.isShadowRoot(invocationTarget) &&
-        invocationTarget._mode === "closed") {
-        rootOfClosedTree = true;
-    }
-    /**
-     * 5. Append a new struct to event's path whose invocation target is
-     * invocationTarget, invocation-target-in-shadow-tree is
-     * invocationTargetInShadowTree, shadow-adjusted target is
-     * shadowAdjustedTarget, relatedTarget is relatedTarget,
-     * touch target list is touchTargets, root-of-closed-tree is
-     * root-of-closed-tree, and slot-in-closed-tree is slot-in-closed-tree.
-     */
-    event._path.push({
-        invocationTarget: invocationTarget,
-        invocationTargetInShadowTree: invocationTargetInShadowTree,
-        shadowAdjustedTarget: shadowAdjustedTarget,
-        relatedTarget: relatedTarget,
-        touchTargetList: touchTargets,
-        rootOfClosedTree: rootOfClosedTree,
-        slotInClosedTree: slotInClosedTree
-    });
-}
-exports.event_appendToAnEventPath = event_appendToAnEventPath;
-/**
- * Invokes an event.
- *
- * @param struct - a struct defining event's path
- * @param event - the event to invoke
- * @param phase - event phase
- * @param legacyOutputDidListenersThrowFlag - legacy output flag that returns
- * whether the event listener's callback threw an exception
- */
-function event_invoke(struct, event, phase, legacyOutputDidListenersThrowFlag) {
-    if (legacyOutputDidListenersThrowFlag === void 0) { legacyOutputDidListenersThrowFlag = { value: false }; }
-    /**
-     * 1. Set event's target to the shadow-adjusted target of the last struct
-     * in event's path, that is either struct or preceding struct, whose
-     * shadow-adjusted target is non-null.
-     */
-    var path = event._path;
-    var index = -1;
-    for (var i = 0; i < path.length; i++) {
-        if (path[i] === struct) {
-            index = i;
-            break;
-        }
-    }
-    if (index !== -1) {
-        var item = path[index];
-        if (item.shadowAdjustedTarget !== null) {
-            event._target = item.shadowAdjustedTarget;
-        }
-        else if (index > 0) {
-            item = path[index - 1];
-            if (item.shadowAdjustedTarget !== null) {
-                event._target = item.shadowAdjustedTarget;
-            }
-        }
-    }
-    /**
-     * 2. Set event's relatedTarget to struct's relatedTarget.
-     * 3. Set event's touch target list to struct's touch target list.
-     * 4. If event's stop propagation flag is set, then return.
-     * 5. Initialize event's currentTarget attribute to struct's invocation
-     * target.
-     * 6. Let listeners be a clone of event's currentTarget attribute value's
-     * event listener list.
-     *
-     * _Note:_ This avoids event listeners added after this point from being
-     * run. Note that removal still has an effect due to the removed field.
-     */
-    event._relatedTarget = struct.relatedTarget;
-    event._touchTargetList = struct.touchTargetList;
-    if (event._stopPropagationFlag)
-        return;
-    event._currentTarget = struct.invocationTarget;
-    var currentTarget = event._currentTarget;
-    var targetListeners = currentTarget._eventListenerList;
-    var listeners = new (Array.bind.apply(Array, __spread([void 0], targetListeners)))();
-    /**
-     * 7. Let found be the result of running inner invoke with event, listeners,
-     * phase, and legacyOutputDidListenersThrowFlag if given.
-     */
-    var found = event_innerInvoke(event, listeners, phase, struct, legacyOutputDidListenersThrowFlag);
-    /**
-     * 8. If found is false and event's isTrusted attribute is true, then:
-     */
-    if (!found && event._isTrusted) {
-        /**
-         * 8.1. Let originalEventType be event's type attribute value.
-         * 8.2. If event's type attribute value is a match for any of the strings
-         * in the first column in the following table, set event's type attribute
-         * value to the string in the second column on the same row as the matching
-         * string, and return otherwise.
-         *
-         * Event type           | Legacy event type
-         * -------------------------------------------------
-         * "animationend"       | "webkitAnimationEnd"
-         * "animationiteration" | "webkitAnimationIteration"
-         * "animationstart"     | "webkitAnimationStart"
-         * "transitionend"      | "webkitTransitionEnd"
-         */
-        var originalEventType = event._type;
-        if (originalEventType === "animationend") {
-            event._type = "webkitAnimationEnd";
-        }
-        else if (originalEventType === "animationiteration") {
-            event._type = "webkitAnimationIteration";
-        }
-        else if (originalEventType === "animationstart") {
-            event._type = "webkitAnimationStart";
-        }
-        else if (originalEventType === "transitionend") {
-            event._type = "webkitTransitionEnd";
-        }
-        /**
-         * 8.3. Inner invoke with event, listeners, phase, and
-         * legacyOutputDidListenersThrowFlag if given.
-         * 8.4. Set event's type attribute value to originalEventType.
-         */
-        event_innerInvoke(event, listeners, phase, struct, legacyOutputDidListenersThrowFlag);
-        event._type = originalEventType;
-    }
-}
-exports.event_invoke = event_invoke;
-/**
- * Invokes an event.
- *
- * @param event - the event to invoke
- * @param listeners - event listeners
- * @param phase - event phase
- * @param struct - a struct defining event's path
- * @param legacyOutputDidListenersThrowFlag - legacy output flag that returns
- * whether the event listener's callback threw an exception
- */
-function event_innerInvoke(event, listeners, phase, struct, legacyOutputDidListenersThrowFlag) {
-    if (legacyOutputDidListenersThrowFlag === void 0) { legacyOutputDidListenersThrowFlag = { value: false }; }
-    /**
-     * 1. Let found be false.
-     * 2. For each listener in listeners, whose removed is false:
-     */
-    var found = false;
-    for (var i = 0; i < listeners.length; i++) {
-        var listener = listeners[i];
-        if (!listener.removed) {
-            /**
-             * 2.1. If event's type attribute value is not listener's type, then
-             * continue.
-             * 2.2. Set found to true.
-             * 2.3. If phase is "capturing" and listener's capture is false, then
-             * continue.
-             * 2.4. If phase is "bubbling" and listener's capture is true, then
-             * continue.
-             */
-            if (event._type !== listener.type)
-                continue;
-            found = true;
-            if (phase === "capturing" && !listener.capture)
-                continue;
-            if (phase === "bubbling" && listener.capture)
-                continue;
-            /**
-             * 2.5. If listener's once is true, then remove listener from event's
-             * currentTarget attribute value's event listener list.
-             */
-            if (listener.once && event._currentTarget !== null) {
-                var impl = event._currentTarget;
-                var index = -1;
-                for (var i_1 = 0; i_1 < impl._eventListenerList.length; i_1++) {
-                    if (impl._eventListenerList[i_1] === listener) {
-                        index = i_1;
-                        break;
-                    }
-                }
-                if (index !== -1) {
-                    impl._eventListenerList.splice(index, 1);
-                }
-            }
-            /**
-             * TODO: Implement realms
-             *
-             * 2.6. Let global be listener callback's associated Realm's global
-             * object.
-             */
-            var globalObject = undefined;
-            /**
-             * 2.7. Let currentEvent be undefined.
-             * 2.8. If global is a Window object, then:
-             * 2.8.1. Set currentEvent to global's current event.
-             * 2.8.2. If struct's invocation-target-in-shadow-tree is false, then
-             * set global's current event to event.
-             */
-            var currentEvent = undefined;
-            if (util_1.Guard.isWindow(globalObject)) {
-                currentEvent = globalObject._currentEvent;
-                if (struct.invocationTargetInShadowTree === false) {
-                    globalObject._currentEvent = event;
-                }
-            }
-            /**
-             * 2.9. If listener's passive is true, then set event's in passive
-             * listener flag.
-             * 2.10. Call a user object's operation with listener's callback,
-             * "handleEvent", « event », and event's currentTarget attribute value.
-             */
-            if (listener.passive)
-                event._inPassiveListenerFlag = true;
-            try {
-                listener.callback.handleEvent.call(event._currentTarget, event);
-            }
-            catch (err) {
-                /**
-                 * If this throws an exception, then:
-                 * 2.10.1. Report the exception.
-                 * 2.10.2. Set legacyOutputDidListenersThrowFlag if given.
-                 *
-                 * _Note:_ The legacyOutputDidListenersThrowFlag is only used by
-                 * Indexed Database API.
-                 * TODO: Report the exception
-                 * See: https://html.spec.whatwg.org/multipage/webappapis.html#runtime-script-errors-in-documents
-                 */
-                legacyOutputDidListenersThrowFlag.value = true;
-            }
-            /**
-             * 2.11. Unset event's in passive listener flag.
-             */
-            if (listener.passive)
-                event._inPassiveListenerFlag = false;
-            /**
-             * 2.12. If global is a Window object, then set global's current event
-             * to currentEvent.
-             */
-            if (util_1.Guard.isWindow(globalObject)) {
-                globalObject._currentEvent = currentEvent;
-            }
-            /**
-             * 2.13. If event's stop immediate propagation flag is set, then return
-             * found.
-             */
-            if (event._stopImmediatePropagationFlag)
-                return found;
-        }
-    }
-    /**
-     * 3. Return found.
-     */
-    return found;
-}
-exports.event_innerInvoke = event_innerInvoke;
-/**
- * Fires an event at target.
- * @param e - event name
- * @param target - event target
- * @param eventConstructor - an event constructor, with a description of how
- * IDL attributes are to be initialized
- * @param idlAttributes - a dictionary describing how IDL attributes are
- * to be initialized
- * @param legacyTargetOverrideFlag - legacy target override flag
- */
-function event_fireAnEvent(e, target, eventConstructor, idlAttributes, legacyTargetOverrideFlag) {
-    /**
-     * 1. If eventConstructor is not given, then let eventConstructor be Event.
-     */
-    if (eventConstructor === undefined) {
-        eventConstructor = EventImpl_1.EventImpl;
-    }
-    /**
-     * 2. Let event be the result of creating an event given eventConstructor,
-     * in the relevant Realm of target.
-     */
-    var event = event_createAnEvent(eventConstructor);
-    /**
-     * 3. Initialize event’s type attribute to e.
-     */
-    event._type = e;
-    /**
-     * 4. Initialize any other IDL attributes of event as described in the
-     * invocation of this algorithm.
-     * _Note:_ This also allows for the isTrusted attribute to be set to false.
-     */
-    if (idlAttributes) {
-        for (var key in idlAttributes) {
-            var idlObj = event;
-            idlObj[key] = idlAttributes[key];
-        }
-    }
-    /**
-     * 5. Return the result of dispatching event at target, with legacy target
-     * override flag set if set.
-     */
-    return event_dispatch(event, target, legacyTargetOverrideFlag);
-}
-exports.event_fireAnEvent = event_fireAnEvent;
-/**
- * Creates an event.
- *
- * @param eventInterface - the name of the event interface
- */
-function event_createLegacyEvent(eventInterface) {
-    /**
-     * 1. Let constructor be null.
-     */
-    var constructor = null;
-    /**
-     * TODO: Implement in HTML DOM
-     * 2. If interface is an ASCII case-insensitive match for any of the strings
-     * in the first column in the following table, then set constructor to the
-     * interface in the second column on the same row as the matching string:
-     *
-     * String | Interface
-     * -------|----------
-     * "beforeunloadevent" | BeforeUnloadEvent
-     * "compositionevent" | CompositionEvent
-     * "customevent" | CustomEvent
-     * "devicemotionevent" | DeviceMotionEvent
-     * "deviceorientationevent" | DeviceOrientationEvent
-     * "dragevent" | DragEvent
-     * "event" | Event
-     * "events" | Event
-     * "focusevent" | FocusEvent
-     * "hashchangeevent" | HashChangeEvent
-     * "htmlevents" | Event
-     * "keyboardevent" | KeyboardEvent
-     * "messageevent" | MessageEvent
-     * "mouseevent" | MouseEvent
-     * "mouseevents" |
-     * "storageevent" | StorageEvent
-     * "svgevents" | Event
-     * "textevent" | CompositionEvent
-     * "touchevent" | TouchEvent
-     * "uievent" | UIEvent
-     * "uievents" | UIEvent
-     */
-    switch (eventInterface.toLowerCase()) {
-        case "beforeunloadevent":
-            break;
-        case "compositionevent":
-            break;
-        case "customevent":
-            constructor = CustomEventImpl_1.CustomEventImpl;
-            break;
-        case "devicemotionevent":
-            break;
-        case "deviceorientationevent":
-            break;
-        case "dragevent":
-            break;
-        case "event":
-        case "events":
-            constructor = EventImpl_1.EventImpl;
-            break;
-        case "focusevent":
-            break;
-        case "hashchangeevent":
-            break;
-        case "htmlevents":
-            break;
-        case "keyboardevent":
-            break;
-        case "messageevent":
-            break;
-        case "mouseevent":
-            break;
-        case "mouseevents":
-            break;
-        case "storageevent":
-            break;
-        case "svgevents":
-            break;
-        case "textevent":
-            break;
-        case "touchevent":
-            break;
-        case "uievent":
-            break;
-        case "uievents":
-            break;
-    }
-    /**
-     * 3. If constructor is null, then throw a "NotSupportedError" DOMException.
-     */
-    if (constructor === null) {
-        throw new DOMException_1.NotSupportedError("Event constructor not found for interface " + eventInterface + ".");
-    }
-    /**
-     * 4. If the interface indicated by constructor is not exposed on the
-     * relevant global object of the context object, then throw a
-     * "NotSupportedError" DOMException.
-     * _Note:_ Typically user agents disable support for touch events in some
-     * configurations, in which case this clause would be triggered for the
-     * interface TouchEvent.
-     */
-    // TODO: Implement realms
-    /**
-     * 5. Let event be the result of creating an event given constructor.
-     * 6. Initialize event’s type attribute to the empty string.
-     * 7. Initialize event’s timeStamp attribute to a DOMHighResTimeStamp
-     * representing the high resolution time from the time origin to now.
-     * 8. Initialize event’s isTrusted attribute to false.
-     * 9. Unset event’s initialized flag.
-     */
-    var event = new constructor("");
-    event._type = "";
-    event._timeStamp = new Date().getTime();
-    event._isTrusted = false;
-    event._initializedFlag = false;
-    /**
-     * 10. Return event.
-     */
-    return event;
-}
-exports.event_createLegacyEvent = event_createLegacyEvent;
-/**
- * Getter of an event handler IDL attribute.
- *
- * @param eventTarget - event target
- * @param name - event name
- */
-function event_getterEventHandlerIDLAttribute(thisObj, name) {
-    /**
-     * 1. Let eventTarget be the result of determining the target of an event
-     * handler given this object and name.
-     * 2. If eventTarget is null, then return null.
-     * 3. Return the result of getting the current value of the event handler
-     * given eventTarget and name.
-     */
-    var eventTarget = event_determineTheTargetOfAnEventHandler(thisObj, name);
-    if (eventTarget === null)
-        return null;
-    return event_getTheCurrentValueOfAnEventHandler(eventTarget, name);
-}
-exports.event_getterEventHandlerIDLAttribute = event_getterEventHandlerIDLAttribute;
-/**
- * Setter of an event handler IDL attribute.
- *
- * @param eventTarget - event target
- * @param name - event name
- * @param value - event handler
- */
-function event_setterEventHandlerIDLAttribute(thisObj, name, value) {
-    /**
-     * 1. Let eventTarget be the result of determining the target of an event
-     * handler given this object and name.
-     * 2. If eventTarget is null, then return.
-     * 3. If the given value is null, then deactivate an event handler given
-     * eventTarget and name.
-     * 4. Otherwise:
-     * 4.1. Let handlerMap be eventTarget's event handler map.
-     * 4.2. Let eventHandler be handlerMap[name].
-     * 4.3. Set eventHandler's value to the given value.
-     * 4.4. Activate an event handler given eventTarget and name.
-     */
-    var eventTarget = event_determineTheTargetOfAnEventHandler(thisObj, name);
-    if (eventTarget === null)
-        return;
-    if (value === null) {
-        event_deactivateAnEventHandler(eventTarget, name);
-    }
-    else {
-        var handlerMap = eventTarget._eventHandlerMap;
-        var eventHandler = handlerMap["onabort"];
-        if (eventHandler !== undefined) {
-            eventHandler.value = value;
-        }
-        event_activateAnEventHandler(eventTarget, name);
-    }
-}
-exports.event_setterEventHandlerIDLAttribute = event_setterEventHandlerIDLAttribute;
-/**
- * Determines the target of an event handler.
- *
- * @param eventTarget - event target
- * @param name - event name
- */
-function event_determineTheTargetOfAnEventHandler(eventTarget, name) {
-    // TODO: Implement in HTML DOM
-    return null;
-}
-exports.event_determineTheTargetOfAnEventHandler = event_determineTheTargetOfAnEventHandler;
-/**
- * Gets the current value of an event handler.
- *
- * @param eventTarget - event target
- * @param name - event name
- */
-function event_getTheCurrentValueOfAnEventHandler(eventTarget, name) {
-    // TODO: Implement in HTML DOM
-    return null;
-}
-exports.event_getTheCurrentValueOfAnEventHandler = event_getTheCurrentValueOfAnEventHandler;
-/**
- * Activates an event handler.
- *
- * @param eventTarget - event target
- * @param name - event name
- */
-function event_activateAnEventHandler(eventTarget, name) {
-    // TODO: Implement in HTML DOM
-}
-exports.event_activateAnEventHandler = event_activateAnEventHandler;
-/**
- * Deactivates an event handler.
- *
- * @param eventTarget - event target
- * @param name - event name
- */
-function event_deactivateAnEventHandler(eventTarget, name) {
-    // TODO: Implement in HTML DOM
-}
-exports.event_deactivateAnEventHandler = event_deactivateAnEventHandler;
-//# sourceMappingURL=EventAlgorithm.js.map
-
-/***/ }),
+/* 108 */,
 /* 109 */,
 /* 110 */,
 /* 111 */,
@@ -8768,7 +7226,7 @@ var AbortControllerImpl_1 = __webpack_require__(990);
 exports.AbortController = AbortControllerImpl_1.AbortControllerImpl;
 var AbortSignalImpl_1 = __webpack_require__(784);
 exports.AbortSignal = AbortSignalImpl_1.AbortSignalImpl;
-var AbstractRangeImpl_1 = __webpack_require__(537);
+var AbstractRangeImpl_1 = __webpack_require__(413);
 exports.AbstractRange = AbstractRangeImpl_1.AbstractRangeImpl;
 var AttrImpl_1 = __webpack_require__(866);
 exports.Attr = AttrImpl_1.AttrImpl;
@@ -8922,17 +7380,577 @@ exports.pop = pop;
 /* 137 */,
 /* 138 */,
 /* 139 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-// Unique ID creation requires a high quality random # generator.  In node.js
-// this is pretty straight-forward - we use the crypto API.
+"use strict";
 
-var crypto = __webpack_require__(417);
-
-module.exports = function nodeRNG() {
-  return crypto.randomBytes(16);
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
-
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const core = __importStar(__webpack_require__(470));
+const io = __importStar(__webpack_require__(1));
+const fs = __importStar(__webpack_require__(747));
+const mm = __importStar(__webpack_require__(31));
+const os = __importStar(__webpack_require__(87));
+const path = __importStar(__webpack_require__(622));
+const httpm = __importStar(__webpack_require__(539));
+const semver = __importStar(__webpack_require__(280));
+const stream = __importStar(__webpack_require__(794));
+const util = __importStar(__webpack_require__(669));
+const v4_1 = __importDefault(__webpack_require__(494));
+const exec_1 = __webpack_require__(986);
+const assert_1 = __webpack_require__(357);
+const retry_helper_1 = __webpack_require__(979);
+class HTTPError extends Error {
+    constructor(httpStatusCode) {
+        super(`Unexpected HTTP response: ${httpStatusCode}`);
+        this.httpStatusCode = httpStatusCode;
+        Object.setPrototypeOf(this, new.target.prototype);
+    }
+}
+exports.HTTPError = HTTPError;
+const IS_WINDOWS = process.platform === 'win32';
+const userAgent = 'actions/tool-cache';
+/**
+ * Download a tool from an url and stream it into a file
+ *
+ * @param url       url of tool to download
+ * @param dest      path to download tool
+ * @param auth      authorization header
+ * @returns         path to downloaded tool
+ */
+function downloadTool(url, dest, auth) {
+    return __awaiter(this, void 0, void 0, function* () {
+        dest = dest || path.join(_getTempDirectory(), v4_1.default());
+        yield io.mkdirP(path.dirname(dest));
+        core.debug(`Downloading ${url}`);
+        core.debug(`Destination ${dest}`);
+        const maxAttempts = 3;
+        const minSeconds = _getGlobal('TEST_DOWNLOAD_TOOL_RETRY_MIN_SECONDS', 10);
+        const maxSeconds = _getGlobal('TEST_DOWNLOAD_TOOL_RETRY_MAX_SECONDS', 20);
+        const retryHelper = new retry_helper_1.RetryHelper(maxAttempts, minSeconds, maxSeconds);
+        return yield retryHelper.execute(() => __awaiter(this, void 0, void 0, function* () {
+            return yield downloadToolAttempt(url, dest || '', auth);
+        }), (err) => {
+            if (err instanceof HTTPError && err.httpStatusCode) {
+                // Don't retry anything less than 500, except 408 Request Timeout and 429 Too Many Requests
+                if (err.httpStatusCode < 500 &&
+                    err.httpStatusCode !== 408 &&
+                    err.httpStatusCode !== 429) {
+                    return false;
+                }
+            }
+            // Otherwise retry
+            return true;
+        });
+    });
+}
+exports.downloadTool = downloadTool;
+function downloadToolAttempt(url, dest, auth) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (fs.existsSync(dest)) {
+            throw new Error(`Destination file path ${dest} already exists`);
+        }
+        // Get the response headers
+        const http = new httpm.HttpClient(userAgent, [], {
+            allowRetries: false
+        });
+        let headers;
+        if (auth) {
+            core.debug('set auth');
+            headers = {
+                authorization: auth
+            };
+        }
+        const response = yield http.get(url, headers);
+        if (response.message.statusCode !== 200) {
+            const err = new HTTPError(response.message.statusCode);
+            core.debug(`Failed to download from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
+            throw err;
+        }
+        // Download the response body
+        const pipeline = util.promisify(stream.pipeline);
+        const responseMessageFactory = _getGlobal('TEST_DOWNLOAD_TOOL_RESPONSE_MESSAGE_FACTORY', () => response.message);
+        const readStream = responseMessageFactory();
+        let succeeded = false;
+        try {
+            yield pipeline(readStream, fs.createWriteStream(dest));
+            core.debug('download complete');
+            succeeded = true;
+            return dest;
+        }
+        finally {
+            // Error, delete dest before retry
+            if (!succeeded) {
+                core.debug('download failed');
+                try {
+                    yield io.rmRF(dest);
+                }
+                catch (err) {
+                    core.debug(`Failed to delete '${dest}'. ${err.message}`);
+                }
+            }
+        }
+    });
+}
+/**
+ * Extract a .7z file
+ *
+ * @param file     path to the .7z file
+ * @param dest     destination directory. Optional.
+ * @param _7zPath  path to 7zr.exe. Optional, for long path support. Most .7z archives do not have this
+ * problem. If your .7z archive contains very long paths, you can pass the path to 7zr.exe which will
+ * gracefully handle long paths. By default 7zdec.exe is used because it is a very small program and is
+ * bundled with the tool lib. However it does not support long paths. 7zr.exe is the reduced command line
+ * interface, it is smaller than the full command line interface, and it does support long paths. At the
+ * time of this writing, it is freely available from the LZMA SDK that is available on the 7zip website.
+ * Be sure to check the current license agreement. If 7zr.exe is bundled with your action, then the path
+ * to 7zr.exe can be pass to this function.
+ * @returns        path to the destination directory
+ */
+function extract7z(file, dest, _7zPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        assert_1.ok(IS_WINDOWS, 'extract7z() not supported on current OS');
+        assert_1.ok(file, 'parameter "file" is required');
+        dest = yield _createExtractFolder(dest);
+        const originalCwd = process.cwd();
+        process.chdir(dest);
+        if (_7zPath) {
+            try {
+                const logLevel = core.isDebug() ? '-bb1' : '-bb0';
+                const args = [
+                    'x',
+                    logLevel,
+                    '-bd',
+                    '-sccUTF-8',
+                    file
+                ];
+                const options = {
+                    silent: true
+                };
+                yield exec_1.exec(`"${_7zPath}"`, args, options);
+            }
+            finally {
+                process.chdir(originalCwd);
+            }
+        }
+        else {
+            const escapedScript = path
+                .join(__dirname, '..', 'scripts', 'Invoke-7zdec.ps1')
+                .replace(/'/g, "''")
+                .replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
+            const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+            const escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+            const command = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`;
+            const args = [
+                '-NoLogo',
+                '-Sta',
+                '-NoProfile',
+                '-NonInteractive',
+                '-ExecutionPolicy',
+                'Unrestricted',
+                '-Command',
+                command
+            ];
+            const options = {
+                silent: true
+            };
+            try {
+                const powershellPath = yield io.which('powershell', true);
+                yield exec_1.exec(`"${powershellPath}"`, args, options);
+            }
+            finally {
+                process.chdir(originalCwd);
+            }
+        }
+        return dest;
+    });
+}
+exports.extract7z = extract7z;
+/**
+ * Extract a compressed tar archive
+ *
+ * @param file     path to the tar
+ * @param dest     destination directory. Optional.
+ * @param flags    flags for the tar command to use for extraction. Defaults to 'xz' (extracting gzipped tars). Optional.
+ * @returns        path to the destination directory
+ */
+function extractTar(file, dest, flags = 'xz') {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!file) {
+            throw new Error("parameter 'file' is required");
+        }
+        // Create dest
+        dest = yield _createExtractFolder(dest);
+        // Determine whether GNU tar
+        core.debug('Checking tar --version');
+        let versionOutput = '';
+        yield exec_1.exec('tar --version', [], {
+            ignoreReturnCode: true,
+            silent: true,
+            listeners: {
+                stdout: (data) => (versionOutput += data.toString()),
+                stderr: (data) => (versionOutput += data.toString())
+            }
+        });
+        core.debug(versionOutput.trim());
+        const isGnuTar = versionOutput.toUpperCase().includes('GNU TAR');
+        // Initialize args
+        let args;
+        if (flags instanceof Array) {
+            args = flags;
+        }
+        else {
+            args = [flags];
+        }
+        if (core.isDebug() && !flags.includes('v')) {
+            args.push('-v');
+        }
+        let destArg = dest;
+        let fileArg = file;
+        if (IS_WINDOWS && isGnuTar) {
+            args.push('--force-local');
+            destArg = dest.replace(/\\/g, '/');
+            // Technically only the dest needs to have `/` but for aesthetic consistency
+            // convert slashes in the file arg too.
+            fileArg = file.replace(/\\/g, '/');
+        }
+        if (isGnuTar) {
+            // Suppress warnings when using GNU tar to extract archives created by BSD tar
+            args.push('--warning=no-unknown-keyword');
+        }
+        args.push('-C', destArg, '-f', fileArg);
+        yield exec_1.exec(`tar`, args);
+        return dest;
+    });
+}
+exports.extractTar = extractTar;
+/**
+ * Extract a zip
+ *
+ * @param file     path to the zip
+ * @param dest     destination directory. Optional.
+ * @returns        path to the destination directory
+ */
+function extractZip(file, dest) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!file) {
+            throw new Error("parameter 'file' is required");
+        }
+        dest = yield _createExtractFolder(dest);
+        if (IS_WINDOWS) {
+            yield extractZipWin(file, dest);
+        }
+        else {
+            yield extractZipNix(file, dest);
+        }
+        return dest;
+    });
+}
+exports.extractZip = extractZip;
+function extractZipWin(file, dest) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // build the powershell command
+        const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
+        const escapedDest = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
+        const command = `$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}')`;
+        // run powershell
+        const powershellPath = yield io.which('powershell', true);
+        const args = [
+            '-NoLogo',
+            '-Sta',
+            '-NoProfile',
+            '-NonInteractive',
+            '-ExecutionPolicy',
+            'Unrestricted',
+            '-Command',
+            command
+        ];
+        yield exec_1.exec(`"${powershellPath}"`, args);
+    });
+}
+function extractZipNix(file, dest) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const unzipPath = yield io.which('unzip', true);
+        const args = [file];
+        if (!core.isDebug()) {
+            args.unshift('-q');
+        }
+        yield exec_1.exec(`"${unzipPath}"`, args, { cwd: dest });
+    });
+}
+/**
+ * Caches a directory and installs it into the tool cacheDir
+ *
+ * @param sourceDir    the directory to cache into tools
+ * @param tool          tool name
+ * @param version       version of the tool.  semver format
+ * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
+ */
+function cacheDir(sourceDir, tool, version, arch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        version = semver.clean(version) || version;
+        arch = arch || os.arch();
+        core.debug(`Caching tool ${tool} ${version} ${arch}`);
+        core.debug(`source dir: ${sourceDir}`);
+        if (!fs.statSync(sourceDir).isDirectory()) {
+            throw new Error('sourceDir is not a directory');
+        }
+        // Create the tool dir
+        const destPath = yield _createToolPath(tool, version, arch);
+        // copy each child item. do not move. move can fail on Windows
+        // due to anti-virus software having an open handle on a file.
+        for (const itemName of fs.readdirSync(sourceDir)) {
+            const s = path.join(sourceDir, itemName);
+            yield io.cp(s, destPath, { recursive: true });
+        }
+        // write .complete
+        _completeToolPath(tool, version, arch);
+        return destPath;
+    });
+}
+exports.cacheDir = cacheDir;
+/**
+ * Caches a downloaded file (GUID) and installs it
+ * into the tool cache with a given targetName
+ *
+ * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid.
+ * @param targetFile    the name of the file name in the tools directory
+ * @param tool          tool name
+ * @param version       version of the tool.  semver format
+ * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
+ */
+function cacheFile(sourceFile, targetFile, tool, version, arch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        version = semver.clean(version) || version;
+        arch = arch || os.arch();
+        core.debug(`Caching tool ${tool} ${version} ${arch}`);
+        core.debug(`source file: ${sourceFile}`);
+        if (!fs.statSync(sourceFile).isFile()) {
+            throw new Error('sourceFile is not a file');
+        }
+        // create the tool dir
+        const destFolder = yield _createToolPath(tool, version, arch);
+        // copy instead of move. move can fail on Windows due to
+        // anti-virus software having an open handle on a file.
+        const destPath = path.join(destFolder, targetFile);
+        core.debug(`destination file ${destPath}`);
+        yield io.cp(sourceFile, destPath);
+        // write .complete
+        _completeToolPath(tool, version, arch);
+        return destFolder;
+    });
+}
+exports.cacheFile = cacheFile;
+/**
+ * Finds the path to a tool version in the local installed tool cache
+ *
+ * @param toolName      name of the tool
+ * @param versionSpec   version of the tool
+ * @param arch          optional arch.  defaults to arch of computer
+ */
+function find(toolName, versionSpec, arch) {
+    if (!toolName) {
+        throw new Error('toolName parameter is required');
+    }
+    if (!versionSpec) {
+        throw new Error('versionSpec parameter is required');
+    }
+    arch = arch || os.arch();
+    // attempt to resolve an explicit version
+    if (!_isExplicitVersion(versionSpec)) {
+        const localVersions = findAllVersions(toolName, arch);
+        const match = _evaluateVersions(localVersions, versionSpec);
+        versionSpec = match;
+    }
+    // check for the explicit version in the cache
+    let toolPath = '';
+    if (versionSpec) {
+        versionSpec = semver.clean(versionSpec) || '';
+        const cachePath = path.join(_getCacheDirectory(), toolName, versionSpec, arch);
+        core.debug(`checking cache: ${cachePath}`);
+        if (fs.existsSync(cachePath) && fs.existsSync(`${cachePath}.complete`)) {
+            core.debug(`Found tool in cache ${toolName} ${versionSpec} ${arch}`);
+            toolPath = cachePath;
+        }
+        else {
+            core.debug('not found');
+        }
+    }
+    return toolPath;
+}
+exports.find = find;
+/**
+ * Finds the paths to all versions of a tool that are installed in the local tool cache
+ *
+ * @param toolName  name of the tool
+ * @param arch      optional arch.  defaults to arch of computer
+ */
+function findAllVersions(toolName, arch) {
+    const versions = [];
+    arch = arch || os.arch();
+    const toolPath = path.join(_getCacheDirectory(), toolName);
+    if (fs.existsSync(toolPath)) {
+        const children = fs.readdirSync(toolPath);
+        for (const child of children) {
+            if (_isExplicitVersion(child)) {
+                const fullPath = path.join(toolPath, child, arch || '');
+                if (fs.existsSync(fullPath) && fs.existsSync(`${fullPath}.complete`)) {
+                    versions.push(child);
+                }
+            }
+        }
+    }
+    return versions;
+}
+exports.findAllVersions = findAllVersions;
+function getManifestFromRepo(owner, repo, auth, branch = 'master') {
+    return __awaiter(this, void 0, void 0, function* () {
+        let releases = [];
+        const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`;
+        const http = new httpm.HttpClient('tool-cache');
+        const headers = {};
+        if (auth) {
+            core.debug('set auth');
+            headers.authorization = auth;
+        }
+        const response = yield http.getJson(treeUrl, headers);
+        if (!response.result) {
+            return releases;
+        }
+        let manifestUrl = '';
+        for (const item of response.result.tree) {
+            if (item.path === 'versions-manifest.json') {
+                manifestUrl = item.url;
+                break;
+            }
+        }
+        headers['accept'] = 'application/vnd.github.VERSION.raw';
+        let versionsRaw = yield (yield http.get(manifestUrl, headers)).readBody();
+        if (versionsRaw) {
+            // shouldn't be needed but protects against invalid json saved with BOM
+            versionsRaw = versionsRaw.replace(/^\uFEFF/, '');
+            try {
+                releases = JSON.parse(versionsRaw);
+            }
+            catch (_a) {
+                core.debug('Invalid json');
+            }
+        }
+        return releases;
+    });
+}
+exports.getManifestFromRepo = getManifestFromRepo;
+function findFromManifest(versionSpec, stable, manifest, archFilter = os.arch()) {
+    return __awaiter(this, void 0, void 0, function* () {
+        // wrap the internal impl
+        const match = yield mm._findMatch(versionSpec, stable, manifest, archFilter);
+        return match;
+    });
+}
+exports.findFromManifest = findFromManifest;
+function _createExtractFolder(dest) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!dest) {
+            // create a temp dir
+            dest = path.join(_getTempDirectory(), v4_1.default());
+        }
+        yield io.mkdirP(dest);
+        return dest;
+    });
+}
+function _createToolPath(tool, version, arch) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch || '');
+        core.debug(`destination ${folderPath}`);
+        const markerPath = `${folderPath}.complete`;
+        yield io.rmRF(folderPath);
+        yield io.rmRF(markerPath);
+        yield io.mkdirP(folderPath);
+        return folderPath;
+    });
+}
+function _completeToolPath(tool, version, arch) {
+    const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch || '');
+    const markerPath = `${folderPath}.complete`;
+    fs.writeFileSync(markerPath, '');
+    core.debug('finished caching tool');
+}
+function _isExplicitVersion(versionSpec) {
+    const c = semver.clean(versionSpec) || '';
+    core.debug(`isExplicit: ${c}`);
+    const valid = semver.valid(c) != null;
+    core.debug(`explicit? ${valid}`);
+    return valid;
+}
+function _evaluateVersions(versions, versionSpec) {
+    let version = '';
+    core.debug(`evaluating ${versions.length} versions`);
+    versions = versions.sort((a, b) => {
+        if (semver.gt(a, b)) {
+            return 1;
+        }
+        return -1;
+    });
+    for (let i = versions.length - 1; i >= 0; i--) {
+        const potential = versions[i];
+        const satisfied = semver.satisfies(potential, versionSpec);
+        if (satisfied) {
+            version = potential;
+            break;
+        }
+    }
+    if (version) {
+        core.debug(`matched: ${version}`);
+    }
+    else {
+        core.debug('match not found');
+    }
+    return version;
+}
+/**
+ * Gets RUNNER_TOOL_CACHE
+ */
+function _getCacheDirectory() {
+    const cacheDirectory = process.env['RUNNER_TOOL_CACHE'] || '';
+    assert_1.ok(cacheDirectory, 'Expected RUNNER_TOOL_CACHE to be defined');
+    return cacheDirectory;
+}
+/**
+ * Gets RUNNER_TEMP
+ */
+function _getTempDirectory() {
+    const tempDirectory = process.env['RUNNER_TEMP'] || '';
+    assert_1.ok(tempDirectory, 'Expected RUNNER_TEMP to be defined');
+    return tempDirectory;
+}
+/**
+ * Gets a global variable
+ */
+function _getGlobal(key, defaultValue) {
+    /* eslint-disable @typescript-eslint/no-explicit-any */
+    const value = global[key];
+    /* eslint-enable @typescript-eslint/no-explicit-any */
+    return value !== undefined ? value : defaultValue;
+}
+//# sourceMappingURL=tool-cache.js.map
 
 /***/ }),
 /* 140 */,
@@ -8945,7 +7963,7 @@ module.exports = function nodeRNG() {
 var net = __webpack_require__(631);
 var tls = __webpack_require__(16);
 var http = __webpack_require__(605);
-var https = __webpack_require__(211);
+var https = __webpack_require__(34);
 var events = __webpack_require__(614);
 var assert = __webpack_require__(357);
 var util = __webpack_require__(669);
@@ -9384,7 +8402,7 @@ var util_1 = __webpack_require__(918);
 var infra_1 = __webpack_require__(23);
 var CreateAlgorithm_1 = __webpack_require__(86);
 var TreeAlgorithm_1 = __webpack_require__(873);
-var EventAlgorithm_1 = __webpack_require__(108);
+var EventAlgorithm_1 = __webpack_require__(826);
 /**
  * Queues a mutation observer microtask to the surrounding agent’s mutation
  * observers.
@@ -9917,7 +8935,7 @@ __export(__webpack_require__(493));
 __export(__webpack_require__(304));
 __export(__webpack_require__(54));
 __export(__webpack_require__(33));
-__export(__webpack_require__(108));
+__export(__webpack_require__(826));
 __export(__webpack_require__(106));
 __export(__webpack_require__(479));
 __export(__webpack_require__(151));
@@ -11070,9 +10088,27 @@ exports.HTMLCollectionImpl = HTMLCollectionImpl;
 /* 209 */,
 /* 210 */,
 /* 211 */
-/***/ (function(module) {
+/***/ (function(__unusedmodule, exports) {
 
-module.exports = require("https");
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = exports.INPUT_VERSION = void 0;
+exports.INPUT_VERSION = 'version';
+exports.INPUT_JAVA_VERSION = 'java-version';
+exports.INPUT_ARCHITECTURE = 'architecture';
+exports.INPUT_JAVA_PACKAGE = 'java-package';
+exports.INPUT_JDK_FILE = 'jdkFile';
+exports.INPUT_SERVER_ID = 'server-id';
+exports.INPUT_SERVER_USERNAME = 'server-username';
+exports.INPUT_SERVER_PASSWORD = 'server-password';
+exports.INPUT_SETTINGS_PATH = 'settings-path';
+exports.INPUT_GPG_PRIVATE_KEY = 'gpg-private-key';
+exports.INPUT_GPG_PASSPHRASE = 'gpg-passphrase';
+exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = undefined;
+exports.INPUT_DEFAULT_GPG_PASSPHRASE = 'GPG_PASSPHRASE';
+exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = 'gpg-private-key-fingerprint';
+
 
 /***/ }),
 /* 212 */
@@ -11408,7 +10444,34 @@ exports.isomorphicDecode = isomorphicDecode;
 //# sourceMappingURL=ByteSequence.js.map
 
 /***/ }),
-/* 264 */,
+/* 264 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getJavaDistributor = void 0;
+const adoptopenjdk_installer_1 = __webpack_require__(318);
+const zulu_installer_1 = __webpack_require__(908);
+var JavaDistributor;
+(function (JavaDistributor) {
+    JavaDistributor["AdoptOpenJdk"] = "adoptOpenJdk";
+    JavaDistributor["Zulu"] = "zulu";
+})(JavaDistributor || (JavaDistributor = {}));
+function getJavaDistributor(distributorName, initOptions) {
+    switch (distributorName) {
+        case JavaDistributor.AdoptOpenJdk:
+            return new adoptopenjdk_installer_1.AdopOpenJdkDistributor(initOptions);
+        case JavaDistributor.Zulu:
+            return new zulu_installer_1.ZuluDistributor(initOptions);
+        default:
+            return null;
+    }
+}
+exports.getJavaDistributor = getJavaDistributor;
+
+
+/***/ }),
 /* 265 */
 /***/ (function(module, __unusedexports, __webpack_require__) {
 
@@ -14187,129 +13250,7 @@ exports.BaseReader = BaseReader;
 /* 309 */,
 /* 310 */,
 /* 311 */,
-/* 312 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-var common = __webpack_require__(740);
-var Type   = __webpack_require__(945);
-
-var YAML_FLOAT_PATTERN = new RegExp(
-  // 2.5e4, 2.5 and integers
-  '^(?:[-+]?(?:0|[1-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?' +
-  // .2e4, .2
-  // special case, seems not from spec
-  '|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?' +
-  // 20:59
-  '|[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*' +
-  // .inf
-  '|[-+]?\\.(?:inf|Inf|INF)' +
-  // .nan
-  '|\\.(?:nan|NaN|NAN))$');
-
-function resolveYamlFloat(data) {
-  if (data === null) return false;
-
-  if (!YAML_FLOAT_PATTERN.test(data) ||
-      // Quick hack to not allow integers end with `_`
-      // Probably should update regexp & check speed
-      data[data.length - 1] === '_') {
-    return false;
-  }
-
-  return true;
-}
-
-function constructYamlFloat(data) {
-  var value, sign, base, digits;
-
-  value  = data.replace(/_/g, '').toLowerCase();
-  sign   = value[0] === '-' ? -1 : 1;
-  digits = [];
-
-  if ('+-'.indexOf(value[0]) >= 0) {
-    value = value.slice(1);
-  }
-
-  if (value === '.inf') {
-    return (sign === 1) ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
-
-  } else if (value === '.nan') {
-    return NaN;
-
-  } else if (value.indexOf(':') >= 0) {
-    value.split(':').forEach(function (v) {
-      digits.unshift(parseFloat(v, 10));
-    });
-
-    value = 0.0;
-    base = 1;
-
-    digits.forEach(function (d) {
-      value += d * base;
-      base *= 60;
-    });
-
-    return sign * value;
-
-  }
-  return sign * parseFloat(value, 10);
-}
-
-
-var SCIENTIFIC_WITHOUT_DOT = /^[-+]?[0-9]+e/;
-
-function representYamlFloat(object, style) {
-  var res;
-
-  if (isNaN(object)) {
-    switch (style) {
-      case 'lowercase': return '.nan';
-      case 'uppercase': return '.NAN';
-      case 'camelcase': return '.NaN';
-    }
-  } else if (Number.POSITIVE_INFINITY === object) {
-    switch (style) {
-      case 'lowercase': return '.inf';
-      case 'uppercase': return '.INF';
-      case 'camelcase': return '.Inf';
-    }
-  } else if (Number.NEGATIVE_INFINITY === object) {
-    switch (style) {
-      case 'lowercase': return '-.inf';
-      case 'uppercase': return '-.INF';
-      case 'camelcase': return '-.Inf';
-    }
-  } else if (common.isNegativeZero(object)) {
-    return '-0.0';
-  }
-
-  res = object.toString(10);
-
-  // JS stringifier can build scientific format without dots: 5e-100,
-  // while YAML requres dot: 5.e-100. Fix it with simple hack
-
-  return SCIENTIFIC_WITHOUT_DOT.test(res) ? res.replace('e', '.e') : res;
-}
-
-function isFloat(object) {
-  return (Object.prototype.toString.call(object) === '[object Number]') &&
-         (object % 1 !== 0 || common.isNegativeZero(object));
-}
-
-module.exports = new Type('tag:yaml.org,2002:float', {
-  kind: 'scalar',
-  resolve: resolveYamlFloat,
-  construct: constructYamlFloat,
-  predicate: isFloat,
-  represent: representYamlFloat,
-  defaultStyle: 'lowercase'
-});
-
-
-/***/ }),
+/* 312 */,
 /* 313 */,
 /* 314 */,
 /* 315 */,
@@ -14352,17 +13293,17 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.AdopOpenJdkDistributor = void 0;
 const core = __importStar(__webpack_require__(470));
-const tc = __importStar(__webpack_require__(533));
+const tc = __importStar(__webpack_require__(139));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const semver_1 = __importDefault(__webpack_require__(280));
 const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
 class AdopOpenJdkDistributor extends base_installer_1.JavaBase {
-    constructor(http, version, arch, javaPackage = "jdk") {
-        super("AdoptOpenJDK", version, arch, javaPackage);
-        this.http = http;
+    constructor(initOptions) {
+        super("AdoptOpenJDK", initOptions.version, initOptions.arch, initOptions.javaPackage);
         this.platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
     }
     getAvailableMajor(range) {
@@ -14384,15 +13325,9 @@ class AdopOpenJdkDistributor extends base_installer_1.JavaBase {
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
-            const majorVersion = yield this.getAvailableMajor(range);
-            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
-            const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
-            const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
-            if (!fullVersion) {
-                throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
-            }
-            core.info(`Downloading ${this.distributor}, java version ${fullVersion.version_data.semver}`);
-            const javaPath = yield tc.downloadTool(fullVersion.binaries[0].package.link);
+            const javaRlease = yield this.resolveVersion(range);
+            core.info(`Downloading ${this.distributor}, java version ${javaRlease.resolvedVersion}`);
+            const javaPath = yield tc.downloadTool(javaRlease.link);
             let downloadDir;
             if (util_1.IS_WINDOWS) {
                 downloadDir = yield tc.extractZip(javaPath);
@@ -14402,20 +13337,31 @@ class AdopOpenJdkDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, fullVersion.version_data.semver, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRlease.resolvedVersion, this.arch);
             if (process.platform === 'darwin') {
                 toolPath = path_1.default.join(toolPath, util_1.macOSJavaContentDir);
             }
-            return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
+            return { javaPath: toolPath, javaVersion: javaRlease.resolvedVersion };
+        });
+    }
+    resolveVersion(range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const majorVersion = yield this.getAvailableMajor(range);
+            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
+            const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
+            const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
+            if (!fullVersion) {
+                throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
+            }
+            const javaRelease = {
+                resolvedVersion: fullVersion.version_data.semver,
+                link: fullVersion.binaries[0].package.link
+            };
+            return javaRelease;
         });
     }
 }
-class AdoptOpenJDKFactory extends base_installer_1.BaseFactory {
-    getJavaDistributor(http, version, arch, javaPackage = 'jdk') {
-        return new AdopOpenJdkDistributor(http, version, arch, javaPackage);
-    }
-}
-exports.default = AdoptOpenJDKFactory;
+exports.AdopOpenJdkDistributor = AdopOpenJdkDistributor;
 
 
 /***/ }),
@@ -14450,7 +13396,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.normalizeVersion = exports.parseFile = exports.getJavaReleaseFileContent = exports.getJavaVersionsPath = exports.getJavaPreInstalledPath = exports.createHttpClient = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.parseFile = exports.getJavaReleaseFileContent = exports.getJavaPreInstalledPath = exports.createHttpClient = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const httpm = __importStar(__webpack_require__(539));
 const core = __importStar(__webpack_require__(470));
 const fs_1 = __importDefault(__webpack_require__(747));
@@ -14475,11 +13421,10 @@ function createHttpClient() {
     return http;
 }
 exports.createHttpClient = createHttpClient;
-function getJavaPreInstalledPath(version, distributor) {
-    const javaDist = getJavaVersionsPath();
-    const versionsDir = fs_1.default.readdirSync(javaDist);
+function getJavaPreInstalledPath(version, distributor, versionsPath) {
+    const versionsDir = fs_1.default.readdirSync(versionsPath);
     const javaInformations = versionsDir.map(versionDir => {
-        let javaPath = path.join(javaDist, versionDir);
+        let javaPath = path.join(versionsPath, versionDir);
         if (exports.IS_MACOS) {
             javaPath = path.join(javaPath, exports.macOSJavaContentDir);
         }
@@ -14508,21 +13453,6 @@ function getJavaPreInstalledPath(version, distributor) {
     return javaInfo;
 }
 exports.getJavaPreInstalledPath = getJavaPreInstalledPath;
-function getJavaVersionsPath() {
-    const windowsPreInstalled = path.normalize('C:/Program Files/Java');
-    const linuxPreInstalled = '/usr/lib/jvm';
-    const macosPreInstalled = '/Library/Java/JavaVirtualMachines';
-    if (exports.IS_WINDOWS) {
-        return windowsPreInstalled;
-    }
-    else if (exports.IS_LINUX) {
-        return linuxPreInstalled;
-    }
-    else {
-        return macosPreInstalled;
-    }
-}
-exports.getJavaVersionsPath = getJavaVersionsPath;
 function getJavaReleaseFileContent(javaDirectory) {
     let javaReleaseFile = path.join(javaDirectory, 'release');
     if (!(fs_1.default.existsSync(javaReleaseFile) && fs_1.default.lstatSync(javaReleaseFile).isFile())) {
@@ -14545,38 +13475,6 @@ function parseFile(keyWord, content) {
     return version;
 }
 exports.parseFile = parseFile;
-// this function validates and parse java version to its normal semver notation
-function normalizeVersion(version) {
-    if (version.slice(0, 2) === '1.') {
-        // Trim leading 1. for versions like 1.8
-        version = version.slice(2);
-        if (!version) {
-            throw new Error('1. is not a valid version');
-        }
-    }
-    if (version.endsWith('-ea')) {
-        // convert e.g. 14-ea to 14.0.0-ea
-        if (version.indexOf('.') == -1) {
-            version = version.slice(0, version.length - 3) + '.0.0-ea';
-        }
-        // match anything in -ea.X (semver won't do .x matching on pre-release versions)
-        if (version[0] >= '0' && version[0] <= '9') {
-            version = '>=' + version;
-        }
-    }
-    else if (version.split('.').length < 3) {
-        // For non-ea versions, add trailing .x if it is missing
-        if (version[version.length - 1] != 'x') {
-            version = version + '.x';
-        }
-    }
-    if (!semver.validRange(version)) {
-        throw new Error(`The version ${version} is not valid semver notation please check README file for code snippets and 
-                more detailed information`);
-    }
-    return version;
-}
-exports.normalizeVersion = normalizeVersion;
 
 
 /***/ }),
@@ -14822,7 +13720,7 @@ const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
 const xmlbuilder2_1 = __webpack_require__(255);
-const constants_1 = __webpack_require__(694);
+const constants_1 = __webpack_require__(211);
 exports.M2_DIR = '.m2';
 exports.SETTINGS_FILE = 'settings.xml';
 function configAuthentication(id, username, password, gpgPassphrase) {
@@ -15225,7 +14123,12 @@ module.exports = require("assert");
 /* 370 */,
 /* 371 */,
 /* 372 */,
-/* 373 */,
+/* 373 */
+/***/ (function(module) {
+
+module.exports = require("crypto");
+
+/***/ }),
 /* 374 */,
 /* 375 */,
 /* 376 */,
@@ -15456,10 +14359,79 @@ exports.NamespacePrefixMap = NamespacePrefixMap;
 /* 411 */,
 /* 412 */,
 /* 413 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports) {
 
-module.exports = __webpack_require__(141);
+"use strict";
 
+Object.defineProperty(exports, "__esModule", { value: true });
+/**
+ * Represents an abstract range with a start and end boundary point.
+ */
+var AbstractRangeImpl = /** @class */ (function () {
+    function AbstractRangeImpl() {
+    }
+    Object.defineProperty(AbstractRangeImpl.prototype, "_startNode", {
+        get: function () { return this._start[0]; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "_startOffset", {
+        get: function () { return this._start[1]; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "_endNode", {
+        get: function () { return this._end[0]; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "_endOffset", {
+        get: function () { return this._end[1]; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "_collapsed", {
+        get: function () {
+            return (this._start[0] === this._end[0] &&
+                this._start[1] === this._end[1]);
+        },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "startContainer", {
+        /** @inheritdoc */
+        get: function () { return this._startNode; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "startOffset", {
+        /** @inheritdoc */
+        get: function () { return this._startOffset; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "endContainer", {
+        /** @inheritdoc */
+        get: function () { return this._endNode; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "endOffset", {
+        /** @inheritdoc */
+        get: function () { return this._endOffset; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(AbstractRangeImpl.prototype, "collapsed", {
+        /** @inheritdoc */
+        get: function () { return this._collapsed; },
+        enumerable: true,
+        configurable: true
+    });
+    return AbstractRangeImpl;
+}());
+exports.AbstractRangeImpl = AbstractRangeImpl;
+//# sourceMappingURL=AbstractRangeImpl.js.map
 
 /***/ }),
 /* 414 */
@@ -15469,7 +14441,7 @@ module.exports = __webpack_require__(141);
 
 
 
-var yaml = __webpack_require__(819);
+var yaml = __webpack_require__(9);
 
 
 module.exports = yaml;
@@ -15479,9 +14451,126 @@ module.exports = yaml;
 /* 415 */,
 /* 416 */,
 /* 417 */
-/***/ (function(module) {
+/***/ (function(module, __unusedexports, __webpack_require__) {
 
-module.exports = require("crypto");
+"use strict";
+
+
+var common = __webpack_require__(740);
+var Type   = __webpack_require__(945);
+
+var YAML_FLOAT_PATTERN = new RegExp(
+  // 2.5e4, 2.5 and integers
+  '^(?:[-+]?(?:0|[1-9][0-9_]*)(?:\\.[0-9_]*)?(?:[eE][-+]?[0-9]+)?' +
+  // .2e4, .2
+  // special case, seems not from spec
+  '|\\.[0-9_]+(?:[eE][-+]?[0-9]+)?' +
+  // 20:59
+  '|[-+]?[0-9][0-9_]*(?::[0-5]?[0-9])+\\.[0-9_]*' +
+  // .inf
+  '|[-+]?\\.(?:inf|Inf|INF)' +
+  // .nan
+  '|\\.(?:nan|NaN|NAN))$');
+
+function resolveYamlFloat(data) {
+  if (data === null) return false;
+
+  if (!YAML_FLOAT_PATTERN.test(data) ||
+      // Quick hack to not allow integers end with `_`
+      // Probably should update regexp & check speed
+      data[data.length - 1] === '_') {
+    return false;
+  }
+
+  return true;
+}
+
+function constructYamlFloat(data) {
+  var value, sign, base, digits;
+
+  value  = data.replace(/_/g, '').toLowerCase();
+  sign   = value[0] === '-' ? -1 : 1;
+  digits = [];
+
+  if ('+-'.indexOf(value[0]) >= 0) {
+    value = value.slice(1);
+  }
+
+  if (value === '.inf') {
+    return (sign === 1) ? Number.POSITIVE_INFINITY : Number.NEGATIVE_INFINITY;
+
+  } else if (value === '.nan') {
+    return NaN;
+
+  } else if (value.indexOf(':') >= 0) {
+    value.split(':').forEach(function (v) {
+      digits.unshift(parseFloat(v, 10));
+    });
+
+    value = 0.0;
+    base = 1;
+
+    digits.forEach(function (d) {
+      value += d * base;
+      base *= 60;
+    });
+
+    return sign * value;
+
+  }
+  return sign * parseFloat(value, 10);
+}
+
+
+var SCIENTIFIC_WITHOUT_DOT = /^[-+]?[0-9]+e/;
+
+function representYamlFloat(object, style) {
+  var res;
+
+  if (isNaN(object)) {
+    switch (style) {
+      case 'lowercase': return '.nan';
+      case 'uppercase': return '.NAN';
+      case 'camelcase': return '.NaN';
+    }
+  } else if (Number.POSITIVE_INFINITY === object) {
+    switch (style) {
+      case 'lowercase': return '.inf';
+      case 'uppercase': return '.INF';
+      case 'camelcase': return '.Inf';
+    }
+  } else if (Number.NEGATIVE_INFINITY === object) {
+    switch (style) {
+      case 'lowercase': return '-.inf';
+      case 'uppercase': return '-.INF';
+      case 'camelcase': return '-.Inf';
+    }
+  } else if (common.isNegativeZero(object)) {
+    return '-0.0';
+  }
+
+  res = object.toString(10);
+
+  // JS stringifier can build scientific format without dots: 5e-100,
+  // while YAML requres dot: 5.e-100. Fix it with simple hack
+
+  return SCIENTIFIC_WITHOUT_DOT.test(res) ? res.replace('e', '.e') : res;
+}
+
+function isFloat(object) {
+  return (Object.prototype.toString.call(object) === '[object Number]') &&
+         (object % 1 !== 0 || common.isNegativeZero(object));
+}
+
+module.exports = new Type('tag:yaml.org,2002:float', {
+  kind: 'scalar',
+  resolve: resolveYamlFloat,
+  construct: constructYamlFloat,
+  predicate: isFloat,
+  represent: representYamlFloat,
+  defaultStyle: 'lowercase'
+});
+
 
 /***/ }),
 /* 418 */,
@@ -22784,7 +21873,41 @@ exports.document_adopt = document_adopt;
 //# sourceMappingURL=DocumentAlgorithm.js.map
 
 /***/ }),
-/* 494 */,
+/* 494 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+var rng = __webpack_require__(58);
+var bytesToUuid = __webpack_require__(722);
+
+function v4(options, buf, offset) {
+  var i = buf && offset || 0;
+
+  if (typeof(options) == 'string') {
+    buf = options === 'binary' ? new Array(16) : null;
+    options = null;
+  }
+  options = options || {};
+
+  var rnds = options.random || (options.rng || rng)();
+
+  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
+  rnds[6] = (rnds[6] & 0x0f) | 0x40;
+  rnds[8] = (rnds[8] & 0x3f) | 0x80;
+
+  // Copy bytes to buffer, if provided
+  if (buf) {
+    for (var ii = 0; ii < 16; ++ii) {
+      buf[i + ii] = rnds[ii];
+    }
+  }
+
+  return buf || bytesToUuid(rnds);
+}
+
+module.exports = v4;
+
+
+/***/ }),
 /* 495 */
 /***/ (function(__unusedmodule, exports) {
 
@@ -23732,573 +22855,31 @@ exports.CompareCache = CompareCache;
 
 "use strict";
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-const core = __importStar(__webpack_require__(470));
-const io = __importStar(__webpack_require__(1));
-const fs = __importStar(__webpack_require__(747));
-const mm = __importStar(__webpack_require__(31));
-const os = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
-const httpm = __importStar(__webpack_require__(539));
-const semver = __importStar(__webpack_require__(280));
-const stream = __importStar(__webpack_require__(794));
-const util = __importStar(__webpack_require__(669));
-const v4_1 = __importDefault(__webpack_require__(826));
-const exec_1 = __webpack_require__(986);
-const assert_1 = __webpack_require__(357);
-const retry_helper_1 = __webpack_require__(979);
-class HTTPError extends Error {
-    constructor(httpStatusCode) {
-        super(`Unexpected HTTP response: ${httpStatusCode}`);
-        this.httpStatusCode = httpStatusCode;
-        Object.setPrototypeOf(this, new.target.prototype);
+var Guard_1 = __webpack_require__(783);
+/**
+ * Contains type casts for DOM objects.
+ */
+var Cast = /** @class */ (function () {
+    function Cast() {
     }
-}
-exports.HTTPError = HTTPError;
-const IS_WINDOWS = process.platform === 'win32';
-const userAgent = 'actions/tool-cache';
-/**
- * Download a tool from an url and stream it into a file
- *
- * @param url       url of tool to download
- * @param dest      path to download tool
- * @param auth      authorization header
- * @returns         path to downloaded tool
- */
-function downloadTool(url, dest, auth) {
-    return __awaiter(this, void 0, void 0, function* () {
-        dest = dest || path.join(_getTempDirectory(), v4_1.default());
-        yield io.mkdirP(path.dirname(dest));
-        core.debug(`Downloading ${url}`);
-        core.debug(`Destination ${dest}`);
-        const maxAttempts = 3;
-        const minSeconds = _getGlobal('TEST_DOWNLOAD_TOOL_RETRY_MIN_SECONDS', 10);
-        const maxSeconds = _getGlobal('TEST_DOWNLOAD_TOOL_RETRY_MAX_SECONDS', 20);
-        const retryHelper = new retry_helper_1.RetryHelper(maxAttempts, minSeconds, maxSeconds);
-        return yield retryHelper.execute(() => __awaiter(this, void 0, void 0, function* () {
-            return yield downloadToolAttempt(url, dest || '', auth);
-        }), (err) => {
-            if (err instanceof HTTPError && err.httpStatusCode) {
-                // Don't retry anything less than 500, except 408 Request Timeout and 429 Too Many Requests
-                if (err.httpStatusCode < 500 &&
-                    err.httpStatusCode !== 408 &&
-                    err.httpStatusCode !== 429) {
-                    return false;
-                }
-            }
-            // Otherwise retry
-            return true;
-        });
-    });
-}
-exports.downloadTool = downloadTool;
-function downloadToolAttempt(url, dest, auth) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (fs.existsSync(dest)) {
-            throw new Error(`Destination file path ${dest} already exists`);
-        }
-        // Get the response headers
-        const http = new httpm.HttpClient(userAgent, [], {
-            allowRetries: false
-        });
-        let headers;
-        if (auth) {
-            core.debug('set auth');
-            headers = {
-                authorization: auth
-            };
-        }
-        const response = yield http.get(url, headers);
-        if (response.message.statusCode !== 200) {
-            const err = new HTTPError(response.message.statusCode);
-            core.debug(`Failed to download from "${url}". Code(${response.message.statusCode}) Message(${response.message.statusMessage})`);
-            throw err;
-        }
-        // Download the response body
-        const pipeline = util.promisify(stream.pipeline);
-        const responseMessageFactory = _getGlobal('TEST_DOWNLOAD_TOOL_RESPONSE_MESSAGE_FACTORY', () => response.message);
-        const readStream = responseMessageFactory();
-        let succeeded = false;
-        try {
-            yield pipeline(readStream, fs.createWriteStream(dest));
-            core.debug('download complete');
-            succeeded = true;
-            return dest;
-        }
-        finally {
-            // Error, delete dest before retry
-            if (!succeeded) {
-                core.debug('download failed');
-                try {
-                    yield io.rmRF(dest);
-                }
-                catch (err) {
-                    core.debug(`Failed to delete '${dest}'. ${err.message}`);
-                }
-            }
-        }
-    });
-}
-/**
- * Extract a .7z file
- *
- * @param file     path to the .7z file
- * @param dest     destination directory. Optional.
- * @param _7zPath  path to 7zr.exe. Optional, for long path support. Most .7z archives do not have this
- * problem. If your .7z archive contains very long paths, you can pass the path to 7zr.exe which will
- * gracefully handle long paths. By default 7zdec.exe is used because it is a very small program and is
- * bundled with the tool lib. However it does not support long paths. 7zr.exe is the reduced command line
- * interface, it is smaller than the full command line interface, and it does support long paths. At the
- * time of this writing, it is freely available from the LZMA SDK that is available on the 7zip website.
- * Be sure to check the current license agreement. If 7zr.exe is bundled with your action, then the path
- * to 7zr.exe can be pass to this function.
- * @returns        path to the destination directory
- */
-function extract7z(file, dest, _7zPath) {
-    return __awaiter(this, void 0, void 0, function* () {
-        assert_1.ok(IS_WINDOWS, 'extract7z() not supported on current OS');
-        assert_1.ok(file, 'parameter "file" is required');
-        dest = yield _createExtractFolder(dest);
-        const originalCwd = process.cwd();
-        process.chdir(dest);
-        if (_7zPath) {
-            try {
-                const logLevel = core.isDebug() ? '-bb1' : '-bb0';
-                const args = [
-                    'x',
-                    logLevel,
-                    '-bd',
-                    '-sccUTF-8',
-                    file
-                ];
-                const options = {
-                    silent: true
-                };
-                yield exec_1.exec(`"${_7zPath}"`, args, options);
-            }
-            finally {
-                process.chdir(originalCwd);
-            }
+    /**
+     * Casts the given object to a `Node`.
+     *
+     * @param a - the object to cast
+     */
+    Cast.asNode = function (a) {
+        if (Guard_1.Guard.isNode(a)) {
+            return a;
         }
         else {
-            const escapedScript = path
-                .join(__dirname, '..', 'scripts', 'Invoke-7zdec.ps1')
-                .replace(/'/g, "''")
-                .replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
-            const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-            const escapedTarget = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-            const command = `& '${escapedScript}' -Source '${escapedFile}' -Target '${escapedTarget}'`;
-            const args = [
-                '-NoLogo',
-                '-Sta',
-                '-NoProfile',
-                '-NonInteractive',
-                '-ExecutionPolicy',
-                'Unrestricted',
-                '-Command',
-                command
-            ];
-            const options = {
-                silent: true
-            };
-            try {
-                const powershellPath = yield io.which('powershell', true);
-                yield exec_1.exec(`"${powershellPath}"`, args, options);
-            }
-            finally {
-                process.chdir(originalCwd);
-            }
+            throw new Error("Invalid object. Node expected.");
         }
-        return dest;
-    });
-}
-exports.extract7z = extract7z;
-/**
- * Extract a compressed tar archive
- *
- * @param file     path to the tar
- * @param dest     destination directory. Optional.
- * @param flags    flags for the tar command to use for extraction. Defaults to 'xz' (extracting gzipped tars). Optional.
- * @returns        path to the destination directory
- */
-function extractTar(file, dest, flags = 'xz') {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!file) {
-            throw new Error("parameter 'file' is required");
-        }
-        // Create dest
-        dest = yield _createExtractFolder(dest);
-        // Determine whether GNU tar
-        core.debug('Checking tar --version');
-        let versionOutput = '';
-        yield exec_1.exec('tar --version', [], {
-            ignoreReturnCode: true,
-            silent: true,
-            listeners: {
-                stdout: (data) => (versionOutput += data.toString()),
-                stderr: (data) => (versionOutput += data.toString())
-            }
-        });
-        core.debug(versionOutput.trim());
-        const isGnuTar = versionOutput.toUpperCase().includes('GNU TAR');
-        // Initialize args
-        let args;
-        if (flags instanceof Array) {
-            args = flags;
-        }
-        else {
-            args = [flags];
-        }
-        if (core.isDebug() && !flags.includes('v')) {
-            args.push('-v');
-        }
-        let destArg = dest;
-        let fileArg = file;
-        if (IS_WINDOWS && isGnuTar) {
-            args.push('--force-local');
-            destArg = dest.replace(/\\/g, '/');
-            // Technically only the dest needs to have `/` but for aesthetic consistency
-            // convert slashes in the file arg too.
-            fileArg = file.replace(/\\/g, '/');
-        }
-        if (isGnuTar) {
-            // Suppress warnings when using GNU tar to extract archives created by BSD tar
-            args.push('--warning=no-unknown-keyword');
-        }
-        args.push('-C', destArg, '-f', fileArg);
-        yield exec_1.exec(`tar`, args);
-        return dest;
-    });
-}
-exports.extractTar = extractTar;
-/**
- * Extract a zip
- *
- * @param file     path to the zip
- * @param dest     destination directory. Optional.
- * @returns        path to the destination directory
- */
-function extractZip(file, dest) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!file) {
-            throw new Error("parameter 'file' is required");
-        }
-        dest = yield _createExtractFolder(dest);
-        if (IS_WINDOWS) {
-            yield extractZipWin(file, dest);
-        }
-        else {
-            yield extractZipNix(file, dest);
-        }
-        return dest;
-    });
-}
-exports.extractZip = extractZip;
-function extractZipWin(file, dest) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // build the powershell command
-        const escapedFile = file.replace(/'/g, "''").replace(/"|\n|\r/g, ''); // double-up single quotes, remove double quotes and newlines
-        const escapedDest = dest.replace(/'/g, "''").replace(/"|\n|\r/g, '');
-        const command = `$ErrorActionPreference = 'Stop' ; try { Add-Type -AssemblyName System.IO.Compression.FileSystem } catch { } ; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedFile}', '${escapedDest}')`;
-        // run powershell
-        const powershellPath = yield io.which('powershell', true);
-        const args = [
-            '-NoLogo',
-            '-Sta',
-            '-NoProfile',
-            '-NonInteractive',
-            '-ExecutionPolicy',
-            'Unrestricted',
-            '-Command',
-            command
-        ];
-        yield exec_1.exec(`"${powershellPath}"`, args);
-    });
-}
-function extractZipNix(file, dest) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const unzipPath = yield io.which('unzip', true);
-        const args = [file];
-        if (!core.isDebug()) {
-            args.unshift('-q');
-        }
-        yield exec_1.exec(`"${unzipPath}"`, args, { cwd: dest });
-    });
-}
-/**
- * Caches a directory and installs it into the tool cacheDir
- *
- * @param sourceDir    the directory to cache into tools
- * @param tool          tool name
- * @param version       version of the tool.  semver format
- * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
- */
-function cacheDir(sourceDir, tool, version, arch) {
-    return __awaiter(this, void 0, void 0, function* () {
-        version = semver.clean(version) || version;
-        arch = arch || os.arch();
-        core.debug(`Caching tool ${tool} ${version} ${arch}`);
-        core.debug(`source dir: ${sourceDir}`);
-        if (!fs.statSync(sourceDir).isDirectory()) {
-            throw new Error('sourceDir is not a directory');
-        }
-        // Create the tool dir
-        const destPath = yield _createToolPath(tool, version, arch);
-        // copy each child item. do not move. move can fail on Windows
-        // due to anti-virus software having an open handle on a file.
-        for (const itemName of fs.readdirSync(sourceDir)) {
-            const s = path.join(sourceDir, itemName);
-            yield io.cp(s, destPath, { recursive: true });
-        }
-        // write .complete
-        _completeToolPath(tool, version, arch);
-        return destPath;
-    });
-}
-exports.cacheDir = cacheDir;
-/**
- * Caches a downloaded file (GUID) and installs it
- * into the tool cache with a given targetName
- *
- * @param sourceFile    the file to cache into tools.  Typically a result of downloadTool which is a guid.
- * @param targetFile    the name of the file name in the tools directory
- * @param tool          tool name
- * @param version       version of the tool.  semver format
- * @param arch          architecture of the tool.  Optional.  Defaults to machine architecture
- */
-function cacheFile(sourceFile, targetFile, tool, version, arch) {
-    return __awaiter(this, void 0, void 0, function* () {
-        version = semver.clean(version) || version;
-        arch = arch || os.arch();
-        core.debug(`Caching tool ${tool} ${version} ${arch}`);
-        core.debug(`source file: ${sourceFile}`);
-        if (!fs.statSync(sourceFile).isFile()) {
-            throw new Error('sourceFile is not a file');
-        }
-        // create the tool dir
-        const destFolder = yield _createToolPath(tool, version, arch);
-        // copy instead of move. move can fail on Windows due to
-        // anti-virus software having an open handle on a file.
-        const destPath = path.join(destFolder, targetFile);
-        core.debug(`destination file ${destPath}`);
-        yield io.cp(sourceFile, destPath);
-        // write .complete
-        _completeToolPath(tool, version, arch);
-        return destFolder;
-    });
-}
-exports.cacheFile = cacheFile;
-/**
- * Finds the path to a tool version in the local installed tool cache
- *
- * @param toolName      name of the tool
- * @param versionSpec   version of the tool
- * @param arch          optional arch.  defaults to arch of computer
- */
-function find(toolName, versionSpec, arch) {
-    if (!toolName) {
-        throw new Error('toolName parameter is required');
-    }
-    if (!versionSpec) {
-        throw new Error('versionSpec parameter is required');
-    }
-    arch = arch || os.arch();
-    // attempt to resolve an explicit version
-    if (!_isExplicitVersion(versionSpec)) {
-        const localVersions = findAllVersions(toolName, arch);
-        const match = _evaluateVersions(localVersions, versionSpec);
-        versionSpec = match;
-    }
-    // check for the explicit version in the cache
-    let toolPath = '';
-    if (versionSpec) {
-        versionSpec = semver.clean(versionSpec) || '';
-        const cachePath = path.join(_getCacheDirectory(), toolName, versionSpec, arch);
-        core.debug(`checking cache: ${cachePath}`);
-        if (fs.existsSync(cachePath) && fs.existsSync(`${cachePath}.complete`)) {
-            core.debug(`Found tool in cache ${toolName} ${versionSpec} ${arch}`);
-            toolPath = cachePath;
-        }
-        else {
-            core.debug('not found');
-        }
-    }
-    return toolPath;
-}
-exports.find = find;
-/**
- * Finds the paths to all versions of a tool that are installed in the local tool cache
- *
- * @param toolName  name of the tool
- * @param arch      optional arch.  defaults to arch of computer
- */
-function findAllVersions(toolName, arch) {
-    const versions = [];
-    arch = arch || os.arch();
-    const toolPath = path.join(_getCacheDirectory(), toolName);
-    if (fs.existsSync(toolPath)) {
-        const children = fs.readdirSync(toolPath);
-        for (const child of children) {
-            if (_isExplicitVersion(child)) {
-                const fullPath = path.join(toolPath, child, arch || '');
-                if (fs.existsSync(fullPath) && fs.existsSync(`${fullPath}.complete`)) {
-                    versions.push(child);
-                }
-            }
-        }
-    }
-    return versions;
-}
-exports.findAllVersions = findAllVersions;
-function getManifestFromRepo(owner, repo, auth, branch = 'master') {
-    return __awaiter(this, void 0, void 0, function* () {
-        let releases = [];
-        const treeUrl = `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}`;
-        const http = new httpm.HttpClient('tool-cache');
-        const headers = {};
-        if (auth) {
-            core.debug('set auth');
-            headers.authorization = auth;
-        }
-        const response = yield http.getJson(treeUrl, headers);
-        if (!response.result) {
-            return releases;
-        }
-        let manifestUrl = '';
-        for (const item of response.result.tree) {
-            if (item.path === 'versions-manifest.json') {
-                manifestUrl = item.url;
-                break;
-            }
-        }
-        headers['accept'] = 'application/vnd.github.VERSION.raw';
-        let versionsRaw = yield (yield http.get(manifestUrl, headers)).readBody();
-        if (versionsRaw) {
-            // shouldn't be needed but protects against invalid json saved with BOM
-            versionsRaw = versionsRaw.replace(/^\uFEFF/, '');
-            try {
-                releases = JSON.parse(versionsRaw);
-            }
-            catch (_a) {
-                core.debug('Invalid json');
-            }
-        }
-        return releases;
-    });
-}
-exports.getManifestFromRepo = getManifestFromRepo;
-function findFromManifest(versionSpec, stable, manifest, archFilter = os.arch()) {
-    return __awaiter(this, void 0, void 0, function* () {
-        // wrap the internal impl
-        const match = yield mm._findMatch(versionSpec, stable, manifest, archFilter);
-        return match;
-    });
-}
-exports.findFromManifest = findFromManifest;
-function _createExtractFolder(dest) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (!dest) {
-            // create a temp dir
-            dest = path.join(_getTempDirectory(), v4_1.default());
-        }
-        yield io.mkdirP(dest);
-        return dest;
-    });
-}
-function _createToolPath(tool, version, arch) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch || '');
-        core.debug(`destination ${folderPath}`);
-        const markerPath = `${folderPath}.complete`;
-        yield io.rmRF(folderPath);
-        yield io.rmRF(markerPath);
-        yield io.mkdirP(folderPath);
-        return folderPath;
-    });
-}
-function _completeToolPath(tool, version, arch) {
-    const folderPath = path.join(_getCacheDirectory(), tool, semver.clean(version) || version, arch || '');
-    const markerPath = `${folderPath}.complete`;
-    fs.writeFileSync(markerPath, '');
-    core.debug('finished caching tool');
-}
-function _isExplicitVersion(versionSpec) {
-    const c = semver.clean(versionSpec) || '';
-    core.debug(`isExplicit: ${c}`);
-    const valid = semver.valid(c) != null;
-    core.debug(`explicit? ${valid}`);
-    return valid;
-}
-function _evaluateVersions(versions, versionSpec) {
-    let version = '';
-    core.debug(`evaluating ${versions.length} versions`);
-    versions = versions.sort((a, b) => {
-        if (semver.gt(a, b)) {
-            return 1;
-        }
-        return -1;
-    });
-    for (let i = versions.length - 1; i >= 0; i--) {
-        const potential = versions[i];
-        const satisfied = semver.satisfies(potential, versionSpec);
-        if (satisfied) {
-            version = potential;
-            break;
-        }
-    }
-    if (version) {
-        core.debug(`matched: ${version}`);
-    }
-    else {
-        core.debug('match not found');
-    }
-    return version;
-}
-/**
- * Gets RUNNER_TOOL_CACHE
- */
-function _getCacheDirectory() {
-    const cacheDirectory = process.env['RUNNER_TOOL_CACHE'] || '';
-    assert_1.ok(cacheDirectory, 'Expected RUNNER_TOOL_CACHE to be defined');
-    return cacheDirectory;
-}
-/**
- * Gets RUNNER_TEMP
- */
-function _getTempDirectory() {
-    const tempDirectory = process.env['RUNNER_TEMP'] || '';
-    assert_1.ok(tempDirectory, 'Expected RUNNER_TEMP to be defined');
-    return tempDirectory;
-}
-/**
- * Gets a global variable
- */
-function _getGlobal(key, defaultValue) {
-    /* eslint-disable @typescript-eslint/no-explicit-any */
-    const value = global[key];
-    /* eslint-enable @typescript-eslint/no-explicit-any */
-    return value !== undefined ? value : defaultValue;
-}
-//# sourceMappingURL=tool-cache.js.map
+    };
+    return Cast;
+}());
+exports.Cast = Cast;
+//# sourceMappingURL=Cast.js.map
 
 /***/ }),
 /* 534 */
@@ -24338,10 +22919,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.BaseFactory = exports.JavaBase = void 0;
-const tc = __importStar(__webpack_require__(533));
+exports.JavaBase = void 0;
+const tc = __importStar(__webpack_require__(139));
+const core = __importStar(__webpack_require__(470));
 const semver_1 = __importDefault(__webpack_require__(280));
 const path_1 = __importDefault(__webpack_require__(622));
+const httpm = __importStar(__webpack_require__(539));
 const util_1 = __webpack_require__(322);
 class JavaBase {
     constructor(distributor, version, arch, javaPackage) {
@@ -24349,6 +22932,22 @@ class JavaBase {
         this.version = version;
         this.arch = arch;
         this.javaPackage = javaPackage;
+        this.http = new httpm.HttpClient('setup-java', undefined, {
+            allowRetries: true,
+            maxRetries: 3
+        });
+        this.version = this.normalizeVersion(version);
+    }
+    getJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const range = new semver_1.default.Range(this.version);
+            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, range.raw, this.arch);
+            if (!javaInfo) {
+                javaInfo = yield this.downloadTool(range);
+            }
+            this.setJavaDefault(javaInfo.javaPath);
+            return javaInfo;
+        });
     }
     findTool(toolName, version, arch) {
         const toolPath = tc.find(toolName, version, arch);
@@ -24356,7 +22955,7 @@ class JavaBase {
         const javaVersion = this.getVersionFromPath(toolPath);
         if (!javaVersion) {
             if (this.javaPackage === 'jdk') {
-                javaInfo = util_1.getJavaPreInstalledPath(version, this.distributor);
+                javaInfo = util_1.getJavaPreInstalledPath(version, this.distributor, this.getJavaVersionsPath());
             }
             return javaInfo;
         }
@@ -24365,28 +22964,69 @@ class JavaBase {
             javaPath: toolPath
         };
     }
+    setJavaDefault(toolPath) {
+        const extendedJavaHome = `JAVA_HOME_${this.version}_${this.arch}`
+            .toUpperCase()
+            .replace(/[^0-9A-Z_]/g, '_');
+        core.exportVariable('JAVA_HOME', toolPath);
+        core.exportVariable(extendedJavaHome, toolPath);
+        core.addPath(path_1.default.join(toolPath, 'bin'));
+        core.setOutput('path', toolPath);
+        core.setOutput('version', this.version);
+    }
+    getJavaVersionsPath() {
+        const windowsPreInstalled = path_1.default.normalize('C:/Program Files/Java');
+        const linuxPreInstalled = '/usr/lib/jvm';
+        const macosPreInstalled = '/Library/Java/JavaVirtualMachines';
+        if (util_1.IS_WINDOWS) {
+            return windowsPreInstalled;
+        }
+        else if (util_1.IS_LINUX) {
+            return linuxPreInstalled;
+        }
+        else {
+            return macosPreInstalled;
+        }
+    }
+    // this function validates and parse java version to its normal semver notation
+    normalizeVersion(version) {
+        if (version.slice(0, 2) === '1.') {
+            // Trim leading 1. for versions like 1.8
+            version = version.slice(2);
+            if (!version) {
+                throw new Error('1. is not a valid version');
+            }
+        }
+        if (version.endsWith('-ea')) {
+            // convert e.g. 14-ea to 14.0.0-ea
+            if (version.indexOf('.') == -1) {
+                version = version.slice(0, version.length - 3) + '.0.0-ea';
+            }
+            // match anything in -ea.X (semver won't do .x matching on pre-release versions)
+            if (version[0] >= '0' && version[0] <= '9') {
+                version = '>=' + version;
+            }
+        }
+        else if (version.split('.').length < 3) {
+            // For non-ea versions, add trailing .x if it is missing
+            if (version[version.length - 1] != 'x') {
+                version = version + '.x';
+            }
+        }
+        if (!semver_1.default.validRange(version)) {
+            throw new Error(`The version ${version} is not valid semver notation please check README file for code snippets and 
+                      more detailed information`);
+        }
+        return version;
+    }
     getVersionFromPath(toolPath) {
         if (toolPath) {
             return path_1.default.basename(path_1.default.dirname(toolPath));
         }
         return toolPath;
     }
-    getJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const range = new semver_1.default.Range(this.version);
-            const majorVersion = yield this.getAvailableMajor(range);
-            let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-            if (!javaInfo) {
-                javaInfo = yield this.downloadTool(range);
-            }
-            return javaInfo;
-        });
-    }
 }
 exports.JavaBase = JavaBase;
-class BaseFactory {
-}
-exports.BaseFactory = BaseFactory;
 
 
 /***/ }),
@@ -24412,82 +23052,7 @@ exports.fragmentCB = BuilderFunctionsCB_1.fragmentCB;
 
 /***/ }),
 /* 536 */,
-/* 537 */
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-/**
- * Represents an abstract range with a start and end boundary point.
- */
-var AbstractRangeImpl = /** @class */ (function () {
-    function AbstractRangeImpl() {
-    }
-    Object.defineProperty(AbstractRangeImpl.prototype, "_startNode", {
-        get: function () { return this._start[0]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "_startOffset", {
-        get: function () { return this._start[1]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "_endNode", {
-        get: function () { return this._end[0]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "_endOffset", {
-        get: function () { return this._end[1]; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "_collapsed", {
-        get: function () {
-            return (this._start[0] === this._end[0] &&
-                this._start[1] === this._end[1]);
-        },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "startContainer", {
-        /** @inheritdoc */
-        get: function () { return this._startNode; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "startOffset", {
-        /** @inheritdoc */
-        get: function () { return this._startOffset; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "endContainer", {
-        /** @inheritdoc */
-        get: function () { return this._endNode; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "endOffset", {
-        /** @inheritdoc */
-        get: function () { return this._endOffset; },
-        enumerable: true,
-        configurable: true
-    });
-    Object.defineProperty(AbstractRangeImpl.prototype, "collapsed", {
-        /** @inheritdoc */
-        get: function () { return this._collapsed; },
-        enumerable: true,
-        configurable: true
-    });
-    return AbstractRangeImpl;
-}());
-exports.AbstractRangeImpl = AbstractRangeImpl;
-//# sourceMappingURL=AbstractRangeImpl.js.map
-
-/***/ }),
+/* 537 */,
 /* 538 */,
 /* 539 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
@@ -24496,7 +23061,7 @@ exports.AbstractRangeImpl = AbstractRangeImpl;
 
 Object.defineProperty(exports, "__esModule", { value: true });
 const http = __webpack_require__(605);
-const https = __webpack_require__(211);
+const https = __webpack_require__(34);
 const pm = __webpack_require__(950);
 let tunnel;
 var HttpCodes;
@@ -24916,7 +23481,7 @@ class HttpClient {
         if (useProxy) {
             // If using proxy, need tunnel
             if (!tunnel) {
-                tunnel = __webpack_require__(413);
+                tunnel = __webpack_require__(856);
             }
             const agentOptions = {
                 maxSockets: maxSockets,
@@ -29450,7 +28015,612 @@ exports.sortInDescendingOrder = sortInDescendingOrder;
 //# sourceMappingURL=List.js.map
 
 /***/ }),
-/* 658 */,
+/* 658 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const os = __importStar(__webpack_require__(87));
+const events = __importStar(__webpack_require__(614));
+const child = __importStar(__webpack_require__(129));
+const path = __importStar(__webpack_require__(622));
+const io = __importStar(__webpack_require__(1));
+const ioUtil = __importStar(__webpack_require__(672));
+/* eslint-disable @typescript-eslint/unbound-method */
+const IS_WINDOWS = process.platform === 'win32';
+/*
+ * Class for running command line tools. Handles quoting and arg parsing in a platform agnostic way.
+ */
+class ToolRunner extends events.EventEmitter {
+    constructor(toolPath, args, options) {
+        super();
+        if (!toolPath) {
+            throw new Error("Parameter 'toolPath' cannot be null or empty.");
+        }
+        this.toolPath = toolPath;
+        this.args = args || [];
+        this.options = options || {};
+    }
+    _debug(message) {
+        if (this.options.listeners && this.options.listeners.debug) {
+            this.options.listeners.debug(message);
+        }
+    }
+    _getCommandString(options, noPrefix) {
+        const toolPath = this._getSpawnFileName();
+        const args = this._getSpawnArgs(options);
+        let cmd = noPrefix ? '' : '[command]'; // omit prefix when piped to a second tool
+        if (IS_WINDOWS) {
+            // Windows + cmd file
+            if (this._isCmdFile()) {
+                cmd += toolPath;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows + verbatim
+            else if (options.windowsVerbatimArguments) {
+                cmd += `"${toolPath}"`;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows (regular)
+            else {
+                cmd += this._windowsQuoteCmdArg(toolPath);
+                for (const a of args) {
+                    cmd += ` ${this._windowsQuoteCmdArg(a)}`;
+                }
+            }
+        }
+        else {
+            // OSX/Linux - this can likely be improved with some form of quoting.
+            // creating processes on Unix is fundamentally different than Windows.
+            // on Unix, execvp() takes an arg array.
+            cmd += toolPath;
+            for (const a of args) {
+                cmd += ` ${a}`;
+            }
+        }
+        return cmd;
+    }
+    _processLineBuffer(data, strBuffer, onLine) {
+        try {
+            let s = strBuffer + data.toString();
+            let n = s.indexOf(os.EOL);
+            while (n > -1) {
+                const line = s.substring(0, n);
+                onLine(line);
+                // the rest of the string ...
+                s = s.substring(n + os.EOL.length);
+                n = s.indexOf(os.EOL);
+            }
+            strBuffer = s;
+        }
+        catch (err) {
+            // streaming lines to console is best effort.  Don't fail a build.
+            this._debug(`error processing line. Failed with error ${err}`);
+        }
+    }
+    _getSpawnFileName() {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                return process.env['COMSPEC'] || 'cmd.exe';
+            }
+        }
+        return this.toolPath;
+    }
+    _getSpawnArgs(options) {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
+                for (const a of this.args) {
+                    argline += ' ';
+                    argline += options.windowsVerbatimArguments
+                        ? a
+                        : this._windowsQuoteCmdArg(a);
+                }
+                argline += '"';
+                return [argline];
+            }
+        }
+        return this.args;
+    }
+    _endsWith(str, end) {
+        return str.endsWith(end);
+    }
+    _isCmdFile() {
+        const upperToolPath = this.toolPath.toUpperCase();
+        return (this._endsWith(upperToolPath, '.CMD') ||
+            this._endsWith(upperToolPath, '.BAT'));
+    }
+    _windowsQuoteCmdArg(arg) {
+        // for .exe, apply the normal quoting rules that libuv applies
+        if (!this._isCmdFile()) {
+            return this._uvQuoteCmdArg(arg);
+        }
+        // otherwise apply quoting rules specific to the cmd.exe command line parser.
+        // the libuv rules are generic and are not designed specifically for cmd.exe
+        // command line parser.
+        //
+        // for a detailed description of the cmd.exe command line parser, refer to
+        // http://stackoverflow.com/questions/4094699/how-does-the-windows-command-interpreter-cmd-exe-parse-scripts/7970912#7970912
+        // need quotes for empty arg
+        if (!arg) {
+            return '""';
+        }
+        // determine whether the arg needs to be quoted
+        const cmdSpecialChars = [
+            ' ',
+            '\t',
+            '&',
+            '(',
+            ')',
+            '[',
+            ']',
+            '{',
+            '}',
+            '^',
+            '=',
+            ';',
+            '!',
+            "'",
+            '+',
+            ',',
+            '`',
+            '~',
+            '|',
+            '<',
+            '>',
+            '"'
+        ];
+        let needsQuotes = false;
+        for (const char of arg) {
+            if (cmdSpecialChars.some(x => x === char)) {
+                needsQuotes = true;
+                break;
+            }
+        }
+        // short-circuit if quotes not needed
+        if (!needsQuotes) {
+            return arg;
+        }
+        // the following quoting rules are very similar to the rules that by libuv applies.
+        //
+        // 1) wrap the string in quotes
+        //
+        // 2) double-up quotes - i.e. " => ""
+        //
+        //    this is different from the libuv quoting rules. libuv replaces " with \", which unfortunately
+        //    doesn't work well with a cmd.exe command line.
+        //
+        //    note, replacing " with "" also works well if the arg is passed to a downstream .NET console app.
+        //    for example, the command line:
+        //          foo.exe "myarg:""my val"""
+        //    is parsed by a .NET console app into an arg array:
+        //          [ "myarg:\"my val\"" ]
+        //    which is the same end result when applying libuv quoting rules. although the actual
+        //    command line from libuv quoting rules would look like:
+        //          foo.exe "myarg:\"my val\""
+        //
+        // 3) double-up slashes that precede a quote,
+        //    e.g.  hello \world    => "hello \world"
+        //          hello\"world    => "hello\\""world"
+        //          hello\\"world   => "hello\\\\""world"
+        //          hello world\    => "hello world\\"
+        //
+        //    technically this is not required for a cmd.exe command line, or the batch argument parser.
+        //    the reasons for including this as a .cmd quoting rule are:
+        //
+        //    a) this is optimized for the scenario where the argument is passed from the .cmd file to an
+        //       external program. many programs (e.g. .NET console apps) rely on the slash-doubling rule.
+        //
+        //    b) it's what we've been doing previously (by deferring to node default behavior) and we
+        //       haven't heard any complaints about that aspect.
+        //
+        // note, a weakness of the quoting rules chosen here, is that % is not escaped. in fact, % cannot be
+        // escaped when used on the command line directly - even though within a .cmd file % can be escaped
+        // by using %%.
+        //
+        // the saving grace is, on the command line, %var% is left as-is if var is not defined. this contrasts
+        // the line parsing rules within a .cmd file, where if var is not defined it is replaced with nothing.
+        //
+        // one option that was explored was replacing % with ^% - i.e. %var% => ^%var^%. this hack would
+        // often work, since it is unlikely that var^ would exist, and the ^ character is removed when the
+        // variable is used. the problem, however, is that ^ is not removed when %* is used to pass the args
+        // to an external program.
+        //
+        // an unexplored potential solution for the % escaping problem, is to create a wrapper .cmd file.
+        // % can be escaped within a .cmd file.
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\'; // double the slash
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '"'; // double the quote
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse
+            .split('')
+            .reverse()
+            .join('');
+    }
+    _uvQuoteCmdArg(arg) {
+        // Tool runner wraps child_process.spawn() and needs to apply the same quoting as
+        // Node in certain cases where the undocumented spawn option windowsVerbatimArguments
+        // is used.
+        //
+        // Since this function is a port of quote_cmd_arg from Node 4.x (technically, lib UV,
+        // see https://github.com/nodejs/node/blob/v4.x/deps/uv/src/win/process.c for details),
+        // pasting copyright notice from Node within this function:
+        //
+        //      Copyright Joyent, Inc. and other Node contributors. All rights reserved.
+        //
+        //      Permission is hereby granted, free of charge, to any person obtaining a copy
+        //      of this software and associated documentation files (the "Software"), to
+        //      deal in the Software without restriction, including without limitation the
+        //      rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+        //      sell copies of the Software, and to permit persons to whom the Software is
+        //      furnished to do so, subject to the following conditions:
+        //
+        //      The above copyright notice and this permission notice shall be included in
+        //      all copies or substantial portions of the Software.
+        //
+        //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        //      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        //      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        //      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        //      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+        //      FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+        //      IN THE SOFTWARE.
+        if (!arg) {
+            // Need double quotation for empty argument
+            return '""';
+        }
+        if (!arg.includes(' ') && !arg.includes('\t') && !arg.includes('"')) {
+            // No quotation needed
+            return arg;
+        }
+        if (!arg.includes('"') && !arg.includes('\\')) {
+            // No embedded double quotes or backslashes, so I can just wrap
+            // quote marks around the whole thing.
+            return `"${arg}"`;
+        }
+        // Expected input/output:
+        //   input : hello"world
+        //   output: "hello\"world"
+        //   input : hello""world
+        //   output: "hello\"\"world"
+        //   input : hello\world
+        //   output: hello\world
+        //   input : hello\\world
+        //   output: hello\\world
+        //   input : hello\"world
+        //   output: "hello\\\"world"
+        //   input : hello\\"world
+        //   output: "hello\\\\\"world"
+        //   input : hello world\
+        //   output: "hello world\\" - note the comment in libuv actually reads "hello world\"
+        //                             but it appears the comment is wrong, it should be "hello world\\"
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\';
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '\\';
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse
+            .split('')
+            .reverse()
+            .join('');
+    }
+    _cloneExecOptions(options) {
+        options = options || {};
+        const result = {
+            cwd: options.cwd || process.cwd(),
+            env: options.env || process.env,
+            silent: options.silent || false,
+            windowsVerbatimArguments: options.windowsVerbatimArguments || false,
+            failOnStdErr: options.failOnStdErr || false,
+            ignoreReturnCode: options.ignoreReturnCode || false,
+            delay: options.delay || 10000
+        };
+        result.outStream = options.outStream || process.stdout;
+        result.errStream = options.errStream || process.stderr;
+        return result;
+    }
+    _getSpawnOptions(options, toolPath) {
+        options = options || {};
+        const result = {};
+        result.cwd = options.cwd;
+        result.env = options.env;
+        result['windowsVerbatimArguments'] =
+            options.windowsVerbatimArguments || this._isCmdFile();
+        if (options.windowsVerbatimArguments) {
+            result.argv0 = `"${toolPath}"`;
+        }
+        return result;
+    }
+    /**
+     * Exec a tool.
+     * Output will be streamed to the live console.
+     * Returns promise with return code
+     *
+     * @param     tool     path to tool to exec
+     * @param     options  optional exec options.  See ExecOptions
+     * @returns   number
+     */
+    exec() {
+        return __awaiter(this, void 0, void 0, function* () {
+            // root the tool path if it is unrooted and contains relative pathing
+            if (!ioUtil.isRooted(this.toolPath) &&
+                (this.toolPath.includes('/') ||
+                    (IS_WINDOWS && this.toolPath.includes('\\')))) {
+                // prefer options.cwd if it is specified, however options.cwd may also need to be rooted
+                this.toolPath = path.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+            }
+            // if the tool is only a file name, then resolve it from the PATH
+            // otherwise verify it exists (add extension on Windows if necessary)
+            this.toolPath = yield io.which(this.toolPath, true);
+            return new Promise((resolve, reject) => {
+                this._debug(`exec tool: ${this.toolPath}`);
+                this._debug('arguments:');
+                for (const arg of this.args) {
+                    this._debug(`   ${arg}`);
+                }
+                const optionsNonNull = this._cloneExecOptions(this.options);
+                if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                    optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os.EOL);
+                }
+                const state = new ExecState(optionsNonNull, this.toolPath);
+                state.on('debug', (message) => {
+                    this._debug(message);
+                });
+                const fileName = this._getSpawnFileName();
+                const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
+                const stdbuffer = '';
+                if (cp.stdout) {
+                    cp.stdout.on('data', (data) => {
+                        if (this.options.listeners && this.options.listeners.stdout) {
+                            this.options.listeners.stdout(data);
+                        }
+                        if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                            optionsNonNull.outStream.write(data);
+                        }
+                        this._processLineBuffer(data, stdbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.stdline) {
+                                this.options.listeners.stdline(line);
+                            }
+                        });
+                    });
+                }
+                const errbuffer = '';
+                if (cp.stderr) {
+                    cp.stderr.on('data', (data) => {
+                        state.processStderr = true;
+                        if (this.options.listeners && this.options.listeners.stderr) {
+                            this.options.listeners.stderr(data);
+                        }
+                        if (!optionsNonNull.silent &&
+                            optionsNonNull.errStream &&
+                            optionsNonNull.outStream) {
+                            const s = optionsNonNull.failOnStdErr
+                                ? optionsNonNull.errStream
+                                : optionsNonNull.outStream;
+                            s.write(data);
+                        }
+                        this._processLineBuffer(data, errbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.errline) {
+                                this.options.listeners.errline(line);
+                            }
+                        });
+                    });
+                }
+                cp.on('error', (err) => {
+                    state.processError = err.message;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    state.CheckComplete();
+                });
+                cp.on('exit', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                cp.on('close', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                state.on('done', (error, exitCode) => {
+                    if (stdbuffer.length > 0) {
+                        this.emit('stdline', stdbuffer);
+                    }
+                    if (errbuffer.length > 0) {
+                        this.emit('errline', errbuffer);
+                    }
+                    cp.removeAllListeners();
+                    if (error) {
+                        reject(error);
+                    }
+                    else {
+                        resolve(exitCode);
+                    }
+                });
+                if (this.options.input) {
+                    if (!cp.stdin) {
+                        throw new Error('child process missing stdin');
+                    }
+                    cp.stdin.end(this.options.input);
+                }
+            });
+        });
+    }
+}
+exports.ToolRunner = ToolRunner;
+/**
+ * Convert an arg string to an array of args. Handles escaping
+ *
+ * @param    argString   string of arguments
+ * @returns  string[]    array of arguments
+ */
+function argStringToArray(argString) {
+    const args = [];
+    let inQuotes = false;
+    let escaped = false;
+    let arg = '';
+    function append(c) {
+        // we only escape double quotes.
+        if (escaped && c !== '"') {
+            arg += '\\';
+        }
+        arg += c;
+        escaped = false;
+    }
+    for (let i = 0; i < argString.length; i++) {
+        const c = argString.charAt(i);
+        if (c === '"') {
+            if (!escaped) {
+                inQuotes = !inQuotes;
+            }
+            else {
+                append(c);
+            }
+            continue;
+        }
+        if (c === '\\' && escaped) {
+            append(c);
+            continue;
+        }
+        if (c === '\\' && inQuotes) {
+            escaped = true;
+            continue;
+        }
+        if (c === ' ' && !inQuotes) {
+            if (arg.length > 0) {
+                args.push(arg);
+                arg = '';
+            }
+            continue;
+        }
+        append(c);
+    }
+    if (arg.length > 0) {
+        args.push(arg.trim());
+    }
+    return args;
+}
+exports.argStringToArray = argStringToArray;
+class ExecState extends events.EventEmitter {
+    constructor(options, toolPath) {
+        super();
+        this.processClosed = false; // tracks whether the process has exited and stdio is closed
+        this.processError = '';
+        this.processExitCode = 0;
+        this.processExited = false; // tracks whether the process has exited
+        this.processStderr = false; // tracks whether stderr was written to
+        this.delay = 10000; // 10 seconds
+        this.done = false;
+        this.timeout = null;
+        if (!toolPath) {
+            throw new Error('toolPath must not be empty');
+        }
+        this.options = options;
+        this.toolPath = toolPath;
+        if (options.delay) {
+            this.delay = options.delay;
+        }
+    }
+    CheckComplete() {
+        if (this.done) {
+            return;
+        }
+        if (this.processClosed) {
+            this._setResult();
+        }
+        else if (this.processExited) {
+            this.timeout = setTimeout(ExecState.HandleTimeout, this.delay, this);
+        }
+    }
+    _debug(message) {
+        this.emit('debug', message);
+    }
+    _setResult() {
+        // determine whether there is an error
+        let error;
+        if (this.processExited) {
+            if (this.processError) {
+                error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+            }
+            else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
+                error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+            }
+            else if (this.processStderr && this.options.failOnStdErr) {
+                error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+            }
+        }
+        // clear the timeout
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        this.done = true;
+        this.emit('done', error, this.processExitCode);
+    }
+    static HandleTimeout(state) {
+        if (state.done) {
+            return;
+        }
+        if (!state.processClosed && state.processExited) {
+            const message = `The STDIO streams did not close within ${state.delay /
+                1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+            state._debug(message);
+        }
+        state._setResult();
+    }
+}
+//# sourceMappingURL=toolrunner.js.map
+
+/***/ }),
 /* 659 */,
 /* 660 */,
 /* 661 */
@@ -30697,7 +29867,7 @@ var __extends = (this && this.__extends) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-var AbstractRangeImpl_1 = __webpack_require__(537);
+var AbstractRangeImpl_1 = __webpack_require__(413);
 var DOMException_1 = __webpack_require__(35);
 var util_1 = __webpack_require__(918);
 /**
@@ -30737,30 +29907,7 @@ exports.StaticRangeImpl = StaticRangeImpl;
 /* 691 */,
 /* 692 */,
 /* 693 */,
-/* 694 */
-/***/ (function(__unusedmodule, exports) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = exports.INPUT_VERSION = void 0;
-exports.INPUT_VERSION = 'version';
-exports.INPUT_JAVA_VERSION = 'java-version';
-exports.INPUT_ARCHITECTURE = 'architecture';
-exports.INPUT_JAVA_PACKAGE = 'java-package';
-exports.INPUT_JDK_FILE = 'jdkFile';
-exports.INPUT_SERVER_ID = 'server-id';
-exports.INPUT_SERVER_USERNAME = 'server-username';
-exports.INPUT_SERVER_PASSWORD = 'server-password';
-exports.INPUT_SETTINGS_PATH = 'settings-path';
-exports.INPUT_GPG_PRIVATE_KEY = 'gpg-private-key';
-exports.INPUT_GPG_PASSPHRASE = 'gpg-passphrase';
-exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = undefined;
-exports.INPUT_DEFAULT_GPG_PASSPHRASE = 'GPG_PASSPHRASE';
-exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = 'gpg-private-key-fingerprint';
-
-
-/***/ }),
+/* 694 */,
 /* 695 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -31843,7 +30990,7 @@ var __values = (this && this.__values) || function(o) {
     throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var EventAlgorithm_1 = __webpack_require__(108);
+var EventAlgorithm_1 = __webpack_require__(826);
 /**
  * Adds an algorithm to the given abort signal.
  *
@@ -31946,7 +31093,7 @@ module.exports = new Schema({
     __webpack_require__(809),
     __webpack_require__(228),
     __webpack_require__(44),
-    __webpack_require__(312)
+    __webpack_require__(417)
   ]
 });
 
@@ -33978,11 +33125,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
-const installer = __importStar(__webpack_require__(923));
 const auth = __importStar(__webpack_require__(331));
 const gpg = __importStar(__webpack_require__(884));
-const constants = __importStar(__webpack_require__(694));
+const constants = __importStar(__webpack_require__(211));
 const path = __importStar(__webpack_require__(622));
+const distributor_factory_1 = __webpack_require__(264);
+function run() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const version = core.getInput(constants.INPUT_JAVA_VERSION, {
+                required: true
+            });
+            const arch = core.getInput(constants.INPUT_ARCHITECTURE, { required: true });
+            const javaDistributor = core.getInput('distribution');
+            const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
+                required: true
+            });
+            const jdkFile = core.getInput(constants.INPUT_JDK_FILE, { required: false });
+            const initOptions = {
+                arch,
+                javaPackage,
+                version
+            };
+            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions);
+            if (!distributor) {
+                throw new Error('No distributor was found');
+            }
+            const result = yield distributor.getJava();
+            core.info(`${javaDistributor} java version is ${result.javaVersion}`);
+            core.info(`Java version path is ${result.javaPath}`);
+            const matchersPath = path.join(__dirname, '..', '..', '.github');
+            core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
+            yield configureAuthentication();
+        }
+        catch (error) {
+            core.setFailed(error.message);
+        }
+    });
+}
 function configureAuthentication() {
     return __awaiter(this, void 0, void 0, function* () {
         const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
@@ -34004,28 +33184,6 @@ function configureAuthentication() {
             core.info('importing private key');
             const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
             core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
-        }
-    });
-}
-function run() {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const version = core.getInput(constants.INPUT_JAVA_VERSION, {
-                required: true
-            });
-            const arch = core.getInput(constants.INPUT_ARCHITECTURE, { required: true });
-            const javaDistributor = core.getInput('distribution');
-            const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
-                required: true
-            });
-            const jdkFile = core.getInput(constants.INPUT_JDK_FILE, { required: false });
-            yield installer.install(version, arch, javaPackage, javaDistributor, jdkFile);
-            const matchersPath = path.join(__dirname, '..', '..', '.github');
-            core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
-            yield configureAuthentication();
-        }
-        catch (error) {
-            core.setFailed(error.message);
         }
     });
 }
@@ -36803,52 +35961,7 @@ exports.asciiSerializationOfAnOrigin = asciiSerializationOfAnOrigin;
 /* 816 */,
 /* 817 */,
 /* 818 */,
-/* 819 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
-
-"use strict";
-
-
-
-var loader = __webpack_require__(457);
-var dumper = __webpack_require__(685);
-
-
-function deprecated(name) {
-  return function () {
-    throw new Error('Function ' + name + ' is deprecated and cannot be used.');
-  };
-}
-
-
-module.exports.Type                = __webpack_require__(945);
-module.exports.Schema              = __webpack_require__(733);
-module.exports.FAILSAFE_SCHEMA     = __webpack_require__(265);
-module.exports.JSON_SCHEMA         = __webpack_require__(720);
-module.exports.CORE_SCHEMA         = __webpack_require__(611);
-module.exports.DEFAULT_SAFE_SCHEMA = __webpack_require__(723);
-module.exports.DEFAULT_FULL_SCHEMA = __webpack_require__(910);
-module.exports.load                = loader.load;
-module.exports.loadAll             = loader.loadAll;
-module.exports.safeLoad            = loader.safeLoad;
-module.exports.safeLoadAll         = loader.safeLoadAll;
-module.exports.dump                = dumper.dump;
-module.exports.safeDump            = dumper.safeDump;
-module.exports.YAMLException       = __webpack_require__(556);
-
-// Deprecated schema names from JS-YAML 2.0.x
-module.exports.MINIMAL_SCHEMA = __webpack_require__(265);
-module.exports.SAFE_SCHEMA    = __webpack_require__(723);
-module.exports.DEFAULT_SCHEMA = __webpack_require__(910);
-
-// Deprecated functions from JS-YAML 1.x.x
-module.exports.scan           = deprecated('scan');
-module.exports.parse          = deprecated('parse');
-module.exports.compose        = deprecated('compose');
-module.exports.addConstructor = deprecated('addConstructor');
-
-
-/***/ }),
+/* 819 */,
 /* 820 */
 /***/ (function(__unusedmodule, exports, __webpack_require__) {
 
@@ -36970,38 +36083,1004 @@ WebIDLAlgorithm_1.idl_defineConst(TextImpl.prototype, "_nodeType", interfaces_1.
 /* 824 */,
 /* 825 */,
 /* 826 */
-/***/ (function(module, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
 
-var rng = __webpack_require__(139);
-var bytesToUuid = __webpack_require__(722);
+"use strict";
 
-function v4(options, buf, offset) {
-  var i = buf && offset || 0;
-
-  if (typeof(options) == 'string') {
-    buf = options === 'binary' ? new Array(16) : null;
-    options = null;
-  }
-  options = options || {};
-
-  var rnds = options.random || (options.rng || rng)();
-
-  // Per 4.4, set bits for version and `clock_seq_hi_and_reserved`
-  rnds[6] = (rnds[6] & 0x0f) | 0x40;
-  rnds[8] = (rnds[8] & 0x3f) | 0x80;
-
-  // Copy bytes to buffer, if provided
-  if (buf) {
-    for (var ii = 0; ii < 16; ++ii) {
-      buf[i + ii] = rnds[ii];
+var __values = (this && this.__values) || function(o) {
+    var s = typeof Symbol === "function" && Symbol.iterator, m = s && o[s], i = 0;
+    if (m) return m.call(o);
+    if (o && typeof o.length === "number") return {
+        next: function () {
+            if (o && i >= o.length) o = void 0;
+            return { value: o && o[i++], done: !o };
+        }
+    };
+    throw new TypeError(s ? "Object is not iterable." : "Symbol.iterator is not defined.");
+};
+var __read = (this && this.__read) || function (o, n) {
+    var m = typeof Symbol === "function" && o[Symbol.iterator];
+    if (!m) return o;
+    var i = m.call(o), r, ar = [], e;
+    try {
+        while ((n === void 0 || n-- > 0) && !(r = i.next()).done) ar.push(r.value);
     }
-  }
-
-  return buf || bytesToUuid(rnds);
+    catch (error) { e = { error: error }; }
+    finally {
+        try {
+            if (r && !r.done && (m = i["return"])) m.call(i);
+        }
+        finally { if (e) throw e.error; }
+    }
+    return ar;
+};
+var __spread = (this && this.__spread) || function () {
+    for (var ar = [], i = 0; i < arguments.length; i++) ar = ar.concat(__read(arguments[i]));
+    return ar;
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+var DOMImpl_1 = __webpack_require__(648);
+var interfaces_1 = __webpack_require__(970);
+var util_1 = __webpack_require__(918);
+var CustomEventImpl_1 = __webpack_require__(164);
+var EventImpl_1 = __webpack_require__(427);
+var DOMException_1 = __webpack_require__(35);
+var TreeAlgorithm_1 = __webpack_require__(873);
+var ShadowTreeAlgorithm_1 = __webpack_require__(180);
+var DOMAlgorithm_1 = __webpack_require__(304);
+/**
+ * Sets the canceled flag of an event.
+ *
+ * @param event - an event
+ */
+function event_setTheCanceledFlag(event) {
+    if (event._cancelable && !event._inPassiveListenerFlag) {
+        event._canceledFlag = true;
+    }
 }
-
-module.exports = v4;
-
+exports.event_setTheCanceledFlag = event_setTheCanceledFlag;
+/**
+ * Initializes the value of an event.
+ *
+ * @param event - an event to initialize
+ * @param type - the type of event
+ * @param bubbles - whether the event propagates in reverse
+ * @param cancelable - whether the event can be cancelled
+ */
+function event_initialize(event, type, bubbles, cancelable) {
+    event._initializedFlag = true;
+    event._stopPropagationFlag = false;
+    event._stopImmediatePropagationFlag = false;
+    event._canceledFlag = false;
+    event._isTrusted = false;
+    event._target = null;
+    event._type = type;
+    event._bubbles = bubbles;
+    event._cancelable = cancelable;
+}
+exports.event_initialize = event_initialize;
+/**
+ * Creates a new event.
+ *
+ * @param eventInterface - event interface
+ * @param realm - realm
+ */
+function event_createAnEvent(eventInterface, realm) {
+    if (realm === void 0) { realm = undefined; }
+    /**
+     * 1. If realm is not given, then set it to null.
+     * 2. Let dictionary be the result of converting the JavaScript value
+     * undefined to the dictionary type accepted by eventInterface’s
+     * constructor. (This dictionary type will either be EventInit or a
+     * dictionary that inherits from it.)
+     * 3. Let event be the result of running the inner event creation steps with
+     * eventInterface, realm, the time of the occurrence that the event is
+     * signaling, and dictionary.
+     * 4. Initialize event’s isTrusted attribute to true.
+     * 5. Return event.
+     */
+    if (realm === undefined)
+        realm = null;
+    var dictionary = {};
+    var event = event_innerEventCreationSteps(eventInterface, realm, new Date(), dictionary);
+    event._isTrusted = true;
+    return event;
+}
+exports.event_createAnEvent = event_createAnEvent;
+/**
+ * Performs event creation steps.
+ *
+ * @param eventInterface - event interface
+ * @param realm - realm
+ * @param time - time of occurrance
+ * @param dictionary - event attributes
+ *
+ */
+function event_innerEventCreationSteps(eventInterface, realm, time, dictionary) {
+    /**
+     * 1. Let event be the result of creating a new object using eventInterface.
+     * TODO: Implement realms
+     * If realm is non-null, then use that Realm; otherwise, use the default
+     * behavior defined in Web IDL.
+     */
+    var event = new eventInterface("");
+    /**
+     * 2. Set event’s initialized flag.
+     * 3. Initialize event’s timeStamp attribute to a DOMHighResTimeStamp
+     * representing the high resolution time from the time origin to time.
+     * 4. For each member → value in dictionary, if event has an attribute
+     * whose identifier is member, then initialize that attribute to value.
+     * 5. Run the event constructing steps with event.
+     * 6. Return event.
+     */
+    event._initializedFlag = true;
+    event._timeStamp = time.getTime();
+    Object.assign(event, dictionary);
+    if (DOMImpl_1.dom.features.steps) {
+        DOMAlgorithm_1.dom_runEventConstructingSteps(event);
+    }
+    return event;
+}
+exports.event_innerEventCreationSteps = event_innerEventCreationSteps;
+/**
+ * Dispatches an event to an event target.
+ *
+ * @param event - the event to dispatch
+ * @param target - event target
+ * @param legacyTargetOverrideFlag - legacy target override flag
+ * @param legacyOutputDidListenersThrowFlag - legacy output flag that returns
+ * whether the event listener's callback threw an exception
+ */
+function event_dispatch(event, target, legacyTargetOverrideFlag, legacyOutputDidListenersThrowFlag) {
+    var e_1, _a, e_2, _b;
+    if (legacyTargetOverrideFlag === void 0) { legacyTargetOverrideFlag = false; }
+    if (legacyOutputDidListenersThrowFlag === void 0) { legacyOutputDidListenersThrowFlag = { value: false }; }
+    var clearTargets = false;
+    /**
+     * 1. Set event's dispatch flag.
+     */
+    event._dispatchFlag = true;
+    /**
+     * 2. Let targetOverride be target, if legacy target override flag is not
+     * given, and target's associated Document otherwise.
+     *
+     * _Note:_ legacy target override flag is only used by HTML and only when
+     * target is a Window object.
+     */
+    var targetOverride = target;
+    if (legacyTargetOverrideFlag) {
+        var doc = target._associatedDocument;
+        if (util_1.Guard.isDocumentNode(doc)) {
+            targetOverride = doc;
+        }
+    }
+    /**
+     * 3. Let activationTarget be null.
+     * 4. Let relatedTarget be the result of retargeting event's relatedTarget
+     * against target.
+     * 5. If target is not relatedTarget or target is event's relatedTarget,
+     * then:
+    */
+    var activationTarget = null;
+    var relatedTarget = TreeAlgorithm_1.tree_retarget(event._relatedTarget, target);
+    if (target !== relatedTarget || target === event._relatedTarget) {
+        /**
+         * 5.1. Let touchTargets be a new list.
+         * 5.2. For each touchTarget of event's touch target list, append the
+         * result of retargeting touchTarget against target to touchTargets.
+         * 5.3. Append to an event path with event, target, targetOverride,
+         * relatedTarget, touchTargets, and false.
+         * 5.4. Let isActivationEvent be true, if event is a MouseEvent object
+         * and event's type attribute is "click", and false otherwise.
+         * 5.5. If isActivationEvent is true and target has activation behavior,
+         * then set activationTarget to target.
+         * 5.6. Let slotable be target, if target is a slotable and is assigned,
+         * and null otherwise.
+         * 5.7. Let slot-in-closed-tree be false.
+         * 5.8. Let parent be the result of invoking target's get the parent with
+         * event.
+         */
+        var touchTargets = [];
+        try {
+            for (var _c = __values(event._touchTargetList), _d = _c.next(); !_d.done; _d = _c.next()) {
+                var touchTarget = _d.value;
+                touchTargets.push(TreeAlgorithm_1.tree_retarget(touchTarget, target));
+            }
+        }
+        catch (e_1_1) { e_1 = { error: e_1_1 }; }
+        finally {
+            try {
+                if (_d && !_d.done && (_a = _c.return)) _a.call(_c);
+            }
+            finally { if (e_1) throw e_1.error; }
+        }
+        event_appendToAnEventPath(event, target, targetOverride, relatedTarget, touchTargets, false);
+        var isActivationEvent = (util_1.Guard.isMouseEvent(event) && event._type === "click");
+        if (isActivationEvent && target._activationBehavior !== undefined) {
+            activationTarget = target;
+        }
+        var slotable = (util_1.Guard.isSlotable(target) && ShadowTreeAlgorithm_1.shadowTree_isAssigned(target)) ?
+            target : null;
+        var slotInClosedTree = false;
+        var parent = target._getTheParent(event);
+        /**
+         * 5.9. While parent is non-null:
+         */
+        while (parent !== null && util_1.Guard.isNode(parent)) {
+            /**
+             * 5.9.1 If slotable is non-null:
+             * 5.9.1.1. Assert: parent is a slot.
+             * 5.9.1.2. Set slotable to null.
+             * 5.9.1.3. If parent's root is a shadow root whose mode is "closed",
+             * then set slot-in-closed-tree to true.
+             */
+            if (slotable !== null) {
+                if (!util_1.Guard.isSlot(parent)) {
+                    throw new Error("Parent node of a slotable should be a slot.");
+                }
+                slotable = null;
+                var root = TreeAlgorithm_1.tree_rootNode(parent, true);
+                if (util_1.Guard.isShadowRoot(root) && root._mode === "closed") {
+                    slotInClosedTree = true;
+                }
+            }
+            /**
+             * 5.9.2 If parent is a slotable and is assigned, then set slotable to
+             * parent.
+             * 5.9.3. Let relatedTarget be the result of retargeting event's
+             * relatedTarget against parent.
+             * 5.9.4. Let touchTargets be a new list.
+             * 5.9.4. For each touchTarget of event's touch target list, append the
+             * result of retargeting touchTarget against parent to touchTargets.
+             */
+            if (util_1.Guard.isSlotable(parent) && ShadowTreeAlgorithm_1.shadowTree_isAssigned(parent)) {
+                slotable = parent;
+            }
+            relatedTarget = TreeAlgorithm_1.tree_retarget(event._relatedTarget, parent);
+            touchTargets = [];
+            try {
+                for (var _e = (e_2 = void 0, __values(event._touchTargetList)), _f = _e.next(); !_f.done; _f = _e.next()) {
+                    var touchTarget = _f.value;
+                    touchTargets.push(TreeAlgorithm_1.tree_retarget(touchTarget, parent));
+                }
+            }
+            catch (e_2_1) { e_2 = { error: e_2_1 }; }
+            finally {
+                try {
+                    if (_f && !_f.done && (_b = _e.return)) _b.call(_e);
+                }
+                finally { if (e_2) throw e_2.error; }
+            }
+            /**
+             * 5.9.6. If parent is a Window object, or parent is a node and target's
+             * root is a shadow-including inclusive ancestor of parent, then:
+             */
+            if (util_1.Guard.isWindow(parent) || (util_1.Guard.isNode(parent) && util_1.Guard.isNode(target) &&
+                TreeAlgorithm_1.tree_isAncestorOf(TreeAlgorithm_1.tree_rootNode(target, true), parent, true, true))) {
+                /**
+                 * 5.9.6.1. If isActivationEvent is true, event's bubbles attribute
+                 * is true, activationTarget is null, and parent has activation
+                 * behavior, then set activationTarget to parent.
+                 * 5.9.6.2. Append to an event path with event, parent, null,
+                 * relatedTarget, touchTargets, and slot-in-closed-tree.
+                 */
+                if (isActivationEvent && event._bubbles && activationTarget === null &&
+                    parent._activationBehavior) {
+                    activationTarget = parent;
+                }
+                event_appendToAnEventPath(event, parent, null, relatedTarget, touchTargets, slotInClosedTree);
+            }
+            else if (parent === relatedTarget) {
+                /**
+                 * 5.9.7. Otherwise, if parent is relatedTarget,
+                 * then set parent to null.
+                 */
+                parent = null;
+            }
+            else {
+                /**
+                 * 5.9.8. Otherwise, set target to parent and then:
+                 * 5.9.8.1. If isActivationEvent is true, activationTarget is null,
+                 * and target has activation behavior, then set activationTarget
+                 * to target.
+                 * 5.9.8.2. Append to an event path with event, parent, target,
+                 * relatedTarget, touchTargets, and slot-in-closed-tree.
+                 */
+                target = parent;
+                if (isActivationEvent && activationTarget === null &&
+                    target._activationBehavior) {
+                    activationTarget = target;
+                }
+                event_appendToAnEventPath(event, parent, target, relatedTarget, touchTargets, slotInClosedTree);
+            }
+            /**
+             * 5.9.9. If parent is non-null, then set parent to the result of
+             * invoking parent's get the parent with event.
+             * 5.9.10. Set slot-in-closed-tree to false.
+             */
+            if (parent !== null) {
+                parent = parent._getTheParent(event);
+            }
+            slotInClosedTree = false;
+        }
+        /**
+         * 5.10. Let clearTargetsStruct be the last struct in event's path whose
+         * shadow-adjusted target is non-null.
+         */
+        var clearTargetsStruct = null;
+        var path = event._path;
+        for (var i = path.length - 1; i >= 0; i--) {
+            var struct = path[i];
+            if (struct.shadowAdjustedTarget !== null) {
+                clearTargetsStruct = struct;
+                break;
+            }
+        }
+        /**
+         * 5.11. Let clearTargets be true if clearTargetsStruct's shadow-adjusted
+         * target, clearTargetsStruct's relatedTarget, or an EventTarget object
+         * in clearTargetsStruct's touch target list is a node and its root is
+         * a shadow root, and false otherwise.
+         */
+        if (clearTargetsStruct !== null) {
+            if (util_1.Guard.isNode(clearTargetsStruct.shadowAdjustedTarget) &&
+                util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(clearTargetsStruct.shadowAdjustedTarget, true))) {
+                clearTargets = true;
+            }
+            else if (util_1.Guard.isNode(clearTargetsStruct.relatedTarget) &&
+                util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(clearTargetsStruct.relatedTarget, true))) {
+                clearTargets = true;
+            }
+            else {
+                for (var j = 0; j < clearTargetsStruct.touchTargetList.length; j++) {
+                    var struct = clearTargetsStruct.touchTargetList[j];
+                    if (util_1.Guard.isNode(struct) &&
+                        util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(struct, true))) {
+                        clearTargets = true;
+                        break;
+                    }
+                }
+            }
+        }
+        /**
+         * 5.12. If activationTarget is non-null and activationTarget has
+         * legacy-pre-activation behavior, then run activationTarget's
+         * legacy-pre-activation behavior.
+         */
+        if (activationTarget !== null &&
+            activationTarget._legacyPreActivationBehavior !== undefined) {
+            activationTarget._legacyPreActivationBehavior(event);
+        }
+        /**
+         * 5.13. For each struct in event's path, in reverse order:
+         */
+        for (var i = path.length - 1; i >= 0; i--) {
+            var struct = path[i];
+            /**
+             * 5.13.1. If struct's shadow-adjusted target is non-null, then set
+             * event's eventPhase attribute to AT_TARGET.
+             * 5.13.2. Otherwise, set event's eventPhase attribute to
+             * CAPTURING_PHASE.
+             * 5.13.3. Invoke with struct, event, "capturing", and
+             * legacyOutputDidListenersThrowFlag if given.
+             */
+            if (struct.shadowAdjustedTarget !== null) {
+                event._eventPhase = interfaces_1.EventPhase.AtTarget;
+            }
+            else {
+                event._eventPhase = interfaces_1.EventPhase.Capturing;
+            }
+            event_invoke(struct, event, "capturing", legacyOutputDidListenersThrowFlag);
+        }
+        /**
+         * 5.14. For each struct in event's path
+         */
+        for (var i = 0; i < path.length; i++) {
+            var struct = path[i];
+            /**
+             * 5.14.1. If struct's shadow-adjusted target is non-null, then set
+             * event's eventPhase attribute to AT_TARGET.
+             * 5.14.2. Otherwise:
+             * 5.14.2.1. If event's bubbles attribute is false, then continue.
+             * 5.14.2.2. Set event's eventPhase attribute to BUBBLING_PHASE.
+             * 5.14.3. Invoke with struct, event, "bubbling", and
+             * legacyOutputDidListenersThrowFlag if given.
+             */
+            if (struct.shadowAdjustedTarget !== null) {
+                event._eventPhase = interfaces_1.EventPhase.AtTarget;
+            }
+            else {
+                if (!event._bubbles)
+                    continue;
+                event._eventPhase = interfaces_1.EventPhase.Bubbling;
+            }
+            event_invoke(struct, event, "bubbling", legacyOutputDidListenersThrowFlag);
+        }
+    }
+    /**
+     * 6. Set event's eventPhase attribute to NONE.
+     * 7. Set event's currentTarget attribute to null.
+     * 8. Set event's path to the empty list.
+     * 9. Unset event's dispatch flag, stop propagation flag, and stop
+     * immediate propagation flag.
+     */
+    event._eventPhase = interfaces_1.EventPhase.None;
+    event._currentTarget = null;
+    event._path = [];
+    event._dispatchFlag = false;
+    event._stopPropagationFlag = false;
+    event._stopImmediatePropagationFlag = false;
+    /**
+     * 10. If clearTargets, then:
+     * 10.1. Set event's target to null.
+     * 10.2. Set event's relatedTarget to null.
+     * 10.3. Set event's touch target list to the empty list.
+     */
+    if (clearTargets) {
+        event._target = null;
+        event._relatedTarget = null;
+        event._touchTargetList = [];
+    }
+    /**
+     * 11. If activationTarget is non-null, then:
+     * 11.1. If event's canceled flag is unset, then run activationTarget's
+     * activation behavior with event.
+     * 11.2. Otherwise, if activationTarget has legacy-canceled-activation
+     * behavior, then run activationTarget's legacy-canceled-activation
+     * behavior.
+     */
+    if (activationTarget !== null) {
+        if (!event._canceledFlag && activationTarget._activationBehavior !== undefined) {
+            activationTarget._activationBehavior(event);
+        }
+        else if (activationTarget._legacyCanceledActivationBehavior !== undefined) {
+            activationTarget._legacyCanceledActivationBehavior(event);
+        }
+    }
+    /**
+     * 12. Return false if event's canceled flag is set, and true otherwise.
+     */
+    return !event._canceledFlag;
+}
+exports.event_dispatch = event_dispatch;
+/**
+ * Appends a new struct to an event's path.
+ *
+ * @param event - an event
+ * @param invocationTarget - the target of the invocation
+ * @param shadowAdjustedTarget - shadow-root adjusted event target
+ * @param relatedTarget - related event target
+ * @param touchTargets - a list of touch targets
+ * @param slotInClosedTree - if the target's parent is a closed shadow root
+ */
+function event_appendToAnEventPath(event, invocationTarget, shadowAdjustedTarget, relatedTarget, touchTargets, slotInClosedTree) {
+    /**
+     * 1. Let invocationTargetInShadowTree be false.
+     * 2. If invocationTarget is a node and its root is a shadow root, then
+     * set invocationTargetInShadowTree to true.
+     */
+    var invocationTargetInShadowTree = false;
+    if (util_1.Guard.isNode(invocationTarget) &&
+        util_1.Guard.isShadowRoot(TreeAlgorithm_1.tree_rootNode(invocationTarget))) {
+        invocationTargetInShadowTree = true;
+    }
+    /**
+     * 3. Let root-of-closed-tree be false.
+     * 4. If invocationTarget is a shadow root whose mode is "closed", then
+     * set root-of-closed-tree to true.
+     */
+    var rootOfClosedTree = false;
+    if (util_1.Guard.isShadowRoot(invocationTarget) &&
+        invocationTarget._mode === "closed") {
+        rootOfClosedTree = true;
+    }
+    /**
+     * 5. Append a new struct to event's path whose invocation target is
+     * invocationTarget, invocation-target-in-shadow-tree is
+     * invocationTargetInShadowTree, shadow-adjusted target is
+     * shadowAdjustedTarget, relatedTarget is relatedTarget,
+     * touch target list is touchTargets, root-of-closed-tree is
+     * root-of-closed-tree, and slot-in-closed-tree is slot-in-closed-tree.
+     */
+    event._path.push({
+        invocationTarget: invocationTarget,
+        invocationTargetInShadowTree: invocationTargetInShadowTree,
+        shadowAdjustedTarget: shadowAdjustedTarget,
+        relatedTarget: relatedTarget,
+        touchTargetList: touchTargets,
+        rootOfClosedTree: rootOfClosedTree,
+        slotInClosedTree: slotInClosedTree
+    });
+}
+exports.event_appendToAnEventPath = event_appendToAnEventPath;
+/**
+ * Invokes an event.
+ *
+ * @param struct - a struct defining event's path
+ * @param event - the event to invoke
+ * @param phase - event phase
+ * @param legacyOutputDidListenersThrowFlag - legacy output flag that returns
+ * whether the event listener's callback threw an exception
+ */
+function event_invoke(struct, event, phase, legacyOutputDidListenersThrowFlag) {
+    if (legacyOutputDidListenersThrowFlag === void 0) { legacyOutputDidListenersThrowFlag = { value: false }; }
+    /**
+     * 1. Set event's target to the shadow-adjusted target of the last struct
+     * in event's path, that is either struct or preceding struct, whose
+     * shadow-adjusted target is non-null.
+     */
+    var path = event._path;
+    var index = -1;
+    for (var i = 0; i < path.length; i++) {
+        if (path[i] === struct) {
+            index = i;
+            break;
+        }
+    }
+    if (index !== -1) {
+        var item = path[index];
+        if (item.shadowAdjustedTarget !== null) {
+            event._target = item.shadowAdjustedTarget;
+        }
+        else if (index > 0) {
+            item = path[index - 1];
+            if (item.shadowAdjustedTarget !== null) {
+                event._target = item.shadowAdjustedTarget;
+            }
+        }
+    }
+    /**
+     * 2. Set event's relatedTarget to struct's relatedTarget.
+     * 3. Set event's touch target list to struct's touch target list.
+     * 4. If event's stop propagation flag is set, then return.
+     * 5. Initialize event's currentTarget attribute to struct's invocation
+     * target.
+     * 6. Let listeners be a clone of event's currentTarget attribute value's
+     * event listener list.
+     *
+     * _Note:_ This avoids event listeners added after this point from being
+     * run. Note that removal still has an effect due to the removed field.
+     */
+    event._relatedTarget = struct.relatedTarget;
+    event._touchTargetList = struct.touchTargetList;
+    if (event._stopPropagationFlag)
+        return;
+    event._currentTarget = struct.invocationTarget;
+    var currentTarget = event._currentTarget;
+    var targetListeners = currentTarget._eventListenerList;
+    var listeners = new (Array.bind.apply(Array, __spread([void 0], targetListeners)))();
+    /**
+     * 7. Let found be the result of running inner invoke with event, listeners,
+     * phase, and legacyOutputDidListenersThrowFlag if given.
+     */
+    var found = event_innerInvoke(event, listeners, phase, struct, legacyOutputDidListenersThrowFlag);
+    /**
+     * 8. If found is false and event's isTrusted attribute is true, then:
+     */
+    if (!found && event._isTrusted) {
+        /**
+         * 8.1. Let originalEventType be event's type attribute value.
+         * 8.2. If event's type attribute value is a match for any of the strings
+         * in the first column in the following table, set event's type attribute
+         * value to the string in the second column on the same row as the matching
+         * string, and return otherwise.
+         *
+         * Event type           | Legacy event type
+         * -------------------------------------------------
+         * "animationend"       | "webkitAnimationEnd"
+         * "animationiteration" | "webkitAnimationIteration"
+         * "animationstart"     | "webkitAnimationStart"
+         * "transitionend"      | "webkitTransitionEnd"
+         */
+        var originalEventType = event._type;
+        if (originalEventType === "animationend") {
+            event._type = "webkitAnimationEnd";
+        }
+        else if (originalEventType === "animationiteration") {
+            event._type = "webkitAnimationIteration";
+        }
+        else if (originalEventType === "animationstart") {
+            event._type = "webkitAnimationStart";
+        }
+        else if (originalEventType === "transitionend") {
+            event._type = "webkitTransitionEnd";
+        }
+        /**
+         * 8.3. Inner invoke with event, listeners, phase, and
+         * legacyOutputDidListenersThrowFlag if given.
+         * 8.4. Set event's type attribute value to originalEventType.
+         */
+        event_innerInvoke(event, listeners, phase, struct, legacyOutputDidListenersThrowFlag);
+        event._type = originalEventType;
+    }
+}
+exports.event_invoke = event_invoke;
+/**
+ * Invokes an event.
+ *
+ * @param event - the event to invoke
+ * @param listeners - event listeners
+ * @param phase - event phase
+ * @param struct - a struct defining event's path
+ * @param legacyOutputDidListenersThrowFlag - legacy output flag that returns
+ * whether the event listener's callback threw an exception
+ */
+function event_innerInvoke(event, listeners, phase, struct, legacyOutputDidListenersThrowFlag) {
+    if (legacyOutputDidListenersThrowFlag === void 0) { legacyOutputDidListenersThrowFlag = { value: false }; }
+    /**
+     * 1. Let found be false.
+     * 2. For each listener in listeners, whose removed is false:
+     */
+    var found = false;
+    for (var i = 0; i < listeners.length; i++) {
+        var listener = listeners[i];
+        if (!listener.removed) {
+            /**
+             * 2.1. If event's type attribute value is not listener's type, then
+             * continue.
+             * 2.2. Set found to true.
+             * 2.3. If phase is "capturing" and listener's capture is false, then
+             * continue.
+             * 2.4. If phase is "bubbling" and listener's capture is true, then
+             * continue.
+             */
+            if (event._type !== listener.type)
+                continue;
+            found = true;
+            if (phase === "capturing" && !listener.capture)
+                continue;
+            if (phase === "bubbling" && listener.capture)
+                continue;
+            /**
+             * 2.5. If listener's once is true, then remove listener from event's
+             * currentTarget attribute value's event listener list.
+             */
+            if (listener.once && event._currentTarget !== null) {
+                var impl = event._currentTarget;
+                var index = -1;
+                for (var i_1 = 0; i_1 < impl._eventListenerList.length; i_1++) {
+                    if (impl._eventListenerList[i_1] === listener) {
+                        index = i_1;
+                        break;
+                    }
+                }
+                if (index !== -1) {
+                    impl._eventListenerList.splice(index, 1);
+                }
+            }
+            /**
+             * TODO: Implement realms
+             *
+             * 2.6. Let global be listener callback's associated Realm's global
+             * object.
+             */
+            var globalObject = undefined;
+            /**
+             * 2.7. Let currentEvent be undefined.
+             * 2.8. If global is a Window object, then:
+             * 2.8.1. Set currentEvent to global's current event.
+             * 2.8.2. If struct's invocation-target-in-shadow-tree is false, then
+             * set global's current event to event.
+             */
+            var currentEvent = undefined;
+            if (util_1.Guard.isWindow(globalObject)) {
+                currentEvent = globalObject._currentEvent;
+                if (struct.invocationTargetInShadowTree === false) {
+                    globalObject._currentEvent = event;
+                }
+            }
+            /**
+             * 2.9. If listener's passive is true, then set event's in passive
+             * listener flag.
+             * 2.10. Call a user object's operation with listener's callback,
+             * "handleEvent", « event », and event's currentTarget attribute value.
+             */
+            if (listener.passive)
+                event._inPassiveListenerFlag = true;
+            try {
+                listener.callback.handleEvent.call(event._currentTarget, event);
+            }
+            catch (err) {
+                /**
+                 * If this throws an exception, then:
+                 * 2.10.1. Report the exception.
+                 * 2.10.2. Set legacyOutputDidListenersThrowFlag if given.
+                 *
+                 * _Note:_ The legacyOutputDidListenersThrowFlag is only used by
+                 * Indexed Database API.
+                 * TODO: Report the exception
+                 * See: https://html.spec.whatwg.org/multipage/webappapis.html#runtime-script-errors-in-documents
+                 */
+                legacyOutputDidListenersThrowFlag.value = true;
+            }
+            /**
+             * 2.11. Unset event's in passive listener flag.
+             */
+            if (listener.passive)
+                event._inPassiveListenerFlag = false;
+            /**
+             * 2.12. If global is a Window object, then set global's current event
+             * to currentEvent.
+             */
+            if (util_1.Guard.isWindow(globalObject)) {
+                globalObject._currentEvent = currentEvent;
+            }
+            /**
+             * 2.13. If event's stop immediate propagation flag is set, then return
+             * found.
+             */
+            if (event._stopImmediatePropagationFlag)
+                return found;
+        }
+    }
+    /**
+     * 3. Return found.
+     */
+    return found;
+}
+exports.event_innerInvoke = event_innerInvoke;
+/**
+ * Fires an event at target.
+ * @param e - event name
+ * @param target - event target
+ * @param eventConstructor - an event constructor, with a description of how
+ * IDL attributes are to be initialized
+ * @param idlAttributes - a dictionary describing how IDL attributes are
+ * to be initialized
+ * @param legacyTargetOverrideFlag - legacy target override flag
+ */
+function event_fireAnEvent(e, target, eventConstructor, idlAttributes, legacyTargetOverrideFlag) {
+    /**
+     * 1. If eventConstructor is not given, then let eventConstructor be Event.
+     */
+    if (eventConstructor === undefined) {
+        eventConstructor = EventImpl_1.EventImpl;
+    }
+    /**
+     * 2. Let event be the result of creating an event given eventConstructor,
+     * in the relevant Realm of target.
+     */
+    var event = event_createAnEvent(eventConstructor);
+    /**
+     * 3. Initialize event’s type attribute to e.
+     */
+    event._type = e;
+    /**
+     * 4. Initialize any other IDL attributes of event as described in the
+     * invocation of this algorithm.
+     * _Note:_ This also allows for the isTrusted attribute to be set to false.
+     */
+    if (idlAttributes) {
+        for (var key in idlAttributes) {
+            var idlObj = event;
+            idlObj[key] = idlAttributes[key];
+        }
+    }
+    /**
+     * 5. Return the result of dispatching event at target, with legacy target
+     * override flag set if set.
+     */
+    return event_dispatch(event, target, legacyTargetOverrideFlag);
+}
+exports.event_fireAnEvent = event_fireAnEvent;
+/**
+ * Creates an event.
+ *
+ * @param eventInterface - the name of the event interface
+ */
+function event_createLegacyEvent(eventInterface) {
+    /**
+     * 1. Let constructor be null.
+     */
+    var constructor = null;
+    /**
+     * TODO: Implement in HTML DOM
+     * 2. If interface is an ASCII case-insensitive match for any of the strings
+     * in the first column in the following table, then set constructor to the
+     * interface in the second column on the same row as the matching string:
+     *
+     * String | Interface
+     * -------|----------
+     * "beforeunloadevent" | BeforeUnloadEvent
+     * "compositionevent" | CompositionEvent
+     * "customevent" | CustomEvent
+     * "devicemotionevent" | DeviceMotionEvent
+     * "deviceorientationevent" | DeviceOrientationEvent
+     * "dragevent" | DragEvent
+     * "event" | Event
+     * "events" | Event
+     * "focusevent" | FocusEvent
+     * "hashchangeevent" | HashChangeEvent
+     * "htmlevents" | Event
+     * "keyboardevent" | KeyboardEvent
+     * "messageevent" | MessageEvent
+     * "mouseevent" | MouseEvent
+     * "mouseevents" |
+     * "storageevent" | StorageEvent
+     * "svgevents" | Event
+     * "textevent" | CompositionEvent
+     * "touchevent" | TouchEvent
+     * "uievent" | UIEvent
+     * "uievents" | UIEvent
+     */
+    switch (eventInterface.toLowerCase()) {
+        case "beforeunloadevent":
+            break;
+        case "compositionevent":
+            break;
+        case "customevent":
+            constructor = CustomEventImpl_1.CustomEventImpl;
+            break;
+        case "devicemotionevent":
+            break;
+        case "deviceorientationevent":
+            break;
+        case "dragevent":
+            break;
+        case "event":
+        case "events":
+            constructor = EventImpl_1.EventImpl;
+            break;
+        case "focusevent":
+            break;
+        case "hashchangeevent":
+            break;
+        case "htmlevents":
+            break;
+        case "keyboardevent":
+            break;
+        case "messageevent":
+            break;
+        case "mouseevent":
+            break;
+        case "mouseevents":
+            break;
+        case "storageevent":
+            break;
+        case "svgevents":
+            break;
+        case "textevent":
+            break;
+        case "touchevent":
+            break;
+        case "uievent":
+            break;
+        case "uievents":
+            break;
+    }
+    /**
+     * 3. If constructor is null, then throw a "NotSupportedError" DOMException.
+     */
+    if (constructor === null) {
+        throw new DOMException_1.NotSupportedError("Event constructor not found for interface " + eventInterface + ".");
+    }
+    /**
+     * 4. If the interface indicated by constructor is not exposed on the
+     * relevant global object of the context object, then throw a
+     * "NotSupportedError" DOMException.
+     * _Note:_ Typically user agents disable support for touch events in some
+     * configurations, in which case this clause would be triggered for the
+     * interface TouchEvent.
+     */
+    // TODO: Implement realms
+    /**
+     * 5. Let event be the result of creating an event given constructor.
+     * 6. Initialize event’s type attribute to the empty string.
+     * 7. Initialize event’s timeStamp attribute to a DOMHighResTimeStamp
+     * representing the high resolution time from the time origin to now.
+     * 8. Initialize event’s isTrusted attribute to false.
+     * 9. Unset event’s initialized flag.
+     */
+    var event = new constructor("");
+    event._type = "";
+    event._timeStamp = new Date().getTime();
+    event._isTrusted = false;
+    event._initializedFlag = false;
+    /**
+     * 10. Return event.
+     */
+    return event;
+}
+exports.event_createLegacyEvent = event_createLegacyEvent;
+/**
+ * Getter of an event handler IDL attribute.
+ *
+ * @param eventTarget - event target
+ * @param name - event name
+ */
+function event_getterEventHandlerIDLAttribute(thisObj, name) {
+    /**
+     * 1. Let eventTarget be the result of determining the target of an event
+     * handler given this object and name.
+     * 2. If eventTarget is null, then return null.
+     * 3. Return the result of getting the current value of the event handler
+     * given eventTarget and name.
+     */
+    var eventTarget = event_determineTheTargetOfAnEventHandler(thisObj, name);
+    if (eventTarget === null)
+        return null;
+    return event_getTheCurrentValueOfAnEventHandler(eventTarget, name);
+}
+exports.event_getterEventHandlerIDLAttribute = event_getterEventHandlerIDLAttribute;
+/**
+ * Setter of an event handler IDL attribute.
+ *
+ * @param eventTarget - event target
+ * @param name - event name
+ * @param value - event handler
+ */
+function event_setterEventHandlerIDLAttribute(thisObj, name, value) {
+    /**
+     * 1. Let eventTarget be the result of determining the target of an event
+     * handler given this object and name.
+     * 2. If eventTarget is null, then return.
+     * 3. If the given value is null, then deactivate an event handler given
+     * eventTarget and name.
+     * 4. Otherwise:
+     * 4.1. Let handlerMap be eventTarget's event handler map.
+     * 4.2. Let eventHandler be handlerMap[name].
+     * 4.3. Set eventHandler's value to the given value.
+     * 4.4. Activate an event handler given eventTarget and name.
+     */
+    var eventTarget = event_determineTheTargetOfAnEventHandler(thisObj, name);
+    if (eventTarget === null)
+        return;
+    if (value === null) {
+        event_deactivateAnEventHandler(eventTarget, name);
+    }
+    else {
+        var handlerMap = eventTarget._eventHandlerMap;
+        var eventHandler = handlerMap["onabort"];
+        if (eventHandler !== undefined) {
+            eventHandler.value = value;
+        }
+        event_activateAnEventHandler(eventTarget, name);
+    }
+}
+exports.event_setterEventHandlerIDLAttribute = event_setterEventHandlerIDLAttribute;
+/**
+ * Determines the target of an event handler.
+ *
+ * @param eventTarget - event target
+ * @param name - event name
+ */
+function event_determineTheTargetOfAnEventHandler(eventTarget, name) {
+    // TODO: Implement in HTML DOM
+    return null;
+}
+exports.event_determineTheTargetOfAnEventHandler = event_determineTheTargetOfAnEventHandler;
+/**
+ * Gets the current value of an event handler.
+ *
+ * @param eventTarget - event target
+ * @param name - event name
+ */
+function event_getTheCurrentValueOfAnEventHandler(eventTarget, name) {
+    // TODO: Implement in HTML DOM
+    return null;
+}
+exports.event_getTheCurrentValueOfAnEventHandler = event_getTheCurrentValueOfAnEventHandler;
+/**
+ * Activates an event handler.
+ *
+ * @param eventTarget - event target
+ * @param name - event name
+ */
+function event_activateAnEventHandler(eventTarget, name) {
+    // TODO: Implement in HTML DOM
+}
+exports.event_activateAnEventHandler = event_activateAnEventHandler;
+/**
+ * Deactivates an event handler.
+ *
+ * @param eventTarget - event target
+ * @param name - event name
+ */
+function event_deactivateAnEventHandler(eventTarget, name) {
+    // TODO: Implement in HTML DOM
+}
+exports.event_deactivateAnEventHandler = event_deactivateAnEventHandler;
+//# sourceMappingURL=EventAlgorithm.js.map
 
 /***/ }),
 /* 827 */,
@@ -37182,7 +37261,13 @@ module.exports = new Type('tag:yaml.org,2002:omap', {
 /* 853 */,
 /* 854 */,
 /* 855 */,
-/* 856 */,
+/* 856 */
+/***/ (function(module, __unusedexports, __webpack_require__) {
+
+module.exports = __webpack_require__(141);
+
+
+/***/ }),
 /* 857 */,
 /* 858 */,
 /* 859 */,
@@ -38525,38 +38610,7 @@ exports.ObjectCache = ObjectCache;
 /* 901 */,
 /* 902 */,
 /* 903 */,
-/* 904 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
-var Guard_1 = __webpack_require__(783);
-/**
- * Contains type casts for DOM objects.
- */
-var Cast = /** @class */ (function () {
-    function Cast() {
-    }
-    /**
-     * Casts the given object to a `Node`.
-     *
-     * @param a - the object to cast
-     */
-    Cast.asNode = function (a) {
-        if (Guard_1.Guard.isNode(a)) {
-            return a;
-        }
-        else {
-            throw new Error("Invalid object. Node expected.");
-        }
-    };
-    return Cast;
-}());
-exports.Cast = Cast;
-//# sourceMappingURL=Cast.js.map
-
-/***/ }),
+/* 904 */,
 /* 905 */,
 /* 906 */,
 /* 907 */,
@@ -38597,53 +38651,27 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.ZuluDistributor = void 0;
 const core = __importStar(__webpack_require__(470));
-const tc = __importStar(__webpack_require__(533));
+const tc = __importStar(__webpack_require__(139));
 const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
 const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
 class ZuluDistributor extends base_installer_1.JavaBase {
-    constructor(http, version, arch, javaPackage = "jdk") {
-        super("Azul Systems, Inc.", version, arch, javaPackage);
-        this.http = http;
+    constructor(initOptions) {
+        super("Azul Systems, Inc.", initOptions.version, initOptions.arch, initOptions.javaPackage);
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
-    }
-    getAvailableMajor(range) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=${this.platform}&arch=${this.arch}&hw_bitness=64&ext=${this.extension}&bundle_type=${this.javaPackage}`;
-            const zuluJavaJson = (yield this.http.getJson(url)).result;
-            if (!zuluJavaJson) {
-                throw new Error(`No zulu java was found for all`);
-            }
-            core.info(`url is ${url}`);
-            core.info(`range is ${range}`);
-            const javaVersions = zuluJavaJson.map(item => semver_1.default.coerce(item.jdk_version.join('.')));
-            const majorVersion = semver_1.default.maxSatisfying(javaVersions, range);
-            if (!majorVersion) {
-                throw new Error(`No zulu major versions was found`);
-            }
-            return majorVersion.major;
-        });
     }
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
-            const javaVersion = yield this.getJavaVersion(this.http, range);
-            const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${javaVersion}&bundle_type=${this.javaPackage}`;
-            const zuluJavaJson = (yield this.http.getJson(url)).result;
-            core.debug(`url for initilial download tool is ${url}`);
-            core.debug(`zuluJavaJson for initilial download tool is ${zuluJavaJson}`);
-            if (!zuluJavaJson) {
-                throw new Error(`No zulu java was found for version ${javaVersion}`);
-            }
-            core.info(`Downloading ${this.distributor} java version ${javaVersion}`);
-            core.info(`Zulu url is ${zuluJavaJson.url}`);
-            const javaPath = yield tc.downloadTool(zuluJavaJson.url);
+            const javaRelease = yield this.resolveVersion(range);
+            const javaPath = yield tc.downloadTool(javaRelease.link);
             let downloadDir;
-            core.info(`Ectracting ${this.distributor} java version ${javaVersion}`);
+            core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
             if (util_1.IS_WINDOWS) {
                 downloadDir = yield tc.extractZip(javaPath);
             }
@@ -38652,20 +38680,28 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor.replace(' ', '')}_${this.javaPackage}`, javaVersion, this.arch);
-            return { javaPath: toolPath, javaVersion };
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor.replace(' ', '')}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+            return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
         });
     }
-    getJavaVersion(http, range) {
+    resolveVersion(range) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resolvedVersion = yield this.getAvailableVersion(range);
+            const urlBinary = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedVersion}&bundle_type=${this.javaPackage}`;
+            const zuluJavaJson = (yield this.http.getJson(urlBinary)).result;
+            if (!zuluJavaJson) {
+                throw new Error(`No zulu java was found for version ${resolvedVersion}`);
+            }
+            return { link: zuluJavaJson.url, resolvedVersion };
+        });
+    }
+    getAvailableVersion(range) {
         return __awaiter(this, void 0, void 0, function* () {
             const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
-            core.debug(`url get all java versions: ${url}`);
-            const zuluJson = (yield http.getJson(url)).result;
+            const zuluJson = (yield this.http.getJson(url)).result;
             if (!zuluJson || zuluJson.length === 0) {
                 throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
             }
-            core.debug(`get id: ${zuluJson[0].id}`);
-            core.debug('Get the list of zulu java versions');
             const zuluVersions = zuluJson.map(item => { var _a; return (_a = semver_1.default.coerce(item.jdk_version.join('.'))) !== null && _a !== void 0 ? _a : ""; });
             const maxVersion = semver_1.default.maxSatisfying(zuluVersions, range);
             if (!maxVersion) {
@@ -38675,12 +38711,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
         });
     }
 }
-class ZuluFactory extends base_installer_1.BaseFactory {
-    getJavaDistributor(http, version, arch, javaPackage = 'jdk') {
-        return new ZuluDistributor(http, version, arch, javaPackage);
-    }
-}
-exports.default = ZuluFactory;
+exports.ZuluDistributor = ZuluDistributor;
 
 
 /***/ }),
@@ -39405,7 +39436,7 @@ exports.XLink = "http://www.w3.org/1999/xlink";
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-var Cast_1 = __webpack_require__(904);
+var Cast_1 = __webpack_require__(533);
 exports.Cast = Cast_1.Cast;
 var Guard_1 = __webpack_require__(783);
 exports.Guard = Guard_1.Guard;
@@ -39488,96 +39519,7 @@ module.exports = new Type('tag:yaml.org,2002:seq', {
 
 /***/ }),
 /* 922 */,
-/* 923 */
-/***/ (function(__unusedmodule, exports, __webpack_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.install = void 0;
-const core = __importStar(__webpack_require__(470));
-const httpm = __importStar(__webpack_require__(539));
-const path = __importStar(__webpack_require__(622));
-const util_1 = __webpack_require__(322);
-const adoptopenjdk_installer_1 = __importDefault(__webpack_require__(318));
-const zulu_installer_1 = __importDefault(__webpack_require__(908));
-var JavaDistributor;
-(function (JavaDistributor) {
-    JavaDistributor["AdopOpenJdk"] = "adopOpenJdk";
-    JavaDistributor["Zulu"] = "zulu";
-})(JavaDistributor || (JavaDistributor = {}));
-class JavaFactory {
-    getJavaDistributor(distributor) {
-        switch (distributor) {
-            case JavaDistributor.AdopOpenJdk:
-                return new adoptopenjdk_installer_1.default();
-            case JavaDistributor.Zulu:
-                return new zulu_installer_1.default();
-            default:
-                return null;
-        }
-    }
-}
-function install(version, arch, javaPackage, distributorName, jdkFile) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const http = new httpm.HttpClient('setup-java', undefined, {
-            allowRetries: true,
-            maxRetries: 3
-        });
-        const javaFactory = new JavaFactory();
-        const distributorFactory = javaFactory.getJavaDistributor(distributorName);
-        const distributor = distributorFactory === null || distributorFactory === void 0 ? void 0 : distributorFactory.getJavaDistributor(http, util_1.normalizeVersion(version), arch, javaPackage);
-        if (!distributor) {
-            throw new Error('No distributor was found');
-        }
-        const javaInfo = yield distributor.getJava();
-        const { javaVersion, javaPath: toolPath } = javaInfo;
-        const extendedJavaHome = `JAVA_HOME_${version}_${arch}`
-            .toUpperCase()
-            .replace(/[^0-9A-Z_]/g, '_');
-        core.exportVariable('JAVA_HOME', toolPath);
-        core.exportVariable(extendedJavaHome, toolPath);
-        core.addPath(path.join(toolPath, 'bin'));
-        core.setOutput('path', toolPath);
-        core.setOutput('version', javaVersion);
-        core.info(`Setuped up java ${javaVersion} from ${distributorName}`);
-    });
-}
-exports.install = install;
-
-
-/***/ }),
+/* 923 */,
 /* 924 */,
 /* 925 */,
 /* 926 */,
@@ -41472,7 +41414,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const tr = __importStar(__webpack_require__(9));
+const tr = __importStar(__webpack_require__(658));
 /**
  * Exec a command.
  * Output will be streamed to the live console.
