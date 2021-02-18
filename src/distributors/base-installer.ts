@@ -3,7 +3,7 @@ import * as core from '@actions/core';
 import semver from 'semver';
 import path from 'path';
 import * as httpm from '@actions/http-client';
-import { getJavaPreInstalledPath, IS_LINUX, IS_WINDOWS } from '../util';
+import { getJavaPreInstalledPath, getVersionFromToolcachePath, IS_LINUX, IS_WINDOWS, parseLocalVersions } from '../util';
 
 export interface JavaInitOptions {
     version: string;
@@ -39,7 +39,7 @@ export abstract class JavaBase {
         let foundJava = this.findInToolcache(range);
         if (!foundJava) {
             // try to find Java in default system locations outside tool-cache
-            foundJava = this.findInKnownLocations(range.raw)
+            foundJava = this.findInKnownLocations(range)
         }
 
         if(!foundJava) {
@@ -59,17 +59,25 @@ export abstract class JavaBase {
         }
 
         return {
-            javaVersion: this.getVersionFromPath(toolPath),
+            javaVersion: getVersionFromToolcachePath(toolPath),
             javaPath: toolPath
         };
     }
 
-    protected findInKnownLocations(version: string): IJavaInfo | null {
+    protected findInKnownLocations(version: semver.Range): IJavaInfo | null {
         if(this.javaPackage !== 'jdk') {
             return null;
         }
         
-        return getJavaPreInstalledPath(version, this.distributor, this.getJavaVersionsPath());
+        let knownLocation = null;
+        switch(process.platform) {
+            case "win32": knownLocation = path.normalize('C:/Program Files/Java');
+            case "darwin": knownLocation = '/Library/Java/JavaVirtualMachines';
+            default: knownLocation = '/usr/lib/jvm'
+        }
+
+        const localVersions = parseLocalVersions(knownLocation, this.distributor);
+        return localVersions.find(localVersion => semver.satisfies(localVersion.javaVersion, version)) ?? null;
     }
 
     protected setJavaDefault(toolPath: string) {
@@ -123,13 +131,5 @@ export abstract class JavaBase {
         }
     
         return version;
-    }
-
-      private getVersionFromPath(toolPath: string) {
-        if(toolPath) {
-            return path.basename(path.dirname(toolPath));
-        }
-
-        return toolPath;
     }
 }

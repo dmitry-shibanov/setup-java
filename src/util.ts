@@ -1,9 +1,7 @@
-import * as httpm from '@actions/http-client';
-import * as core from '@actions/core';
 import fs from 'fs';
-import os from 'os';
+import os, { EOL } from 'os';
 import * as path from 'path';
-import * as semver from 'semver';
+import { IJavaInfo } from './distributors/base-installer';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
@@ -17,88 +15,48 @@ export function getTempDir() {
   return tempDirectory;
 }
 
-export function createHttpClient() {
-  const http = new httpm.HttpClient('setup-java', undefined, {
-    allowRetries: true,
-    maxRetries: 3
-  });
+export function getVersionFromToolcachePath(toolPath: string) {
+  if(toolPath) {
+      return path.basename(path.dirname(toolPath));
+  }
 
-  return http;
+  return toolPath;
 }
 
-export function getJavaPreInstalledPath(
-  version: string,
-  distributor: string,
-  versionsPath: string
-) {
-  const versionsDir = fs.readdirSync(versionsPath);
-  const javaInformations = versionsDir.map(versionDir => {
-    let javaPath = path.join(versionsPath, versionDir);
+export function parseLocalVersions(rootLocation: string, distributor: string): IJavaInfo[] {
+  const potentialVersions = fs.readdirSync(rootLocation);
+  const foundVersions: IJavaInfo[] = [];
+
+  potentialVersions.forEach(potentialVersion => {
+    let javaPath = path.join(rootLocation, potentialVersion);
     if (IS_MACOS) {
       javaPath = path.join(javaPath, macOSJavaContentDir);
     }
-
-    const content: string | null = getJavaReleaseFileContent(javaPath);
-    if (!content) {
-      return null;
+    const javaReleaseFile = path.join(javaPath, 'release');
+    if (!fs.existsSync(javaReleaseFile)) {
+      return;
     }
 
-    const implemetation = parseFile('IMPLEMENTOR', content);
-
-    const re = new RegExp(/^[7,8]\./);
-    if (!re.test(version) && implemetation !== distributor) {
-      return null;
+    const dict = parseReleaseFile(javaReleaseFile);
+    if (dict["IMPLEMENTOR"] && dict["IMPLEMENTOR"].includes(distributor)) {
+      foundVersions.push({
+        javaVersion: dict["JAVA_VERSION"],
+        javaPath: javaPath
+      });
     }
-
-    const javaVersion = parseFile('JAVA_VERSION', content);
-
-    if (!javaVersion) {
-      return null;
-    }
-
-    core.info(`found java ${javaVersion} version for ${implemetation}`);
-
-    return {
-      javaVersion: semver.coerce(javaVersion.split('_')[0])!.version,
-      javaPath: javaPath
-    };
   });
 
-  const javaInfo =
-    javaInformations.find(item => {
-      return (
-        item && semver.satisfies(item.javaVersion, new semver.Range(version))
-      );
-    }) || null;
-
-  return javaInfo;
+  return foundVersions;
 }
 
-export function getJavaReleaseFileContent(javaDirectory: string) {
-  let javaReleaseFile = path.join(javaDirectory, 'release');
+function parseReleaseFile(releaseFilePath: string): {[key: string]: string} {
+  const content: string = fs.readFileSync(releaseFilePath).toString();
+  const lines = content.split(EOL);
+  const dict: {[key: string]: string} = {}
+  lines.forEach(line => {
+    const [key, value] = line.split('=', 2);
+    dict[key] = value;
+  });
 
-  if (
-    !(fs.existsSync(javaReleaseFile) && fs.lstatSync(javaReleaseFile).isFile())
-  ) {
-    core.info('Release file for java was not found');
-    return null;
-  }
-
-  const content: string = fs.readFileSync(javaReleaseFile).toString();
-
-  return content;
-}
-
-export function parseFile(keyWord: string, content: string) {
-  const re = new RegExp(`${keyWord}="(.*)"$`, 'gm');
-  const regexExecArr = re.exec(content);
-  if (!regexExecArr) {
-    return null;
-  }
-
-  let version = regexExecArr[1].startsWith('1.')
-    ? regexExecArr[1].replace('1.', '')
-    : regexExecArr[1];
-
-  return version;
+  return dict;
 }
