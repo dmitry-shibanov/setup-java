@@ -36,33 +36,40 @@ export abstract class JavaBase {
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
-        let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, range.raw, this.arch);
-
-        if(!javaInfo) {
-            javaInfo = await this.downloadTool(range);
+        let foundJava = this.findInToolcache(range);
+        if (!foundJava) {
+            // try to find Java in default system locations outside tool-cache
+            foundJava = this.findInKnownLocations(range.raw)
         }
 
-        this.setJavaDefault(javaInfo.javaPath);
+        if(!foundJava) {
+            // download Java if it is not found locally
+            foundJava = await this.downloadTool(range);
+        }
 
-        return javaInfo;
+        this.setJavaDefault(foundJava.javaPath);
+
+        return foundJava;
     }
 
-    protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
-        const toolPath = tc.find(toolName, version, arch);
-        let javaInfo: IJavaInfo | null = null;
-        const javaVersion = this.getVersionFromPath(toolPath);
-        if(!javaVersion) {
-            if(this.javaPackage === 'jdk') {
-                javaInfo = getJavaPreInstalledPath(version, this.distributor, this.getJavaVersionsPath());
-    
-            }
-            return javaInfo;
+    protected findInToolcache(version: semver.Range): IJavaInfo | null {
+        const toolPath = tc.find(`Java_${this.distributor}_${this.javaPackage}`, version.raw, this.arch);
+        if (!toolPath) {
+            return null;
         }
 
         return {
-            javaVersion,
+            javaVersion: this.getVersionFromPath(toolPath),
             javaPath: toolPath
+        };
+    }
+
+    protected findInKnownLocations(version: string): IJavaInfo | null {
+        if(this.javaPackage !== 'jdk') {
+            return null;
         }
+        
+        return getJavaPreInstalledPath(version, this.distributor, this.getJavaVersionsPath());
     }
 
     protected setJavaDefault(toolPath: string) {
@@ -76,19 +83,13 @@ export abstract class JavaBase {
         core.setOutput('version', this.version);
     }
 
-    protected getJavaVersionsPath() {
-        const windowsPreInstalled = path.normalize('C:/Program Files/Java');
-        const linuxPreInstalled = '/usr/lib/jvm';
-        const macosPreInstalled = '/Library/Java/JavaVirtualMachines';
-      
-        if (IS_WINDOWS) {
-          return windowsPreInstalled;
-        } else if (IS_LINUX) {
-          return linuxPreInstalled;
-        } else {
-          return macosPreInstalled;
+    protected getJavaVersionsPath(): string {
+        switch(process.platform) {
+            case "win32": return path.normalize('C:/Program Files/Java');
+            case "darwin": return '/Library/Java/JavaVirtualMachines'
+            default: return '/usr/lib/jvm'
         }
-      }
+    }
 
     // this function validates and parse java version to its normal semver notation
     protected normalizeVersion(version: string): string {
