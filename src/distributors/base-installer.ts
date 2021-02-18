@@ -70,10 +70,12 @@ export abstract class JavaBase {
             return null;
         }
         
-        let knownLocation = null;
+        let knownLocation;
         switch(process.platform) {
             case "win32": knownLocation = path.normalize('C:/Program Files/Java');
+            break;
             case "darwin": knownLocation = '/Library/Java/JavaVirtualMachines';
+            break;
             default: knownLocation = '/usr/lib/jvm'
         }
 

@@ -1,4 +1,5 @@
 import fs from 'fs';
+import * as core from '@actions/core';
 import os, {EOL} from 'os';
 import * as path from 'path';
 import {IJavaInfo} from './distributors/base-installer';
@@ -37,11 +38,15 @@ export function parseLocalVersions(
     }
     const javaReleaseFile = path.join(javaPath, 'release');
     if (!fs.existsSync(javaReleaseFile)) {
+      core.info('release file does not exist');
       return;
     }
 
     const dict = parseReleaseFile(javaReleaseFile);
-    if (dict['IMPLEMENTOR'] && dict['IMPLEMENTOR'].includes(distributor)) {
+    if (
+      dict['IMPLEMENTOR_VERSION'] &&
+      dict['IMPLEMENTOR_VERSION'].includes(distributor)
+    ) {
       foundVersions.push({
         javaVersion: dict['JAVA_VERSION'],
         javaPath: javaPath
@@ -58,7 +63,7 @@ function parseReleaseFile(releaseFilePath: string): {[key: string]: string} {
   const dict: {[key: string]: string} = {};
   lines.forEach(line => {
     const [key, value] = line.split('=', 2);
-    dict[key] = value;
+    dict[key] = value.replace(/"/g, '');
   });
 
   return dict;

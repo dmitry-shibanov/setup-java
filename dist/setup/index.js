@@ -13397,6 +13397,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.parseLocalVersions = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const fs_1 = __importDefault(__webpack_require__(747));
+const core = __importStar(__webpack_require__(470));
 const os_1 = __importStar(__webpack_require__(87));
 const path = __importStar(__webpack_require__(622));
 exports.IS_WINDOWS = process.platform === 'win32';
@@ -13426,10 +13427,12 @@ function parseLocalVersions(rootLocation, distributor) {
         }
         const javaReleaseFile = path.join(javaPath, 'release');
         if (!fs_1.default.existsSync(javaReleaseFile)) {
+            core.info('release file does not exist');
             return;
         }
         const dict = parseReleaseFile(javaReleaseFile);
-        if (dict['IMPLEMENTOR'] && dict['IMPLEMENTOR'].includes(distributor)) {
+        if (dict['IMPLEMENTOR_VERSION'] &&
+            dict['IMPLEMENTOR_VERSION'].includes(distributor)) {
             foundVersions.push({
                 javaVersion: dict['JAVA_VERSION'],
                 javaPath: javaPath
@@ -13445,7 +13448,7 @@ function parseReleaseFile(releaseFilePath) {
     const dict = {};
     lines.forEach(line => {
         const [key, value] = line.split('=', 2);
-        dict[key] = value;
+        dict[key] = value.replace(/"/g, '');
     });
     return dict;
 }
@@ -22944,10 +22947,14 @@ class JavaBase {
         if (this.javaPackage !== 'jdk') {
             return null;
         }
-        let knownLocation = null;
+        let knownLocation;
         switch (process.platform) {
-            case "win32": knownLocation = path_1.default.normalize('C:/Program Files/Java');
-            case "darwin": knownLocation = '/Library/Java/JavaVirtualMachines';
+            case "win32":
+                knownLocation = path_1.default.normalize('C:/Program Files/Java');
+                break;
+            case "darwin":
+                knownLocation = '/Library/Java/JavaVirtualMachines';
+                break;
             default: knownLocation = '/usr/lib/jvm';
         }
         const localVersions = util_1.parseLocalVersions(knownLocation, this.distributor);
