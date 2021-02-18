@@ -5,6 +5,12 @@ import path from 'path';
 import * as httpm from '@actions/http-client';
 import { getJavaPreInstalledPath } from '../util';
 
+export interface JavaInitOptions {
+    version: string;
+    arch: string;
+    javaPackage: string;
+}
+
 export abstract class JavaBase {
     protected http: httpm.HttpClient;
     constructor(protected distributor: string, protected version: string, protected arch: string, protected javaPackage: string) {
@@ -19,10 +25,11 @@ export abstract class JavaBase {
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
-        const majorVersion = await this.getAvailableMajor(range);
+        //const majorVersion = await this.getAvailableMajor(range);
         let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
 
         if(!javaInfo) {
+            // resolveVersion ()
             javaInfo = await this.downloadTool(range);
         }
 
@@ -68,14 +75,6 @@ export abstract class JavaBase {
         core.setOutput('version', this.version);
     }
 }
-
-export abstract class BaseFactory {
-    abstract getJavaDistributor(        
-        http: httpm.HttpClient,
-        version: string,
-        arch: string,
-        javaPackage: string) : JavaBase;
-} 
 
 export interface IJavaInfo {
     javaVersion: string;

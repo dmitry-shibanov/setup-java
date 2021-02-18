@@ -9,11 +9,12 @@ import semver from 'semver';
 import { BaseFactory, IJavaInfo, JavaBase } from './base-installer';
 import { IZulu, IZuluDetailed } from './zulu-models';
 import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
+import { JavaInitOptions } from '../installer';
 
-class ZuluDistributor extends JavaBase {
+export class ZuluDistributor extends JavaBase {
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
-    constructor(private http: httpm.HttpClient, version: string, arch: string, javaPackage: string = "jdk") {
+    constructor(initOptions: JavaInitOptions) {
         super("Azul Systems, Inc.", version, arch, javaPackage);
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
     }
@@ -92,22 +93,3 @@ class ZuluDistributor extends JavaBase {
     }
     
 }
-
-class ZuluFactory extends BaseFactory {
-    
-    getJavaDistributor(
-        http: httpm.HttpClient,
-        version: string,
-        arch: string,
-        javaPackage: string = 'jdk'): JavaBase {
-        return new ZuluDistributor(
-            http,
-            version,
-            arch,
-            javaPackage
-          );
-    }
-    
-}
-
-export default ZuluFactory;

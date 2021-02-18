@@ -4,6 +4,42 @@ import * as auth from './auth';
 import * as gpg from './gpg';
 import * as constants from './constants';
 import * as path from 'path';
+import { JavaInitOptions } from './distributors/base-installer';
+import { getJavaDistributor } from './distributors/distributor-factory';
+
+async function run() {
+  try {
+    const version = core.getInput(constants.INPUT_JAVA_VERSION, {
+      required: true
+    });
+    const arch = core.getInput(constants.INPUT_ARCHITECTURE, {required: true});
+    const javaDistributor = core.getInput('distribution');
+    const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
+      required: true
+    });
+    const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {required: false});
+
+    const initOptions: JavaInitOptions = {
+      arch,
+      javaPackage,
+      version
+    };
+    const distributor = getJavaDistributor(javaDistributor, initOptions);
+    if (!distributor) {
+      throw new Error('No distributor was found');
+    }
+
+    const result = distributor.getJava();
+    // add output of version
+
+    const matchersPath = path.join(__dirname, '..', '..', '.github');
+    core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
+
+    await configureAuthentication();
+  } catch (error) {
+    core.setFailed(error.message);
+  }
+}
 
 async function configureAuthentication() {
   const id = core.getInput(constants.INPUT_SERVER_ID, {required: false});
@@ -30,35 +66,6 @@ async function configureAuthentication() {
     core.info('importing private key');
     const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
     core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
-  }
-}
-
-async function run() {
-  try {
-    const version = core.getInput(constants.INPUT_JAVA_VERSION, {
-      required: true
-    });
-    const arch = core.getInput(constants.INPUT_ARCHITECTURE, {required: true});
-    const javaDistributor = core.getInput('distribution');
-    const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
-      required: true
-    });
-    const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {required: false});
-
-    await installer.install(
-      version,
-      arch,
-      javaPackage,
-      javaDistributor,
-      jdkFile
-    );
-
-    const matchersPath = path.join(__dirname, '..', '..', '.github');
-    core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
-
-    await configureAuthentication();
-  } catch (error) {
-    core.setFailed(error.message);
   }
 }
 

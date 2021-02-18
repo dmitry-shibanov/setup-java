@@ -9,11 +9,12 @@ import semver from 'semver';
 import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
 import { BaseFactory, IJavaInfo, JavaBase } from "./base-installer";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
+import { JavaInitOptions } from '../installer';
 
-class AdopOpenJdkDistributor extends JavaBase {
+export class AdopOpenJdkDistributor extends JavaBase {
     private platform: string;
     
-    constructor(private http: httpm.HttpClient, version: string, arch: string, javaPackage: string = "jdk") {
+    constructor(initOptions: JavaInitOptions) {
         super("AdoptOpenJDK", version, arch, javaPackage);
         this.platform = IS_MACOS ? 'mac' : PLATFORM;
     }
@@ -69,22 +70,3 @@ class AdopOpenJdkDistributor extends JavaBase {
         return { javaPath: toolPath, javaVersion: fullVersion.version_data.semver };
     }
 }
-
-class AdoptOpenJDKFactory extends BaseFactory {
-    
-    getJavaDistributor(
-        http: httpm.HttpClient,
-        version: string,
-        arch: string,
-        javaPackage: string = 'jdk'): JavaBase {
-        return new AdopOpenJdkDistributor(
-            http,
-            version,
-            arch,
-            javaPackage
-          );
-    }
-    
-}
-
-export default AdoptOpenJDKFactory;
