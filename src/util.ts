@@ -3,6 +3,7 @@ import * as core from '@actions/core';
 import os, {EOL} from 'os';
 import * as path from 'path';
 import {IJavaInfo} from './distributors/base-installer';
+import {validRange} from 'semver';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
@@ -66,7 +67,9 @@ function parseReleaseFile(releaseFilePath: string): {[key: string]: string} {
     const [key, value] = line.split('=', 2);
     core.info(`key is ${key}`);
     core.info(`value is ${value}`);
-    dict[key] = value.replace(/"/g, '');
+    if (key && value) {
+      dict[key] = value.replace(/"/g, '');
+    }
   });
 
   return dict;
