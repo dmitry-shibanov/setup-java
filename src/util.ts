@@ -1,7 +1,7 @@
 import fs from 'fs';
-import os, { EOL } from 'os';
+import os, {EOL} from 'os';
 import * as path from 'path';
-import { IJavaInfo } from './distributors/base-installer';
+import {IJavaInfo} from './distributors/base-installer';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
@@ -16,14 +16,17 @@ export function getTempDir() {
 }
 
 export function getVersionFromToolcachePath(toolPath: string) {
-  if(toolPath) {
-      return path.basename(path.dirname(toolPath));
+  if (toolPath) {
+    return path.basename(path.dirname(toolPath));
   }
 
   return toolPath;
 }
 
-export function parseLocalVersions(rootLocation: string, distributor: string): IJavaInfo[] {
+export function parseLocalVersions(
+  rootLocation: string,
+  distributor: string
+): IJavaInfo[] {
   const potentialVersions = fs.readdirSync(rootLocation);
   const foundVersions: IJavaInfo[] = [];
 
@@ -38,9 +41,9 @@ export function parseLocalVersions(rootLocation: string, distributor: string): I
     }
 
     const dict = parseReleaseFile(javaReleaseFile);
-    if (dict["IMPLEMENTOR"] && dict["IMPLEMENTOR"].includes(distributor)) {
+    if (dict['IMPLEMENTOR'] && dict['IMPLEMENTOR'].includes(distributor)) {
       foundVersions.push({
-        javaVersion: dict["JAVA_VERSION"],
+        javaVersion: dict['JAVA_VERSION'],
         javaPath: javaPath
       });
     }
@@ -52,7 +55,7 @@ export function parseLocalVersions(rootLocation: string, distributor: string): I
 function parseReleaseFile(releaseFilePath: string): {[key: string]: string} {
   const content: string = fs.readFileSync(releaseFilePath).toString();
   const lines = content.split(EOL);
-  const dict: {[key: string]: string} = {}
+  const dict: {[key: string]: string} = {};
   lines.forEach(line => {
     const [key, value] = line.split('=', 2);
     dict[key] = value;

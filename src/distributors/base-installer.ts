@@ -3,7 +3,7 @@ import * as core from '@actions/core';
 import semver from 'semver';
 import path from 'path';
 import * as httpm from '@actions/http-client';
-import { getJavaPreInstalledPath, getVersionFromToolcachePath, IS_LINUX, IS_WINDOWS, parseLocalVersions } from '../util';
+import {  getVersionFromToolcachePath, parseLocalVersions } from '../util';
 
 export interface JavaInitOptions {
     version: string;
@@ -31,7 +31,7 @@ export abstract class JavaBase {
           this.version = this.normalizeVersion(version);
     }
 
-    protected abstract downloadTool(range: semver.Range): Promise<IJavaInfo>;
+    protected abstract downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo>;
     protected abstract resolveVersion(range: semver.Range): Promise<IJavaRelease>;
 
     public async getJava(): Promise<IJavaInfo> {
@@ -44,7 +44,8 @@ export abstract class JavaBase {
 
         if(!foundJava) {
             // download Java if it is not found locally
-            foundJava = await this.downloadTool(range);
+            const javaRelease = await this.resolveVersion(range)
+            foundJava = await this.downloadTool(javaRelease);
         }
 
         this.setJavaDefault(foundJava.javaPath);

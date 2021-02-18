@@ -9,7 +9,7 @@ import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
 import { IJavaInfo, IJavaRelease, JavaBase, JavaInitOptions } from "./base-installer";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
-export class AdopOpenJdkDistributor extends JavaBase {
+export class AdoptOpenJdkDistributor extends JavaBase {
     private platform: string;
     
     constructor(initOptions: JavaInitOptions) {
@@ -35,13 +35,12 @@ export class AdopOpenJdkDistributor extends JavaBase {
         return majorVersion;
     }
 
-    protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
+    protected async downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo> {
         let toolPath: string;
-        const javaRlease = await this.resolveVersion(range);
-
-        core.info(`Downloading ${this.distributor}, java version ${javaRlease.resolvedVersion}`);
-        const javaPath = await tc.downloadTool(javaRlease.link);
         let downloadDir: string;
+
+        core.info(`Downloading ${this.distributor}, java version ${javaRelease.resolvedVersion}`);
+        const javaPath = await tc.downloadTool(javaRelease.link);
         
         if(IS_WINDOWS) {
             downloadDir = await tc.extractZip(javaPath);
@@ -51,13 +50,13 @@ export class AdopOpenJdkDistributor extends JavaBase {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRlease.resolvedVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
         if(process.platform === 'darwin') {
             toolPath = path.join(toolPath, macOSJavaContentDir);
         }
 
-        return { javaPath: toolPath, javaVersion: javaRlease.resolvedVersion };
+        return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
     protected async resolveVersion(range: semver.Range): Promise<IJavaRelease> {

@@ -18,12 +18,11 @@ export class ZuluDistributor extends JavaBase {
         this.arch = this.arch === 'x64' ? 'x86' : this.arch;
     }
 
-    protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
+    protected async downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo> {
         let toolPath: string;
-
-        const javaRelease = await this.resolveVersion(range);
-        const javaPath = await tc.downloadTool(javaRelease.link);
         let downloadDir: string;
+
+        const javaPath = await tc.downloadTool(javaRelease.link);
         
         core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
         if(IS_WINDOWS) {
