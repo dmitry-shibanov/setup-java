@@ -62,7 +62,10 @@ function parseReleaseFile(releaseFilePath: string): {[key: string]: string} {
   const lines = content.split(EOL);
   const dict: {[key: string]: string} = {};
   lines.forEach(line => {
+    core.info(`line is ${line}`);
     const [key, value] = line.split('=', 2);
+    core.info(`key is ${key}`);
+    core.info(`value is ${value}`);
     dict[key] = value.replace(/"/g, '');
   });
 
