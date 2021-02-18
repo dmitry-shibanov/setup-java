@@ -38664,6 +38664,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
         super("Azul Systems, Inc.", initOptions.version, initOptions.arch, initOptions.javaPackage);
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
+        this.arch = this.arch === 'x64' ? 'x86' : this.arch;
     }
     downloadTool(range) {
         return __awaiter(this, void 0, void 0, function* () {

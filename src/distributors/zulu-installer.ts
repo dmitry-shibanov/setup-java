@@ -15,6 +15,7 @@ export class ZuluDistributor extends JavaBase {
     constructor(initOptions: JavaInitOptions) {
         super("Azul Systems, Inc.", initOptions.version, initOptions.arch, initOptions.javaPackage);
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
+        this.arch = this.arch === 'x64' ? 'x86' : this.arch;
     }
 
     protected async downloadTool(range: semver.Range): Promise<IJavaInfo> {
