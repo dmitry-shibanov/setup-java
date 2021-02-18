@@ -13451,7 +13451,7 @@ function parseReleaseFile(releaseFilePath) {
         const [key, value] = line.split('=', 2);
         core.info(`key is ${key}`);
         core.info(`value is ${value}`);
-        if (key && value) {
+        if (!!key && !!value) {
             dict[key] = value.replace(/"/g, '');
         }
     });
