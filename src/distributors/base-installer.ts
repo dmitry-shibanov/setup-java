@@ -1,11 +1,34 @@
 import * as tc from '@actions/tool-cache';
+import * as core from '@actions/core';
 import semver from 'semver';
 import path from 'path';
 import * as httpm from '@actions/http-client';
 import { getJavaPreInstalledPath } from '../util';
 
 export abstract class JavaBase {
+    protected http: httpm.HttpClient;
     constructor(protected distributor: string, protected version: string, protected arch: string, protected javaPackage: string) {
+        this.http = new httpm.HttpClient('setup-java', undefined, {
+            allowRetries: true,
+            maxRetries: 3
+          });
+    }
+
+    protected abstract downloadTool(range: semver.Range): Promise<IJavaInfo>;
+    protected abstract getAvailableMajor(range: semver.Range): Promise<number>;
+
+    public async getJava(): Promise<IJavaInfo> {
+        const range = new semver.Range(this.version);
+        const majorVersion = await this.getAvailableMajor(range);
+        let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
+
+        if(!javaInfo) {
+            javaInfo = await this.downloadTool(range);
+        }
+
+        this.setJavaDefault(javaInfo.javaPath);
+
+        return javaInfo;
     }
 
     protected findTool(toolName: string, version: string, arch: string): IJavaInfo | null {
@@ -34,19 +57,16 @@ export abstract class JavaBase {
         return toolPath;
     }
 
-    public async getJava(): Promise<IJavaInfo> {
-        const range = new semver.Range(this.version);
-        const majorVersion = await this.getAvailableMajor(range);
-        let javaInfo = this.findTool(`Java_${this.distributor}_${this.javaPackage}`, majorVersion.toString(), this.arch);
-
-        if(!javaInfo) {
-            javaInfo = await this.downloadTool(range);
-        }
-
-        return javaInfo;
+    protected setJavaDefault(toolPath: string) {
+        const extendedJavaHome = `JAVA_HOME_${this.version}_${this.arch}`
+            .toUpperCase()
+            .replace(/[^0-9A-Z_]/g, '_');
+        core.exportVariable('JAVA_HOME', toolPath);
+        core.exportVariable(extendedJavaHome, toolPath);
+        core.addPath(path.join(toolPath, 'bin'));
+        core.setOutput('path', toolPath);
+        core.setOutput('version', this.version);
     }
-    protected abstract downloadTool(range: semver.Range): Promise<IJavaInfo>;
-    protected abstract getAvailableMajor(range: semver.Range): Promise<number>;
 }
 
 export abstract class BaseFactory {

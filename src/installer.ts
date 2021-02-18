@@ -8,7 +8,7 @@ import {BaseFactory} from './distributors/base-installer';
 import ZuluDistributor from './distributors/zulu-installer';
 
 enum JavaDistributor {
-  AdopOpenJdk = 'adopOpenJdk',
+  AdoptOpenJdk = 'adoptOpenJdk',
   Zulu = 'zulu'
 }
 
@@ -17,7 +17,7 @@ class JavaFactory {
     distributor: JavaDistributor | string
   ): BaseFactory | null {
     switch (distributor) {
-      case JavaDistributor.AdopOpenJdk:
+      case JavaDistributor.AdoptOpenJdk:
         return new AdoptOpenJDKFactory();
       case JavaDistributor.Zulu:
         return new ZuluDistributor();
@@ -34,15 +34,10 @@ export async function install(
   distributorName: string,
   jdkFile?: string
 ) {
-  const http = new httpm.HttpClient('setup-java', undefined, {
-    allowRetries: true,
-    maxRetries: 3
-  });
 
   const javaFactory = new JavaFactory();
   const distributorFactory = javaFactory.getJavaDistributor(distributorName);
   const distributor = distributorFactory?.getJavaDistributor(
-    http,
     normalizeVersion(version),
     arch,
     javaPackage
@@ -53,15 +48,6 @@ export async function install(
 
   const javaInfo = await distributor.getJava();
   const {javaVersion, javaPath: toolPath} = javaInfo;
-
-  const extendedJavaHome = `JAVA_HOME_${version}_${arch}`
-    .toUpperCase()
-    .replace(/[^0-9A-Z_]/g, '_');
-  core.exportVariable('JAVA_HOME', toolPath);
-  core.exportVariable(extendedJavaHome, toolPath);
-  core.addPath(path.join(toolPath, 'bin'));
-  core.setOutput('path', toolPath);
-  core.setOutput('version', javaVersion);
 
   core.info(`Setuped up java ${javaVersion} from ${distributorName}`);
 }
