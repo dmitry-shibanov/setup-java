@@ -5,7 +5,7 @@ import path from 'path';
 import * as httpm from '@actions/http-client';
 import {  getVersionFromToolcachePath, parseLocalVersions } from '../util';
 
-export interface JavaInitOptions {
+export interface JavaInstallerOptions {
     version: string;
     arch: string;
     javaPackage: string;
@@ -26,7 +26,7 @@ export abstract class JavaBase {
     protected version: string;
     protected arch: string;
     protected javaPackage: string;
-    constructor(initOptions: JavaInitOptions) {
+    constructor(protected distributor: string, initOptions: JavaInstallerOptions) {
         this.http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
@@ -38,7 +38,7 @@ export abstract class JavaBase {
 
     protected abstract downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo>;
     protected abstract resolveVersion(range: semver.Range): Promise<IJavaRelease>;
-    protected abstract get Distributor(): string; 
+    protected abstract get javaRootName(): string;
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
@@ -60,7 +60,7 @@ export abstract class JavaBase {
     }
 
     protected findInToolcache(version: semver.Range): IJavaInfo | null {
-        const toolPath = tc.find(`Java_${this.Distributor}_${this.javaPackage}`, version.raw, this.arch);
+        const toolPath = tc.find(this.javaRootName, version.raw, this.arch);
         if (!toolPath) {
             return null;
         }
@@ -85,7 +85,7 @@ export abstract class JavaBase {
             default: knownLocation = '/usr/lib/jvm'
         }
 
-        const localVersions = parseLocalVersions(knownLocation, this.Distributor);
+        const localVersions = parseLocalVersions(knownLocation, this.distributor);
         return localVersions.find(localVersion => semver.satisfies(localVersion.javaVersion, version)) ?? null;
     }
 

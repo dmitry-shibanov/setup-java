@@ -5,15 +5,15 @@ import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
 
-import { IJavaInfo, IJavaRelease, JavaBase, JavaInitOptions } from './base-installer';
+import { IJavaInfo, IJavaRelease, JavaBase, JavaInstallerOptions } from './base-installer';
 import { IZulu, IZuluDetailed } from './zulu-models';
 import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
 
 export class ZuluDistributor extends JavaBase {
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
-    constructor(initOptions: JavaInitOptions) {
-        super(initOptions);
+    constructor(initOptions: JavaInstallerOptions) {
+        super("Zulu", initOptions);
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
         this.arch = this.arch === 'x64' ? 'x86' : this.arch;
     }
@@ -24,7 +24,7 @@ export class ZuluDistributor extends JavaBase {
 
         const javaPath = await tc.downloadTool(javaRelease.link);
         
-        core.info(`Ectracting ${this.Distributor} java version ${javaRelease.resolvedVersion}`);
+        core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
         if(IS_WINDOWS) {
             downloadDir = await tc.extractZip(javaPath);
         } else {
@@ -33,7 +33,7 @@ export class ZuluDistributor extends JavaBase {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.Distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
@@ -51,8 +51,8 @@ export class ZuluDistributor extends JavaBase {
         return {link: zuluJavaJson.url, resolvedVersion};
     }
 
-    protected get Distributor(): string {
-        return "Zulu";
+    protected get javaRootName(): string {
+        return `Java_${this.distributor}_${this.javaPackage}`;
     }
 
     private async getAvailableVersion(range: semver.Range): Promise<string> {

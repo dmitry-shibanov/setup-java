@@ -3,7 +3,7 @@ import * as auth from './auth';
 import * as gpg from './gpg';
 import * as constants from './constants';
 import * as path from 'path';
-import {JavaInitOptions} from './distributors/base-installer';
+import {JavaInstallerOptions} from './distributors/base-installer';
 import {getJavaDistributor} from './distributors/distributor-factory';
 
 async function run() {
@@ -18,7 +18,7 @@ async function run() {
     });
     const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {required: false});
 
-    const initOptions: JavaInitOptions = {
+    const initOptions: JavaInstallerOptions = {
       arch,
       javaPackage,
       version

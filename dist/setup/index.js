@@ -13303,8 +13303,7 @@ const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
 class AdoptOpenJdkDistributor extends base_installer_1.JavaBase {
     constructor(initOptions) {
-        super(initOptions);
-        this.platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
+        super("AdoptOpenJDK", initOptions);
     }
     getAvailableMajor(range) {
         var _a;
@@ -13312,7 +13311,7 @@ class AdoptOpenJdkDistributor extends base_installer_1.JavaBase {
             const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases";
             const javaVersionAvailable = (yield this.http.getJson(urlReleaseVersion)).result;
             if (!javaVersionAvailable) {
-                throw new Error(`No versions were found for ${this.Distributor}`);
+                throw new Error(`No versions were found for ${this.distributor}`);
             }
             const javaSemVer = javaVersionAvailable.available_releases.map(item => semver_1.default.coerce(item));
             const majorVersion = (_a = semver_1.default.maxSatisfying(javaSemVer, range)) === null || _a === void 0 ? void 0 : _a.major;
@@ -13326,7 +13325,7 @@ class AdoptOpenJdkDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             let toolPath;
             let downloadDir;
-            core.info(`Downloading ${this.Distributor}, java version ${javaRelease.resolvedVersion}`);
+            core.info(`Downloading ${this.distributor}, java version ${javaRelease.resolvedVersion}`);
             const javaPath = yield tc.downloadTool(javaRelease.link);
             if (util_1.IS_WINDOWS) {
                 downloadDir = yield tc.extractZip(javaPath);
@@ -13336,24 +13335,25 @@ class AdoptOpenJdkDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.Distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
             if (process.platform === 'darwin') {
                 toolPath = path_1.default.join(toolPath, util_1.macOSJavaContentDir);
             }
             return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
         });
     }
-    get Distributor() {
-        return "AdoptOpenJDK";
+    get javaRootName() {
+        return `Java_${this.distributor}_${this.javaPackage}`;
     }
     resolveVersion(range) {
         return __awaiter(this, void 0, void 0, function* () {
+            const platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
             const majorVersion = yield this.getAvailableMajor(range);
-            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${this.platform}`;
-            const javaRleasesVersion = (yield this.http.getJson(releasesUrl)).result;
-            const fullVersion = javaRleasesVersion === null || javaRleasesVersion === void 0 ? void 0 : javaRleasesVersion.find(item => semver_1.default.satisfies(item.version_data.semver, range));
+            const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${platform}`;
+            const javaVersionReleases = (yield this.http.getJson(releasesUrl)).result;
+            const fullVersion = javaVersionReleases === null || javaVersionReleases === void 0 ? void 0 : javaVersionReleases.find(item => semver_1.default.satisfies(item.version_data.semver, range));
             if (!fullVersion) {
-                throw new Error(`Could not find satisfied version in ${javaRleasesVersion}`);
+                throw new Error(`Could not find satisfied version in ${javaVersionReleases}`);
             }
             const javaRelease = {
                 resolvedVersion: fullVersion.version_data.semver,
@@ -13717,7 +13717,7 @@ function configAuthentication(id, username, password, gpgPassphrase) {
      and gpg-passphrase=${gpgPassphrase ? '$' + gpgPassphrase : null}`);
         // when an alternate m2 location is specified use only that location (no .m2 directory)
         // otherwise use the home/.m2/ path
-        const settingsDirectory = path.join(core.getInput(constants_1.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants_1.INPUT_SETTINGS_PATH) || exports.M2_DIR);
+        const settingsDirectory = path.join(core.getInput(constants_1.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants_1.INPUT_SETTINGS_PATH) ? '' : exports.M2_DIR);
         yield io.mkdirP(settingsDirectory);
         yield write(settingsDirectory, generate(id, username, password, gpgPassphrase));
     });
@@ -22912,7 +22912,8 @@ const path_1 = __importDefault(__webpack_require__(622));
 const httpm = __importStar(__webpack_require__(539));
 const util_1 = __webpack_require__(322);
 class JavaBase {
-    constructor(initOptions) {
+    constructor(distributor, initOptions) {
+        this.distributor = distributor;
         this.http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
@@ -22939,7 +22940,7 @@ class JavaBase {
         });
     }
     findInToolcache(version) {
-        const toolPath = tc.find(`Java_${this.Distributor}_${this.javaPackage}`, version.raw, this.arch);
+        const toolPath = tc.find(this.javaRootName, version.raw, this.arch);
         if (!toolPath) {
             return null;
         }
@@ -22963,7 +22964,7 @@ class JavaBase {
                 break;
             default: knownLocation = '/usr/lib/jvm';
         }
-        const localVersions = util_1.parseLocalVersions(knownLocation, this.Distributor);
+        const localVersions = util_1.parseLocalVersions(knownLocation, this.distributor);
         return (_a = localVersions.find(localVersion => semver_1.default.satisfies(localVersion.javaVersion, version))) !== null && _a !== void 0 ? _a : null;
     }
     setJavaDefault(toolPath) {
@@ -38650,7 +38651,7 @@ const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
 class ZuluDistributor extends base_installer_1.JavaBase {
     constructor(initOptions) {
-        super(initOptions);
+        super("Zulu", initOptions);
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
         this.arch = this.arch === 'x64' ? 'x86' : this.arch;
@@ -38660,7 +38661,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             let toolPath;
             let downloadDir;
             const javaPath = yield tc.downloadTool(javaRelease.link);
-            core.info(`Ectracting ${this.Distributor} java version ${javaRelease.resolvedVersion}`);
+            core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
             if (util_1.IS_WINDOWS) {
                 downloadDir = yield tc.extractZip(javaPath);
             }
@@ -38669,7 +38670,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(downloadDir)[0];
             const archivePath = path_1.default.join(downloadDir, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.Distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
             return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
         });
     }
@@ -38684,8 +38685,8 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             return { link: zuluJavaJson.url, resolvedVersion };
         });
     }
-    get Distributor() {
-        return "Zulu";
+    get javaRootName() {
+        return `Java_${this.distributor}_${this.javaPackage}`;
     }
     getAvailableVersion(range) {
         return __awaiter(this, void 0, void 0, function* () {

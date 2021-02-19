@@ -27,7 +27,7 @@ export async function configAuthentication(
   // otherwise use the home/.m2/ path
   const settingsDirectory: string = path.join(
     core.getInput(INPUT_SETTINGS_PATH) || os.homedir(),
-    core.getInput(INPUT_SETTINGS_PATH) || M2_DIR
+    core.getInput(INPUT_SETTINGS_PATH) ? '' : M2_DIR
   );
   await io.mkdirP(settingsDirectory);
   await write(
