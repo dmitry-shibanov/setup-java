@@ -3,7 +3,6 @@ import * as core from '@actions/core';
 import os, {EOL} from 'os';
 import * as path from 'path';
 import {IJavaInfo} from './distributors/base-installer';
-import {validRange} from 'semver';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';

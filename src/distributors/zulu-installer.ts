@@ -13,7 +13,7 @@ export class ZuluDistributor extends JavaBase {
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
     constructor(initOptions: JavaInitOptions) {
-        super("Azul Systems, Inc.", initOptions.version, initOptions.arch, initOptions.javaPackage);
+        super(initOptions);
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
         this.arch = this.arch === 'x64' ? 'x86' : this.arch;
     }
@@ -24,7 +24,7 @@ export class ZuluDistributor extends JavaBase {
 
         const javaPath = await tc.downloadTool(javaRelease.link);
         
-        core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
+        core.info(`Ectracting ${this.Distributor} java version ${javaRelease.resolvedVersion}`);
         if(IS_WINDOWS) {
             downloadDir = await tc.extractZip(javaPath);
         } else {
@@ -33,7 +33,7 @@ export class ZuluDistributor extends JavaBase {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor.replace(' ', '')}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.Distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
@@ -49,6 +49,10 @@ export class ZuluDistributor extends JavaBase {
         }
 
         return {link: zuluJavaJson.url, resolvedVersion};
+    }
+
+    protected get Distributor(): string {
+        return "Zulu";
     }
 
     private async getAvailableVersion(range: semver.Range): Promise<string> {

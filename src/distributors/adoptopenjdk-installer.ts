@@ -13,7 +13,7 @@ export class AdoptOpenJdkDistributor extends JavaBase {
     private platform: string;
     
     constructor(initOptions: JavaInitOptions) {
-        super("AdoptOpenJDK", initOptions.version, initOptions.arch, initOptions.javaPackage);
+        super(initOptions);
         this.platform = IS_MACOS ? 'mac' : PLATFORM;
     }
 
@@ -22,7 +22,7 @@ export class AdoptOpenJdkDistributor extends JavaBase {
         const javaVersionAvailable = (await this.http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
 
         if (!javaVersionAvailable) {
-            throw new Error(`No versions were found for ${this.distributor}`)
+            throw new Error(`No versions were found for ${this.Distributor}`)
         }
 
         const javaSemVer = javaVersionAvailable.available_releases.map(item => semver.coerce(item)!)!;
@@ -39,7 +39,7 @@ export class AdoptOpenJdkDistributor extends JavaBase {
         let toolPath: string;
         let downloadDir: string;
 
-        core.info(`Downloading ${this.distributor}, java version ${javaRelease.resolvedVersion}`);
+        core.info(`Downloading ${this.Distributor}, java version ${javaRelease.resolvedVersion}`);
         const javaPath = await tc.downloadTool(javaRelease.link);
         
         if(IS_WINDOWS) {
@@ -50,13 +50,17 @@ export class AdoptOpenJdkDistributor extends JavaBase {
 
         const archiveName = fs.readdirSync(downloadDir)[0];
         const archivePath = path.join(downloadDir, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+        toolPath = await tc.cacheDir(archivePath, `Java_${this.Distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
         if(process.platform === 'darwin') {
             toolPath = path.join(toolPath, macOSJavaContentDir);
         }
 
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
+    }
+
+    protected get Distributor(): string {
+        return "AdoptOpenJDK";
     }
 
     protected async resolveVersion(range: semver.Range): Promise<IJavaRelease> {

@@ -23,16 +23,22 @@ export interface IJavaRelease {
 
 export abstract class JavaBase {
     protected http: httpm.HttpClient;
-    constructor(protected distributor: string, protected version: string, protected arch: string, protected javaPackage: string) {
+    protected version: string;
+    protected arch: string;
+    protected javaPackage: string;
+    constructor(initOptions: JavaInitOptions) {
         this.http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
           });
-          this.version = this.normalizeVersion(version);
+          this.version = this.normalizeVersion(initOptions.version);
+          this.arch = initOptions.arch;
+          this.javaPackage  = initOptions.javaPackage;
     }
 
     protected abstract downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo>;
     protected abstract resolveVersion(range: semver.Range): Promise<IJavaRelease>;
+    protected abstract get Distributor(): string; 
 
     public async getJava(): Promise<IJavaInfo> {
         const range = new semver.Range(this.version);
@@ -54,7 +60,7 @@ export abstract class JavaBase {
     }
 
     protected findInToolcache(version: semver.Range): IJavaInfo | null {
-        const toolPath = tc.find(`Java_${this.distributor}_${this.javaPackage}`, version.raw, this.arch);
+        const toolPath = tc.find(`Java_${this.Distributor}_${this.javaPackage}`, version.raw, this.arch);
         if (!toolPath) {
             return null;
         }
@@ -79,7 +85,7 @@ export abstract class JavaBase {
             default: knownLocation = '/usr/lib/jvm'
         }
 
-        const localVersions = parseLocalVersions(knownLocation, this.distributor);
+        const localVersions = parseLocalVersions(knownLocation, this.Distributor);
         return localVersions.find(localVersion => semver.satisfies(localVersion.javaVersion, version)) ?? null;
     }
 
