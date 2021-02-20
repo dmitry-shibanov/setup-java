@@ -6,7 +6,7 @@ import path from 'path';
 import semver from 'semver';
 
 import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
-import { IJavaInfo, IJavaRelease, JavaBase, JavaInstallerOptions } from "./base-installer";
+import { JavaInstallerResults, IJavaRelease, JavaBase, JavaInstallerOptions } from "./base-installer";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
 export class AdoptOpenJdkDistributor extends JavaBase {
@@ -16,38 +16,38 @@ export class AdoptOpenJdkDistributor extends JavaBase {
     }
 
     private async getAvailableMajor(range: semver.Range) {
-        const urlReleaseVersion = "https://api.adoptopenjdk.net/v3/info/available_releases"
-        const javaVersionAvailable = (await this.http.getJson<IReleaseVersion>(urlReleaseVersion)).result;
+        const availableMajorVersionsUrl = "https://api.adoptopenjdk.net/v3/info/available_releases"
+        const availableMajorVersions = (await this.http.getJson<IReleaseVersion>(availableMajorVersionsUrl)).result;
 
-        if (!javaVersionAvailable) {
+        if (!availableMajorVersions) {
             throw new Error(`No versions were found for ${this.distributor}`)
         }
 
-        const javaSemVer = javaVersionAvailable.available_releases.map(item => semver.coerce(item)!)!;
-        const majorVersion = semver.maxSatisfying(javaSemVer, range)?.major;
+        const coercedAvailableVersions = availableMajorVersions.available_releases.map(item => semver.coerce(item)!)!;
+        const resolvedMajorVersion = semver.maxSatisfying(coercedAvailableVersions, range)?.major;
 
-        if(!majorVersion) {
-            throw new Error(`Could find version which satisfying. Versions: ${javaVersionAvailable.available_releases}`);
+        if(!resolvedMajorVersion) {
+            throw new Error(`Could find version which satisfying. Versions: ${availableMajorVersions.available_releases}`);
         }
 
-        return majorVersion;
+        return resolvedMajorVersion;
     }
 
-    protected async downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo> {
+    protected async downloadTool(javaRelease: IJavaRelease): Promise<JavaInstallerResults> {
         let toolPath: string;
-        let downloadDir: string;
+        let extractedJavaPath: string;
 
         core.info(`Downloading ${this.distributor}, java version ${javaRelease.resolvedVersion}`);
-        const javaPath = await tc.downloadTool(javaRelease.link);
+        const javaArchivePath = await tc.downloadTool(javaRelease.link);
         
         if(IS_WINDOWS) {
-            downloadDir = await tc.extractZip(javaPath);
+            extractedJavaPath = await tc.extractZip(javaArchivePath);
         } else {
-            downloadDir = await tc.extractTar(javaPath);
+            extractedJavaPath = await tc.extractTar(javaArchivePath);
         }
 
-        const archiveName = fs.readdirSync(downloadDir)[0];
-        const archivePath = path.join(downloadDir, archiveName);
+        const archiveName = fs.readdirSync(extractedJavaPath)[0];
+        const archivePath = path.join(extractedJavaPath, archiveName);
         toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
         if(process.platform === 'darwin') {
@@ -57,25 +57,21 @@ export class AdoptOpenJdkDistributor extends JavaBase {
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
-    protected get javaRootName(): string {
-        return `Java_${this.distributor}_${this.javaPackage}`;
-    }
-
     protected async resolveVersion(range: semver.Range): Promise<IJavaRelease> {
         const platform = IS_MACOS ? 'mac' : PLATFORM;
 
-        const majorVersion = await this.getAvailableMajor(range);
-        const releasesUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${majorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${platform}`;
-        const javaVersionReleases = ( await this.http.getJson<IRelease[]>(releasesUrl)).result;
-        const fullVersion = javaVersionReleases?.find(item => semver.satisfies(item.version_data.semver, range));
+        const resolvedMajorVersion = await this.getAvailableMajor(range);
+        const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${resolvedMajorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${platform}`;
+        const availableVersionsList = ( await this.http.getJson<IRelease[]>(availableVersionsUrl)).result;
+        const resolvedFullVersion = availableVersionsList?.find(item => semver.satisfies(item.version_data.semver, range));
 
-        if(!fullVersion) {
-            throw new Error(`Could not find satisfied version in ${javaVersionReleases}`);
+        if(!resolvedFullVersion) {
+            throw new Error(`Could not find satisfied version in ${availableVersionsList}`);
         }
 
         const javaRelease: IJavaRelease = {
-            resolvedVersion: fullVersion.version_data.semver,
-            link: fullVersion.binaries[0].package.link
+            resolvedVersion: resolvedFullVersion.version_data.semver,
+            link: resolvedFullVersion.binaries[0].package.link
         }
 
         return javaRelease;

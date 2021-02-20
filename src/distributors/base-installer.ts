@@ -3,7 +3,7 @@ import * as core from '@actions/core';
 import semver from 'semver';
 import path from 'path';
 import * as httpm from '@actions/http-client';
-import {  getVersionFromToolcachePath, parseLocalVersions } from '../util';
+import { getVersionFromToolcachePath } from '../util';
 
 export interface JavaInstallerOptions {
     version: string;
@@ -11,7 +11,7 @@ export interface JavaInstallerOptions {
     javaPackage: string;
 }
 
-export interface IJavaInfo {
+export interface JavaInstallerResults {
     javaVersion: string;
     javaPath: string;
 }
@@ -36,17 +36,12 @@ export abstract class JavaBase {
           this.javaPackage  = initOptions.javaPackage;
     }
 
-    protected abstract downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo>;
+    protected abstract downloadTool(javaRelease: IJavaRelease): Promise<JavaInstallerResults>;
     protected abstract resolveVersion(range: semver.Range): Promise<IJavaRelease>;
-    protected abstract get javaRootName(): string;
 
-    public async getJava(): Promise<IJavaInfo> {
+    public async getJava(): Promise<JavaInstallerResults> {
         const range = new semver.Range(this.version);
         let foundJava = this.findInToolcache(range);
-        if (!foundJava) {
-            // try to find Java in default system locations outside tool-cache
-            foundJava = this.findInKnownLocations(range)
-        }
 
         if(!foundJava) {
             // download Java if it is not found locally
@@ -59,8 +54,12 @@ export abstract class JavaBase {
         return foundJava;
     }
 
-    protected findInToolcache(version: semver.Range): IJavaInfo | null {
-        const toolPath = tc.find(this.javaRootName, version.raw, this.arch);
+    protected get toolcacheFolderName(): string {
+        return `Java_${this.distributor}_${this.javaPackage}`;
+    }
+
+    protected findInToolcache(version: semver.Range): JavaInstallerResults | null {
+        const toolPath = tc.find(this.toolcacheFolderName, version.raw, this.arch);
         if (!toolPath) {
             return null;
         }
@@ -71,30 +70,8 @@ export abstract class JavaBase {
         };
     }
 
-    protected findInKnownLocations(version: semver.Range): IJavaInfo | null {
-        if(this.javaPackage !== 'jdk') {
-            return null;
-        }
-        
-        let knownLocation;
-        switch(process.platform) {
-            case "win32": knownLocation = path.normalize('C:/Program Files/Java');
-            break;
-            case "darwin": knownLocation = '/Library/Java/JavaVirtualMachines';
-            break;
-            default: knownLocation = '/usr/lib/jvm'
-        }
-
-        const localVersions = parseLocalVersions(knownLocation, this.distributor);
-        return localVersions.find(localVersion => semver.satisfies(localVersion.javaVersion, version)) ?? null;
-    }
-
     protected setJavaDefault(toolPath: string) {
-        const extendedJavaHome = `JAVA_HOME_${this.version}_${this.arch}`
-            .toUpperCase()
-            .replace(/[^0-9A-Z_]/g, '_');
         core.exportVariable('JAVA_HOME', toolPath);
-        core.exportVariable(extendedJavaHome, toolPath);
         core.addPath(path.join(toolPath, 'bin'));
         core.setOutput('path', toolPath);
         core.setOutput('version', this.version);
@@ -110,7 +87,7 @@ export abstract class JavaBase {
 
     // this function validates and parse java version to its normal semver notation
     protected normalizeVersion(version: string): string {
-        if (version.slice(0, 2) === '1.') {
+        if (version.startsWith('1.')) {
           // Trim leading 1. for versions like 1.8
           version = version.slice(2);
           if (!version) {

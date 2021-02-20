@@ -5,7 +5,7 @@ import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
 
-import { IJavaInfo, IJavaRelease, JavaBase, JavaInstallerOptions } from './base-installer';
+import { JavaInstallerResults, IJavaRelease, JavaBase, JavaInstallerOptions } from './base-installer';
 import { IZulu, IZuluDetailed } from './zulu-models';
 import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
 
@@ -18,60 +18,56 @@ export class ZuluDistributor extends JavaBase {
         this.arch = this.arch === 'x64' ? 'x86' : this.arch;
     }
 
-    protected async downloadTool(javaRelease: IJavaRelease): Promise<IJavaInfo> {
+    protected async downloadTool(javaRelease: IJavaRelease): Promise<JavaInstallerResults> {
         let toolPath: string;
-        let downloadDir: string;
+        let extractedJavaPath: string;
 
-        const javaPath = await tc.downloadTool(javaRelease.link);
+        const javaArchivePath = await tc.downloadTool(javaRelease.link);
         
         core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
         if(IS_WINDOWS) {
-            downloadDir = await tc.extractZip(javaPath);
+            extractedJavaPath = await tc.extractZip(javaArchivePath);
         } else {
-            downloadDir = await tc.extractTar(javaPath);
+            extractedJavaPath = await tc.extractTar(javaArchivePath);
         }
 
-        const archiveName = fs.readdirSync(downloadDir)[0];
-        const archivePath = path.join(downloadDir, archiveName);
+        const archiveName = fs.readdirSync(extractedJavaPath)[0];
+        const archivePath = path.join(extractedJavaPath, archiveName);
         toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
     protected async resolveVersion(range: semver.Range): Promise<IJavaRelease> {
-        const resolvedVersion = await this.getAvailableVersion(range);
+        const resolvedFullVersion = await this.getAvailableVersion(range);
 
-        const urlBinary = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedVersion}&bundle_type=${this.javaPackage}`;
-        const zuluJavaJson = (await this.http.getJson<IZuluDetailed>(urlBinary)).result;
+        const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
+        const availableZuluRelease = (await this.http.getJson<IZuluDetailed>(availableZuluReleaseUrl)).result;
 
-        if(!zuluJavaJson) {
-            throw new Error(`No zulu java was found for version ${resolvedVersion}`);
+        if(!availableZuluRelease) {
+            throw new Error(`No zulu java was found for version ${resolvedFullVersion}`);
         }
 
-        return {link: zuluJavaJson.url, resolvedVersion};
-    }
-
-    protected get javaRootName(): string {
-        return `Java_${this.distributor}_${this.javaPackage}`;
+        return {link: availableZuluRelease.url, resolvedVersion: resolvedFullVersion};
     }
 
     private async getAvailableVersion(range: semver.Range): Promise<string> {
-        const url = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
+        const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
 
-        const zuluJson = (await this.http.getJson<Array<IZulu>>(url)).result;
+        const availableVersionsList = (await this.http.getJson<Array<IZulu>>(availableVersionsUrl)).result;
 
-        if(!zuluJson || zuluJson.length === 0) {
+        if(!availableVersionsList || availableVersionsList.length === 0) {
             throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
         }
 
-        const zuluVersions = zuluJson.map(item => semver.coerce(item.jdk_version.join('.'))?? "");
-        const maxVersion = semver.maxSatisfying(zuluVersions, range);
+        const zuluVersions = availableVersionsList.map(item => semver.coerce(item.jdk_version.join('.'))?? "");
+        const resolvedVersion = semver.maxSatisfying(zuluVersions, range);
 
-        if(!maxVersion) {
+        if(!resolvedVersion) {
             throw new Error('No versions are satisfying');
         }
 
-        return maxVersion.raw;
+        return resolvedVersion.raw;
     }
     
 }

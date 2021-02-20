@@ -1109,34 +1109,13 @@ run();
 
 "use strict";
 
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.parseLocalVersions = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
-const fs_1 = __importDefault(__webpack_require__(747));
-const core = __importStar(__webpack_require__(470));
-const os_1 = __importStar(__webpack_require__(87));
-const path = __importStar(__webpack_require__(622));
+exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+const os_1 = __importDefault(__webpack_require__(87));
+const path_1 = __importDefault(__webpack_require__(622));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
 exports.IS_MACOS = process.platform === 'darwin';
@@ -1149,51 +1128,11 @@ function getTempDir() {
 exports.getTempDir = getTempDir;
 function getVersionFromToolcachePath(toolPath) {
     if (toolPath) {
-        return path.basename(path.dirname(toolPath));
+        return path_1.default.basename(path_1.default.dirname(toolPath));
     }
     return toolPath;
 }
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
-function parseLocalVersions(rootLocation, distributor) {
-    const potentialVersions = fs_1.default.readdirSync(rootLocation);
-    const foundVersions = [];
-    potentialVersions.forEach(potentialVersion => {
-        let javaPath = path.join(rootLocation, potentialVersion);
-        if (exports.IS_MACOS) {
-            javaPath = path.join(javaPath, exports.macOSJavaContentDir);
-        }
-        const javaReleaseFile = path.join(javaPath, 'release');
-        if (!fs_1.default.existsSync(javaReleaseFile)) {
-            core.info('release file does not exist');
-            return;
-        }
-        const dict = parseReleaseFile(javaReleaseFile);
-        if (dict['IMPLEMENTOR_VERSION'] &&
-            dict['IMPLEMENTOR_VERSION'].includes(distributor)) {
-            foundVersions.push({
-                javaVersion: dict['JAVA_VERSION'],
-                javaPath: javaPath
-            });
-        }
-    });
-    return foundVersions;
-}
-exports.parseLocalVersions = parseLocalVersions;
-function parseReleaseFile(releaseFilePath) {
-    const content = fs_1.default.readFileSync(releaseFilePath).toString();
-    const lines = content.split(os_1.EOL);
-    const dict = {};
-    lines.forEach(line => {
-        core.info(`line is ${line}`);
-        const [key, value] = line.split('=', 2);
-        core.info(`key is ${key}`);
-        core.info(`value is ${value}`);
-        if (!!key && !!value) {
-            dict[key] = value.replace(/"/g, '');
-        }
-    });
-    return dict;
-}
 
 
 /***/ }),
