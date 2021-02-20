@@ -42,7 +42,7 @@ export abstract class JavaBase {
     protected abstract findPackageForDownload(range: semver.Range): Promise<JavaDownloadRelease>;
 
     public async setupJava(): Promise<JavaInstallerResults> {
-        let foundJava = this.findInToolcache(this.version);
+        let foundJava = this.findInToolcache();
         if (foundJava) {
           core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
         } else {
@@ -62,8 +62,8 @@ export abstract class JavaBase {
         return `Java_${this.distributor}_${this.javaPackage}`;
     }
 
-    protected findInToolcache(version: semver.Range): JavaInstallerResults | null {
-        const toolPath = tc.find(this.toolcacheFolderName, version.raw, this.arch);
+    protected findInToolcache(): JavaInstallerResults | null {
+        const toolPath = tc.find(this.toolcacheFolderName, this.version.raw, this.arch);
         if (!toolPath) {
             return null;
         }

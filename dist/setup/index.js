@@ -10453,6 +10453,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getJavaDistributor = void 0;
 const adoptopenjdk_installer_1 = __webpack_require__(318);
 const zulu_installer_1 = __webpack_require__(908);
+// TO-DO: confirm distributor names
 var JavaDistributor;
 (function (JavaDistributor) {
     JavaDistributor["AdoptOpenJdk"] = "adoptOpenJdk";
@@ -13302,29 +13303,8 @@ const semver_1 = __importDefault(__webpack_require__(280));
 const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
 class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
-    constructor(initOptions) {
-        super("AdoptOpenJDK", initOptions);
-    }
-    downloadTool(javaRelease) {
-        return __awaiter(this, void 0, void 0, function* () {
-            let toolPath;
-            let extractedJavaPath;
-            core.info(`Downloading ${this.distributor}, java version ${javaRelease.resolvedVersion}`);
-            const javaArchivePath = yield tc.downloadTool(javaRelease.link);
-            if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
-            }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
-            const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
-            const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
-            if (process.platform === 'darwin') {
-                toolPath = path_1.default.join(toolPath, util_1.macOSJavaContentDir);
-            }
-            return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
-        });
+    constructor(installerOptions) {
+        super("AdoptOpenJDK", installerOptions);
     }
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -13334,12 +13314,36 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             const availableVersionsList = (yield this.http.getJson(availableVersionsUrl)).result;
             const resolvedFullVersion = availableVersionsList === null || availableVersionsList === void 0 ? void 0 : availableVersionsList.find(item => semver_1.default.satisfies(item.version_data.semver, version));
             if (!resolvedFullVersion) {
-                throw new Error(`Could not find satisfied version in ${availableVersionsList}`);
+                const availableOptions = availableVersionsList === null || availableVersionsList === void 0 ? void 0 : availableVersionsList.map(item => item.version_data.semver).join(', ');
+                const availableOptionsMessage = availableOptions ? `\nAvailable versions: ${availableOptions}` : "";
+                throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
             }
             return {
                 resolvedVersion: resolvedFullVersion.version_data.semver,
                 link: resolvedFullVersion.binaries[0].package.link
             };
+        });
+    }
+    downloadTool(javaRelease) {
+        return __awaiter(this, void 0, void 0, function* () {
+            let toolPath;
+            let extractedJavaPath;
+            core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
+            const javaArchivePath = yield tc.downloadTool(javaRelease.link);
+            core.info(`Extracting Java archive...`);
+            if (util_1.IS_WINDOWS) {
+                extractedJavaPath = yield tc.extractZip(javaArchivePath);
+            }
+            else {
+                extractedJavaPath = yield tc.extractTar(javaArchivePath);
+            }
+            const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
+            const archivePath = path_1.default.join(extractedJavaPath, archiveName);
+            toolPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
+            if (process.platform === 'darwin') {
+                toolPath = path_1.default.join(toolPath, util_1.macOSJavaContentDir);
+            }
+            return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
         });
     }
     resolveMajorVersion(range) {
@@ -13348,12 +13352,12 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             const availableMajorVersionsUrl = "https://api.adoptopenjdk.net/v3/info/available_releases";
             const availableMajorVersions = (yield this.http.getJson(availableMajorVersionsUrl)).result;
             if (!availableMajorVersions) {
-                throw new Error(`No versions were found for ${this.distributor}`);
+                throw new Error(`Unable to get the list of major versions for '${this.distributor}'`);
             }
             const coercedAvailableVersions = availableMajorVersions.available_releases.map(item => semver_1.default.coerce(item)).filter((item) => !!item);
             const resolvedMajorVersion = (_a = semver_1.default.maxSatisfying(coercedAvailableVersions, range)) === null || _a === void 0 ? void 0 : _a.major;
             if (!resolvedMajorVersion) {
-                throw new Error(`Could find version which satisfying. Versions: ${availableMajorVersions.available_releases}`);
+                throw new Error(`Could not find satisfied major version for semver ${range}. \nAvailable versions: ${availableMajorVersions.available_releases.join(', ')}`);
             }
             return resolvedMajorVersion;
         });
@@ -22847,23 +22851,29 @@ const path_1 = __importDefault(__webpack_require__(622));
 const httpm = __importStar(__webpack_require__(539));
 const util_1 = __webpack_require__(322);
 class JavaBase {
-    constructor(distributor, initOptions) {
+    constructor(distributor, installerOptions) {
         this.distributor = distributor;
         this.http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
         });
-        this.version = this.normalizeVersion(initOptions.version);
-        this.arch = initOptions.arch;
-        this.javaPackage = initOptions.javaPackage;
+        this.version = this.normalizeVersion(installerOptions.version);
+        this.arch = installerOptions.arch;
+        this.javaPackage = installerOptions.javaPackage;
     }
     setupJava() {
         return __awaiter(this, void 0, void 0, function* () {
-            let foundJava = this.findInToolcache(this.version);
-            if (!foundJava) {
+            let foundJava = this.findInToolcache();
+            if (foundJava) {
+                core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
+            }
+            else {
+                core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
                 const javaRelease = yield this.findPackageForDownload(this.version);
                 foundJava = yield this.downloadTool(javaRelease);
+                core.info(`Java ${foundJava.javaVersion} was downloaded`);
             }
+            core.info(`Setting Java ${foundJava.javaVersion} as default`);
             this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
             return foundJava;
         });
@@ -22871,8 +22881,8 @@ class JavaBase {
     get toolcacheFolderName() {
         return `Java_${this.distributor}_${this.javaPackage}`;
     }
-    findInToolcache(version) {
-        const toolPath = tc.find(this.toolcacheFolderName, version.raw, this.arch);
+    findInToolcache() {
+        const toolPath = tc.find(this.toolcacheFolderName, this.version.raw, this.arch);
         if (!toolPath) {
             return null;
         }
@@ -22884,18 +22894,20 @@ class JavaBase {
     setJavaDefault(toolPath, version) {
         core.exportVariable('JAVA_HOME', toolPath);
         core.addPath(path_1.default.join(toolPath, 'bin'));
+        core.setOutput('distributor', this.distributor);
         core.setOutput('path', toolPath);
         core.setOutput('version', version);
     }
     // this function validates and parse java version to its normal semver notation
     normalizeVersion(version) {
         if (version.startsWith('1.')) {
-            // Trim leading 1. for versions like 1.8
+            // Trim leading 1. for versions like 1.8 and 1.7
             version = version.slice(2);
             if (!version) {
                 throw new Error('1. is not a valid version');
             }
         }
+        // TO-DO: rework ea/ga logic
         if (version.endsWith('-ea')) {
             // convert e.g. 14-ea to 14.0.0-ea
             if (version.indexOf('.') == -1) {
@@ -22913,8 +22925,7 @@ class JavaBase {
             }
         }
         if (!semver_1.default.validRange(version)) {
-            throw new Error(`The version ${version} is not valid semver notation please check README file for code snippets and 
-                      more detailed information`);
+            throw new Error(`The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`);
         }
         return new semver_1.default.Range(version);
     }
@@ -33035,6 +33046,7 @@ function run() {
                 required: true
             });
             const jdkFile = core.getInput(constants.INPUT_JDK_FILE, { required: false });
+            // TO-DO: add support of local file (jdkFile)
             const initOptions = {
                 arch,
                 javaPackage,
@@ -33042,11 +33054,12 @@ function run() {
             };
             const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions);
             if (!distributor) {
-                throw new Error('No distributor was found');
+                throw new Error(`No distributor was found with name ${javaDistributor}`);
             }
             const result = yield distributor.setupJava();
-            core.info(`${javaDistributor} java version is ${result.javaVersion}`);
-            core.info(`Java version path is ${result.javaPath}`);
+            core.info(`Java distributor: ${javaDistributor}`);
+            core.info(`Java version: ${result.javaVersion}`);
+            core.info(`Java path: ${result.javaPath}`);
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
             yield configureAuthentication();
@@ -33074,7 +33087,7 @@ function configureAuthentication() {
         }
         yield auth.configAuthentication(id, username, password, gpgPassphrase);
         if (gpgPrivateKey) {
-            core.info('importing private key');
+            core.info('Importing private key');
             const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
             core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
         }
@@ -38552,19 +38565,35 @@ const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
 const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
+// TO-DO: validate feature
 class ZuluDistributor extends base_installer_1.JavaBase {
     constructor(initOptions) {
         super("Zulu", initOptions);
         this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
         this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
-        this.arch = this.arch === 'x64' ? 'x86' : this.arch;
+        if (this.arch === 'x64') {
+            // put small comment
+            this.arch = 'x86';
+        }
+    }
+    findPackageForDownload(version) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resolvedFullVersion = yield this.getAvailableVersion(version);
+            // TO-DO: double check all urls and parameters
+            const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
+            const availableZuluRelease = (yield this.http.getJson(availableZuluReleaseUrl)).result;
+            if (!availableZuluRelease) {
+                throw new Error(`No Zulu packages were found for version ${resolvedFullVersion}`);
+            }
+            return { link: availableZuluRelease.url, resolvedVersion: resolvedFullVersion };
+        });
     }
     downloadTool(javaRelease) {
         return __awaiter(this, void 0, void 0, function* () {
-            let toolPath;
             let extractedJavaPath;
+            core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link}...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
-            core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
+            core.info(`Extracting Java archive...`);
             if (util_1.IS_WINDOWS) {
                 extractedJavaPath = yield tc.extractZip(javaArchivePath);
             }
@@ -38573,19 +38602,8 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            toolPath = yield tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+            const toolPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
             return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
-        });
-    }
-    findPackageForDownload(version) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const resolvedFullVersion = yield this.getAvailableVersion(version);
-            const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
-            const availableZuluRelease = (yield this.http.getJson(availableZuluReleaseUrl)).result;
-            if (!availableZuluRelease) {
-                throw new Error(`No zulu java was found for version ${resolvedFullVersion}`);
-            }
-            return { link: availableZuluRelease.url, resolvedVersion: resolvedFullVersion };
         });
     }
     getAvailableVersion(range) {
@@ -38593,12 +38611,12 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
             const availableVersionsList = (yield this.http.getJson(availableVersionsUrl)).result;
             if (!availableVersionsList || availableVersionsList.length === 0) {
-                throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
+                throw new Error(`No versions were not found for arch '${this.arch}' and platform '${this.platform}'`);
             }
             const zuluVersions = availableVersionsList.map(item => semver_1.default.coerce(item.jdk_version.join('.'))).filter((item) => !!item);
             const resolvedVersion = semver_1.default.maxSatisfying(zuluVersions, range);
             if (!resolvedVersion) {
-                throw new Error('No versions are satisfying');
+                throw new Error(`Could not find satisfied version for semver ${range.raw}`);
             }
             return resolvedVersion.raw;
         });

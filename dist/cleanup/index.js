@@ -1088,13 +1088,13 @@ const constants = __importStar(__webpack_require__(211));
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         if (core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false })) {
-            core.info('removing private key from keychain');
+            core.info('Removing private key from keychain');
             try {
                 const keyFingerprint = core.getState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT);
                 yield gpg.deleteKey(keyFingerprint);
             }
             catch (error) {
-                core.setFailed('failed to remove private key');
+                core.setFailed('Failed to remove private key');
             }
         }
     });
