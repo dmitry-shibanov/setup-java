@@ -9,6 +9,7 @@ import { JavaInstallerResults, JavaDownloadRelease, JavaBase, JavaInstallerOptio
 import { IZulu, IZuluDetailed } from './zulu-models';
 import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
 
+// TO-DO: validate feature
 export class ZuluDistributor extends JavaBase {
     private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
     private platform: string;
