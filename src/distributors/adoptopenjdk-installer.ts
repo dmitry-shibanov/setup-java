@@ -6,7 +6,7 @@ import path from 'path';
 import semver from 'semver';
 
 import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
-import { JavaInstallerResults, IJavaRelease, JavaBase, JavaInstallerOptions } from "./base-installer";
+import { JavaInstallerResults, JavaDownloadRelease, JavaBase, JavaInstallerOptions } from "./base-installer";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
 export class AdoptOpenJDKDistributor extends JavaBase {
@@ -15,25 +15,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
         super("AdoptOpenJDK", initOptions);
     }
 
-    private async resolveMajorVersion(range: semver.Range) {
-        const availableMajorVersionsUrl = "https://api.adoptopenjdk.net/v3/info/available_releases"
-        const availableMajorVersions = (await this.http.getJson<IReleaseVersion>(availableMajorVersionsUrl)).result;
-
-        if (!availableMajorVersions) {
-            throw new Error(`No versions were found for ${this.distributor}`)
-        }
-
-        const coercedAvailableVersions = availableMajorVersions.available_releases.map(item => semver.coerce(item)!)!;
-        const resolvedMajorVersion = semver.maxSatisfying(coercedAvailableVersions, range)?.major;
-
-        if(!resolvedMajorVersion) {
-            throw new Error(`Could find version which satisfying. Versions: ${availableMajorVersions.available_releases}`);
-        }
-
-        return resolvedMajorVersion;
-    }
-
-    protected async downloadTool(javaRelease: IJavaRelease): Promise<JavaInstallerResults> {
+    protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
         let toolPath: string;
         let extractedJavaPath: string;
 
@@ -57,7 +39,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
-    protected async findPackageForDownload(version: semver.Range): Promise<IJavaRelease> {
+    protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
         const platform = IS_MACOS ? 'mac' : PLATFORM;
 
         const resolvedMajorVersion = await this.resolveMajorVersion(version);
@@ -73,5 +55,23 @@ export class AdoptOpenJDKDistributor extends JavaBase {
             resolvedVersion: resolvedFullVersion.version_data.semver,
             link: resolvedFullVersion.binaries[0].package.link
         }
+    }
+
+    private async resolveMajorVersion(range: semver.Range) {
+        const availableMajorVersionsUrl = "https://api.adoptopenjdk.net/v3/info/available_releases"
+        const availableMajorVersions = (await this.http.getJson<IReleaseVersion>(availableMajorVersionsUrl)).result;
+
+        if (!availableMajorVersions) {
+            throw new Error(`No versions were found for ${this.distributor}`)
+        }
+
+        const coercedAvailableVersions = availableMajorVersions.available_releases.map(item => semver.coerce(item)).filter((item): item is semver.SemVer => !!item);
+        const resolvedMajorVersion = semver.maxSatisfying(coercedAvailableVersions, range)?.major;
+
+        if(!resolvedMajorVersion) {
+            throw new Error(`Could find version which satisfying. Versions: ${availableMajorVersions.available_releases}`);
+        }
+
+        return resolvedMajorVersion;
     }
 }

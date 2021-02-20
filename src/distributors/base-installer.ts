@@ -16,14 +16,14 @@ export interface JavaInstallerResults {
     javaPath: string;
 }
 
-export interface IJavaRelease {
+export interface JavaDownloadRelease {
     resolvedVersion: string;
     link: string;
 }
 
 export abstract class JavaBase {
     protected http: httpm.HttpClient;
-    protected version: string;
+    protected version: semver.Range;
     protected arch: string;
     protected javaPackage: string;
     constructor(protected distributor: string, initOptions: JavaInstallerOptions) {
@@ -31,20 +31,19 @@ export abstract class JavaBase {
             allowRetries: true,
             maxRetries: 3
           });
-          this.version = this.normalizeVersion(initOptions.version);
-          this.arch = initOptions.arch;
-          this.javaPackage  = initOptions.javaPackage;
+        this.version = this.normalizeVersion(initOptions.version);
+        this.arch = initOptions.arch;
+        this.javaPackage  = initOptions.javaPackage;
     }
 
-    protected abstract downloadTool(javaRelease: IJavaRelease): Promise<JavaInstallerResults>;
-    protected abstract findPackageForDownload(range: semver.Range): Promise<IJavaRelease>;
+    protected abstract downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults>;
+    protected abstract findPackageForDownload(range: semver.Range): Promise<JavaDownloadRelease>;
 
     public async setupJava(): Promise<JavaInstallerResults> {
-        const range = new semver.Range(this.version);
-        let foundJava = this.findInToolcache(range);
+        let foundJava = this.findInToolcache(this.version);
 
         if(!foundJava) {
-            const javaRelease = await this.findPackageForDownload(range)
+            const javaRelease = await this.findPackageForDownload(this.version);
             foundJava = await this.downloadTool(javaRelease);
         }
 
@@ -77,7 +76,7 @@ export abstract class JavaBase {
     }
 
     // this function validates and parse java version to its normal semver notation
-    protected normalizeVersion(version: string): string {
+    protected normalizeVersion(version: string): semver.Range {
         if (version.startsWith('1.')) {
           // Trim leading 1. for versions like 1.8
           version = version.slice(2);
@@ -107,6 +106,6 @@ export abstract class JavaBase {
                       more detailed information`);
         }
     
-        return version;
+        return new semver.Range(version);
     }
 }
