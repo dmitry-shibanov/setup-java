@@ -1,4 +1,4 @@
-import { AdoptOpenJdkDistributor } from "./adoptopenjdk-installer";
+import { AdoptOpenJDKDistributor } from "./adoptopenjdk-installer";
 import { JavaInstallerOptions, JavaBase } from "./base-installer";
 import { ZuluDistributor } from "./zulu-installer";
 
@@ -10,7 +10,7 @@ enum JavaDistributor {
 export function getJavaDistributor(distributorName: string, initOptions: JavaInstallerOptions): JavaBase | null {
   switch (distributorName) {
     case JavaDistributor.AdoptOpenJdk:
-        return new AdoptOpenJdkDistributor(initOptions);
+        return new AdoptOpenJDKDistributor(initOptions);
       case JavaDistributor.Zulu:
         return new ZuluDistributor(initOptions);
       default:

@@ -9,13 +9,13 @@ import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from "../util";
 import { JavaInstallerResults, IJavaRelease, JavaBase, JavaInstallerOptions } from "./base-installer";
 import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
-export class AdoptOpenJdkDistributor extends JavaBase {
+export class AdoptOpenJDKDistributor extends JavaBase {
     
     constructor(initOptions: JavaInstallerOptions) {
         super("AdoptOpenJDK", initOptions);
     }
 
-    private async getAvailableMajor(range: semver.Range) {
+    private async resolveMajorVersion(range: semver.Range) {
         const availableMajorVersionsUrl = "https://api.adoptopenjdk.net/v3/info/available_releases"
         const availableMajorVersions = (await this.http.getJson<IReleaseVersion>(availableMajorVersionsUrl)).result;
 
@@ -50,30 +50,28 @@ export class AdoptOpenJdkDistributor extends JavaBase {
         const archivePath = path.join(extractedJavaPath, archiveName);
         toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
 
-        if(process.platform === 'darwin') {
+        if (process.platform === 'darwin') {
             toolPath = path.join(toolPath, macOSJavaContentDir);
         }
 
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
-    protected async resolveVersion(range: semver.Range): Promise<IJavaRelease> {
+    protected async findPackageForDownload(version: semver.Range): Promise<IJavaRelease> {
         const platform = IS_MACOS ? 'mac' : PLATFORM;
 
-        const resolvedMajorVersion = await this.getAvailableMajor(range);
+        const resolvedMajorVersion = await this.resolveMajorVersion(version);
         const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${resolvedMajorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${platform}`;
         const availableVersionsList = ( await this.http.getJson<IRelease[]>(availableVersionsUrl)).result;
-        const resolvedFullVersion = availableVersionsList?.find(item => semver.satisfies(item.version_data.semver, range));
+        const resolvedFullVersion = availableVersionsList?.find(item => semver.satisfies(item.version_data.semver, version));
 
         if(!resolvedFullVersion) {
             throw new Error(`Could not find satisfied version in ${availableVersionsList}`);
         }
 
-        const javaRelease: IJavaRelease = {
+        return {
             resolvedVersion: resolvedFullVersion.version_data.semver,
             link: resolvedFullVersion.binaries[0].package.link
         }
-
-        return javaRelease;
     }
 }

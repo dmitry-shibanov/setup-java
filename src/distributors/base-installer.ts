@@ -37,19 +37,18 @@ export abstract class JavaBase {
     }
 
     protected abstract downloadTool(javaRelease: IJavaRelease): Promise<JavaInstallerResults>;
-    protected abstract resolveVersion(range: semver.Range): Promise<IJavaRelease>;
+    protected abstract findPackageForDownload(range: semver.Range): Promise<IJavaRelease>;
 
-    public async getJava(): Promise<JavaInstallerResults> {
+    public async setupJava(): Promise<JavaInstallerResults> {
         const range = new semver.Range(this.version);
         let foundJava = this.findInToolcache(range);
 
         if(!foundJava) {
-            // download Java if it is not found locally
-            const javaRelease = await this.resolveVersion(range)
+            const javaRelease = await this.findPackageForDownload(range)
             foundJava = await this.downloadTool(javaRelease);
         }
 
-        this.setJavaDefault(foundJava.javaPath);
+        this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
 
         return foundJava;
     }
@@ -70,19 +69,11 @@ export abstract class JavaBase {
         };
     }
 
-    protected setJavaDefault(toolPath: string) {
+    protected setJavaDefault(toolPath: string, version: string) {
         core.exportVariable('JAVA_HOME', toolPath);
         core.addPath(path.join(toolPath, 'bin'));
         core.setOutput('path', toolPath);
-        core.setOutput('version', this.version);
-    }
-
-    protected getJavaVersionsPath(): string {
-        switch(process.platform) {
-            case "win32": return path.normalize('C:/Program Files/Java');
-            case "darwin": return '/Library/Java/JavaVirtualMachines'
-            default: return '/usr/lib/jvm'
-        }
+        core.setOutput('version', version);
     }
 
     // this function validates and parse java version to its normal semver notation

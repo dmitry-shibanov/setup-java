@@ -38,13 +38,13 @@ export class ZuluDistributor extends JavaBase {
         return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
-    protected async resolveVersion(range: semver.Range): Promise<IJavaRelease> {
-        const resolvedFullVersion = await this.getAvailableVersion(range);
+    protected async findPackageForDownload(version: semver.Range): Promise<IJavaRelease> {
+        const resolvedFullVersion = await this.getAvailableVersion(version);
 
         const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
         const availableZuluRelease = (await this.http.getJson<IZuluDetailed>(availableZuluReleaseUrl)).result;
 
-        if(!availableZuluRelease) {
+        if (!availableZuluRelease) {
             throw new Error(`No zulu java was found for version ${resolvedFullVersion}`);
         }
 
@@ -56,7 +56,7 @@ export class ZuluDistributor extends JavaBase {
 
         const availableVersionsList = (await this.http.getJson<Array<IZulu>>(availableVersionsUrl)).result;
 
-        if(!availableVersionsList || availableVersionsList.length === 0) {
+        if (!availableVersionsList || availableVersionsList.length === 0) {
             throw new Error(`No Zulu java versions were not found for arch ${this.arch}, extenstion ${this.extension}, platform ${this.platform}`);
         }
 

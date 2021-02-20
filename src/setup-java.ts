@@ -28,7 +28,7 @@ async function run() {
       throw new Error('No distributor was found');
     }
 
-    const result = await distributor.getJava();
+    const result = await distributor.setupJava();
     core.info(`${javaDistributor} java version is ${result.javaVersion}`);
     core.info(`Java version path is ${result.javaPath}`);
 
