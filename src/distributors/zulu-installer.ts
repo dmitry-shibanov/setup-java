@@ -15,27 +15,10 @@ export class ZuluDistributor extends JavaBase {
     constructor(initOptions: JavaInstallerOptions) {
         super("Zulu", initOptions);
         this.platform = IS_MACOS ? 'macos' : PLATFORM;
-        this.arch = this.arch === 'x64' ? 'x86' : this.arch;
-    }
-
-    protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
-        let toolPath: string;
-        let extractedJavaPath: string;
-
-        const javaArchivePath = await tc.downloadTool(javaRelease.link);
-        
-        core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
-        if(IS_WINDOWS) {
-            extractedJavaPath = await tc.extractZip(javaArchivePath);
-        } else {
-            extractedJavaPath = await tc.extractTar(javaArchivePath);
+        if (this.arch === 'x64') {
+            // put small comment
+            this.arch = 'x86';
         }
-
-        const archiveName = fs.readdirSync(extractedJavaPath)[0];
-        const archivePath = path.join(extractedJavaPath, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
-
-        return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
     protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
@@ -49,6 +32,25 @@ export class ZuluDistributor extends JavaBase {
         }
 
         return {link: availableZuluRelease.url, resolvedVersion: resolvedFullVersion};
+    }
+
+    protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
+        let extractedJavaPath: string;
+
+        const javaArchivePath = await tc.downloadTool(javaRelease.link);
+        
+        core.info(`Ectracting ${this.distributor} java version ${javaRelease.resolvedVersion}`);
+        if(IS_WINDOWS) {
+            extractedJavaPath = await tc.extractZip(javaArchivePath);
+        } else {
+            extractedJavaPath = await tc.extractTar(javaArchivePath);
+        }
+
+        const archiveName = fs.readdirSync(extractedJavaPath)[0];
+        const archivePath = path.join(extractedJavaPath, archiveName);
+        const toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
+
+        return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
     }
 
     private async getAvailableVersion(range: semver.Range): Promise<string> {

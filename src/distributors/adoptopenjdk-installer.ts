@@ -11,32 +11,8 @@ import { IRelease, IReleaseVersion } from './adoptopenjdk-models'
 
 export class AdoptOpenJDKDistributor extends JavaBase {
     
-    constructor(initOptions: JavaInstallerOptions) {
-        super("AdoptOpenJDK", initOptions);
-    }
-
-    protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
-        let toolPath: string;
-        let extractedJavaPath: string;
-
-        core.info(`Downloading ${this.distributor}, java version ${javaRelease.resolvedVersion}`);
-        const javaArchivePath = await tc.downloadTool(javaRelease.link);
-        
-        if(IS_WINDOWS) {
-            extractedJavaPath = await tc.extractZip(javaArchivePath);
-        } else {
-            extractedJavaPath = await tc.extractTar(javaArchivePath);
-        }
-
-        const archiveName = fs.readdirSync(extractedJavaPath)[0];
-        const archivePath = path.join(extractedJavaPath, archiveName);
-        toolPath = await tc.cacheDir(archivePath, `Java_${this.distributor}_${this.javaPackage}`, javaRelease.resolvedVersion, this.arch);
-
-        if (process.platform === 'darwin') {
-            toolPath = path.join(toolPath, macOSJavaContentDir);
-        }
-
-        return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
+    constructor(installerOptions: JavaInstallerOptions) {
+        super("AdoptOpenJDK", installerOptions);
     }
 
     protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
@@ -48,7 +24,9 @@ export class AdoptOpenJDKDistributor extends JavaBase {
         const resolvedFullVersion = availableVersionsList?.find(item => semver.satisfies(item.version_data.semver, version));
 
         if(!resolvedFullVersion) {
-            throw new Error(`Could not find satisfied version in ${availableVersionsList}`);
+            const availableOptions = availableVersionsList?.map(item => item.version_data.semver).join(', ');
+            const availableOptionsMessage = availableOptions ? `\nAvailable versions: ${availableOptions}` : "";
+            throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
         }
 
         return {
@@ -57,19 +35,44 @@ export class AdoptOpenJDKDistributor extends JavaBase {
         }
     }
 
+    protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
+        let toolPath: string;
+        let extractedJavaPath: string;
+
+        core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
+        const javaArchivePath = await tc.downloadTool(javaRelease.link);
+        
+        core.info(`Extracting Java archive...`);
+        if(IS_WINDOWS) {
+            extractedJavaPath = await tc.extractZip(javaArchivePath);
+        } else {
+            extractedJavaPath = await tc.extractTar(javaArchivePath);
+        }
+
+        const archiveName = fs.readdirSync(extractedJavaPath)[0];
+        const archivePath = path.join(extractedJavaPath, archiveName);
+        toolPath = await tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
+
+        if (process.platform === 'darwin') {
+            toolPath = path.join(toolPath, macOSJavaContentDir);
+        }
+
+        return { javaPath: toolPath, javaVersion: javaRelease.resolvedVersion };
+    }
+
     private async resolveMajorVersion(range: semver.Range) {
         const availableMajorVersionsUrl = "https://api.adoptopenjdk.net/v3/info/available_releases"
         const availableMajorVersions = (await this.http.getJson<IReleaseVersion>(availableMajorVersionsUrl)).result;
 
         if (!availableMajorVersions) {
-            throw new Error(`No versions were found for ${this.distributor}`)
+            throw new Error(`Unable to get the list of major versions for '${this.distributor}'`)
         }
 
         const coercedAvailableVersions = availableMajorVersions.available_releases.map(item => semver.coerce(item)).filter((item): item is semver.SemVer => !!item);
         const resolvedMajorVersion = semver.maxSatisfying(coercedAvailableVersions, range)?.major;
 
         if(!resolvedMajorVersion) {
-            throw new Error(`Could find version which satisfying. Versions: ${availableMajorVersions.available_releases}`);
+            throw new Error(`Could not find satisfied major version for semver ${range}. \nAvailable versions: ${availableMajorVersions.available_releases.join(', ')}`);
         }
 
         return resolvedMajorVersion;

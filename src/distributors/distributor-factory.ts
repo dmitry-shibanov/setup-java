@@ -2,6 +2,7 @@ import { AdoptOpenJDKDistributor } from "./adoptopenjdk-installer";
 import { JavaInstallerOptions, JavaBase } from "./base-installer";
 import { ZuluDistributor } from "./zulu-installer";
 
+// TO-DO: confirm distributor names
 enum JavaDistributor {
     AdoptOpenJdk = 'adoptOpenJdk',
     Zulu = 'zulu'

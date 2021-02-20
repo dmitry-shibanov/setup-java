@@ -26,14 +26,16 @@ export abstract class JavaBase {
     protected version: semver.Range;
     protected arch: string;
     protected javaPackage: string;
-    constructor(protected distributor: string, initOptions: JavaInstallerOptions) {
+
+    constructor(protected distributor: string, installerOptions: JavaInstallerOptions) {
         this.http = new httpm.HttpClient('setup-java', undefined, {
-            allowRetries: true,
-            maxRetries: 3
-          });
-        this.version = this.normalizeVersion(initOptions.version);
-        this.arch = initOptions.arch;
-        this.javaPackage  = initOptions.javaPackage;
+          allowRetries: true,
+          maxRetries: 3
+        });
+
+        this.version = this.normalizeVersion(installerOptions.version);
+        this.arch = installerOptions.arch;
+        this.javaPackage  = installerOptions.javaPackage;
     }
 
     protected abstract downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults>;
@@ -41,12 +43,16 @@ export abstract class JavaBase {
 
     public async setupJava(): Promise<JavaInstallerResults> {
         let foundJava = this.findInToolcache(this.version);
-
-        if(!foundJava) {
-            const javaRelease = await this.findPackageForDownload(this.version);
-            foundJava = await this.downloadTool(javaRelease);
+        if (foundJava) {
+          core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
+        } else {
+          core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
+          const javaRelease = await this.findPackageForDownload(this.version);
+          foundJava = await this.downloadTool(javaRelease);
+          core.info(`Java ${foundJava.javaVersion} was downloaded`);
         }
 
+        core.info(`Setting Java ${foundJava.javaVersion} as default`);
         this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
 
         return foundJava;
@@ -71,6 +77,7 @@ export abstract class JavaBase {
     protected setJavaDefault(toolPath: string, version: string) {
         core.exportVariable('JAVA_HOME', toolPath);
         core.addPath(path.join(toolPath, 'bin'));
+        core.setOutput('distributor', this.distributor);
         core.setOutput('path', toolPath);
         core.setOutput('version', version);
     }
@@ -78,13 +85,14 @@ export abstract class JavaBase {
     // this function validates and parse java version to its normal semver notation
     protected normalizeVersion(version: string): semver.Range {
         if (version.startsWith('1.')) {
-          // Trim leading 1. for versions like 1.8
+          // Trim leading 1. for versions like 1.8 and 1.7
           version = version.slice(2);
           if (!version) {
             throw new Error('1. is not a valid version');
           }
         }
     
+        // TO-DO: rework ea/ga logic
         if (version.endsWith('-ea')) {
           // convert e.g. 14-ea to 14.0.0-ea
           if (version.indexOf('.') == -1) {
@@ -102,8 +110,7 @@ export abstract class JavaBase {
         }
     
         if (!semver.validRange(version)) {
-          throw new Error(`The version ${version} is not valid semver notation please check README file for code snippets and 
-                      more detailed information`);
+          throw new Error(`The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`);
         }
     
         return new semver.Range(version);

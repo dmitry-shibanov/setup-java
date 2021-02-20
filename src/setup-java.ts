@@ -17,6 +17,7 @@ async function run() {
       required: true
     });
     const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {required: false});
+    // TO-DO: add support of local file (jdkFile)
 
     const initOptions: JavaInstallerOptions = {
       arch,
@@ -25,12 +26,13 @@ async function run() {
     };
     const distributor = getJavaDistributor(javaDistributor, initOptions);
     if (!distributor) {
-      throw new Error('No distributor was found');
+      throw new Error(`No distributor was found with name ${javaDistributor}`);
     }
 
     const result = await distributor.setupJava();
-    core.info(`${javaDistributor} java version is ${result.javaVersion}`);
-    core.info(`Java version path is ${result.javaPath}`);
+    core.info(`Java distributor: ${javaDistributor}`);
+    core.info(`Java version: ${result.javaVersion}`);
+    core.info(`Java path: ${result.javaPath}`);
 
     const matchersPath = path.join(__dirname, '..', '..', '.github');
     core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
@@ -63,7 +65,7 @@ async function configureAuthentication() {
   await auth.configAuthentication(id, username, password, gpgPassphrase);
 
   if (gpgPrivateKey) {
-    core.info('importing private key');
+    core.info('Importing private key');
     const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
     core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
   }
