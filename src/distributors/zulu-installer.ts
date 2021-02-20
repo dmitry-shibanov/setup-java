@@ -25,6 +25,7 @@ export class ZuluDistributor extends JavaBase {
     protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
         const resolvedFullVersion = await this.getAvailableVersion(version);
 
+        // TO-DO: double check all urls and parameters
         const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
         const availableZuluRelease = (await this.http.getJson<IZuluDetailed>(availableZuluReleaseUrl)).result;
 
