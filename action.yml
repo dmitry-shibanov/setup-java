@@ -21,6 +21,9 @@ inputs:
     description: 'Path to where the compressed JDK is located. The path could
        be in your source repository or a local path on the agent.'
     required: false
+  distribution:
+    description: 'Java distributor. See the list of supported distributors in README file.'
+    required: true
   server-id:
     description: 'ID of the distributionManagement repository in the pom.xml
        file. Default is `github`'

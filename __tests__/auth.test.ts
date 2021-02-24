@@ -87,7 +87,7 @@ describe('auth tests', () => {
     const username = 'USERNAME';
     const password = 'PASSWORD';
 
-    fs.mkdirSync(m2Dir, {recursive: true});
+    fs.mkdirSync(m2Dir, { recursive: true });
     fs.writeFileSync(settingsFile, 'FAKE FILE');
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);
