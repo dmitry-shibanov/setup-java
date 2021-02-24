@@ -7,7 +7,7 @@ import semver from 'semver';
 
 import { JavaBase } from './base-installer';
 import { IZuluVersions, IZuluVersionsDetailed } from './zulu-models';
-import { IS_WINDOWS, IS_MACOS, PLATFORM, setupFromJdkFile } from '../util';
+import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
 import {
   JavaDownloadRelease,
   JavaInstallerOptions,
@@ -61,7 +61,11 @@ export class ZuluDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    extractedJavaPath = await setupFromJdkFile(javaArchivePath);
+    if (IS_WINDOWS) {
+      extractedJavaPath = await tc.extractZip(javaArchivePath);
+    } else {
+      extractedJavaPath = await tc.extractTar(javaArchivePath);
+    }
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);

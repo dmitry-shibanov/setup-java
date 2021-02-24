@@ -13340,7 +13340,12 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            extractedJavaPath = yield util_1.setupFromJdkFile(javaArchivePath);
+            if (util_1.IS_WINDOWS) {
+                extractedJavaPath = yield tc.extractZip(javaArchivePath);
+            }
+            else {
+                extractedJavaPath = yield tc.extractTar(javaArchivePath);
+            }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
@@ -38749,7 +38754,12 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link}...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            extractedJavaPath = yield util_1.setupFromJdkFile(javaArchivePath);
+            if (util_1.IS_WINDOWS) {
+                extractedJavaPath = yield tc.extractZip(javaArchivePath);
+            }
+            else {
+                extractedJavaPath = yield tc.extractTar(javaArchivePath);
+            }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
