@@ -38768,7 +38768,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     }
     getAvailableVersion(range) {
         return __awaiter(this, void 0, void 0, function* () {
-            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}`;
+            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&bundle_type=${this.javaPackage}`;
             const availableVersionsList = (yield this.http.getJson(availableVersionsUrl)).result;
             if (!availableVersionsList || availableVersionsList.length === 0) {
                 throw new Error(`No versions were found for arch '${this.arch}' and platform '${this.platform}'`);

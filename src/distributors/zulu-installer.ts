@@ -80,7 +80,7 @@ export class ZuluDistributor extends JavaBase {
   }
 
   private async getAvailableVersion(range: semver.Range): Promise<string> {
-    const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}`;
+    const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&bundle_type=${this.javaPackage}`;
     const availableVersionsList = (
       await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)
     ).result;
