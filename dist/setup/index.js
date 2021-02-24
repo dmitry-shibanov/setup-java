@@ -10452,6 +10452,7 @@ exports.isomorphicDecode = isomorphicDecode;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getJavaDistributor = void 0;
 const adoptopenjdk_installer_1 = __webpack_require__(318);
+const local_installer_1 = __webpack_require__(403);
 const zulu_installer_1 = __webpack_require__(908);
 // TO-DO: confirm distributor names
 var JavaDistributor;
@@ -10461,6 +10462,8 @@ var JavaDistributor;
 })(JavaDistributor || (JavaDistributor = {}));
 function getJavaDistributor(distributorName, initOptions) {
     switch (distributorName) {
+        case 'jdkFile':
+            return new local_installer_1.LocalDistributor(initOptions);
         case JavaDistributor.AdoptOpenJdk:
             return new adoptopenjdk_installer_1.AdoptOpenJDKDistributor(initOptions);
         case JavaDistributor.Zulu:
@@ -13337,12 +13340,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
-            }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
+            extractedJavaPath = yield util_1.setupFromJdkFile(javaArchivePath);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
@@ -13383,13 +13381,42 @@ exports.AdoptOpenJDKDistributor = AdoptOpenJDKDistributor;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.setupFromJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
+const tc = __importStar(__webpack_require__(139));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
 exports.IS_MACOS = process.platform === 'darwin';
@@ -13407,6 +13434,27 @@ function getVersionFromToolcachePath(toolPath) {
     return toolPath;
 }
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
+function setupFromJdkFile(toolPath) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const extension = toolPath.endsWith('.tar.gz')
+            ? '.tar.gz'
+            : path_1.default.extname(toolPath);
+        let extractedJavaPath;
+        switch (extension) {
+            case '.tar.gz':
+            case '.tar':
+                extractedJavaPath = yield tc.extractTar(toolPath);
+                break;
+            case '.zip':
+                extractedJavaPath = yield tc.extractZip(toolPath);
+                break;
+            default:
+                extractedJavaPath = yield tc.extract7z(toolPath);
+        }
+        return extractedJavaPath;
+    });
+}
+exports.setupFromJdkFile = setupFromJdkFile;
 
 
 /***/ }),
@@ -14284,7 +14332,83 @@ exports.NamespacePrefixMap = NamespacePrefixMap;
 /* 400 */,
 /* 401 */,
 /* 402 */,
-/* 403 */,
+/* 403 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LocalDistributor = void 0;
+const tc = __importStar(__webpack_require__(139));
+const fs_1 = __importDefault(__webpack_require__(747));
+const path_1 = __importDefault(__webpack_require__(622));
+const util_1 = __webpack_require__(322);
+const base_installer_1 = __webpack_require__(534);
+class LocalDistributor extends base_installer_1.JavaBase {
+    constructor(installerOptions) {
+        super('local_distributor', installerOptions);
+        this.jdkFile = installerOptions.jdkFile;
+    }
+    findPackageForDownload(version) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Should not be implemented');
+        });
+    }
+    downloadTool(javaRelease) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Should not be implemented');
+        });
+    }
+    setupJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const resolvedVersion = this.version.raw;
+            const extractedJavaPath = yield util_1.setupFromJdkFile(this.jdkFile);
+            const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
+            const archivePath = path_1.default.join(extractedJavaPath, archiveName);
+            let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, resolvedVersion, this.arch);
+            if (process.platform === 'darwin') {
+                javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+            }
+            this.setJavaDefault(javaPath, resolvedVersion);
+            return { javaPath, javaVersion: resolvedVersion };
+        });
+    }
+}
+exports.LocalDistributor = LocalDistributor;
+
+
+/***/ }),
 /* 404 */,
 /* 405 */,
 /* 406 */,
@@ -33066,7 +33190,8 @@ function run() {
             const initOptions = {
                 arch,
                 javaPackage,
-                version
+                version,
+                jdkFile
             };
             const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions);
             if (!distributor) {
@@ -38596,7 +38721,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             const resolvedFullVersion = yield this.getAvailableVersion(version);
             // TO-DO: double check all urls and parameters
-            const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
+            const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
             const availableZuluRelease = (yield this.http.getJson(availableZuluReleaseUrl)).result;
             if (!availableZuluRelease) {
                 throw new Error(`No Zulu packages were found for version ${resolvedFullVersion}`);
@@ -38613,12 +38738,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link}...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
-            }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
+            extractedJavaPath = yield util_1.setupFromJdkFile(javaArchivePath);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
@@ -38627,7 +38747,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     }
     getAvailableVersion(range) {
         return __awaiter(this, void 0, void 0, function* () {
-            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
+            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}`;
             const availableVersionsList = (yield this.http.getJson(availableVersionsUrl)).result;
             if (!availableVersionsList || availableVersionsList.length === 0) {
                 throw new Error(`No versions were found for arch '${this.arch}' and platform '${this.platform}'`);

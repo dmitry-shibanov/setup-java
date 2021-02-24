@@ -15,8 +15,8 @@ export function getJavaDistributor(
   initOptions: JavaInstallerOptions
 ): JavaBase | null {
   switch (distributorName) {
-    case "jdkFile":
-        return new LocalDistributor(initOptions);
+    case 'jdkFile':
+      return new LocalDistributor(initOptions);
     case JavaDistributor.AdoptOpenJdk:
       return new AdoptOpenJDKDistributor(initOptions);
     case JavaDistributor.Zulu:

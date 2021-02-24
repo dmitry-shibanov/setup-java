@@ -7,7 +7,7 @@ import semver from 'semver';
 
 import { JavaBase } from './base-installer';
 import { IZuluVersions, IZuluVersionsDetailed } from './zulu-models';
-import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
+import { IS_WINDOWS, IS_MACOS, PLATFORM, setupFromJdkFile } from '../util';
 import {
   JavaDownloadRelease,
   JavaInstallerOptions,
@@ -33,7 +33,7 @@ export class ZuluDistributor extends JavaBase {
     const resolvedFullVersion = await this.getAvailableVersion(version);
 
     // TO-DO: double check all urls and parameters
-    const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
+    const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
     const availableZuluRelease = (
       await this.http.getJson<IZuluVersionsDetailed>(availableZuluReleaseUrl)
     ).result;
@@ -61,11 +61,7 @@ export class ZuluDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    if (IS_WINDOWS) {
-      extractedJavaPath = await tc.extractZip(javaArchivePath);
-    } else {
-      extractedJavaPath = await tc.extractTar(javaArchivePath);
-    }
+    extractedJavaPath = await setupFromJdkFile(javaArchivePath);
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
@@ -80,7 +76,7 @@ export class ZuluDistributor extends JavaBase {
   }
 
   private async getAvailableVersion(range: semver.Range): Promise<string> {
-    const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
+    const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}`;
     const availableVersionsList = (
       await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)
     ).result;
