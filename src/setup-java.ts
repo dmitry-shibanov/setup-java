@@ -26,7 +26,8 @@ async function run() {
     const initOptions: JavaInstallerOptions = {
       arch,
       javaPackage,
-      version
+      version,
+      jdkFile
     };
     const distributor = getJavaDistributor(javaDistributor, initOptions);
     if (!distributor) {
