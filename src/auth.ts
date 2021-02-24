@@ -5,7 +5,7 @@ import * as io from '@actions/io';
 import * as fs from 'fs';
 import * as os from 'os';
 
-import {create as xmlCreate} from 'xmlbuilder2';
+import { create as xmlCreate } from 'xmlbuilder2';
 import * as constants from './constants';
 
 export const M2_DIR = '.m2';
@@ -44,7 +44,7 @@ export function generate(
   password: string,
   gpgPassphrase?: string | undefined
 ) {
-  const xmlObj: {[key: string]: any} = {
+  const xmlObj: { [key: string]: any } = {
     settings: {
       '@xmlns': 'http://maven.apache.org/SETTINGS/1.0.0',
       '@xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
@@ -70,7 +70,11 @@ export function generate(
     xmlObj.settings.servers.server.push(gpgServer);
   }
 
-  return xmlCreate(xmlObj).end({headless: true, prettyPrint: true, width: 80});
+  return xmlCreate(xmlObj).end({
+    headless: true,
+    prettyPrint: true,
+    width: 80
+  });
 }
 
 async function write(directory: string, settings: string) {

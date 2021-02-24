@@ -3,20 +3,24 @@ import * as auth from './auth';
 import * as gpg from './gpg';
 import * as constants from './constants';
 import * as path from 'path';
-import {JavaInstallerOptions} from './distributors/base-installer';
-import {getJavaDistributor} from './distributors/distributor-factory';
+import { getJavaDistributor } from './distributors/distributor-factory';
+import { JavaInstallerOptions } from './distributors/base-models';
 
 async function run() {
   try {
     const version = core.getInput(constants.INPUT_JAVA_VERSION, {
       required: true
     });
-    const arch = core.getInput(constants.INPUT_ARCHITECTURE, {required: true});
+    const arch = core.getInput(constants.INPUT_ARCHITECTURE, {
+      required: true
+    });
     const javaDistributor = core.getInput('distribution');
     const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
       required: true
     });
-    const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {required: false});
+    const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {
+      required: false
+    });
     // TO-DO: add support of local file (jdkFile)
 
     const initOptions: JavaInstallerOptions = {
@@ -26,7 +30,9 @@ async function run() {
     };
     const distributor = getJavaDistributor(javaDistributor, initOptions);
     if (!distributor) {
-      throw new Error(`No distributor was found with name ${javaDistributor}`);
+      throw new Error(
+        `No supported distributor was found for input ${javaDistributor}`
+      );
     }
 
     const result = await distributor.setupJava();
@@ -44,7 +50,7 @@ async function run() {
 }
 
 async function configureAuthentication() {
-  const id = core.getInput(constants.INPUT_SERVER_ID, {required: false});
+  const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
   const username = core.getInput(constants.INPUT_SERVER_USERNAME, {
     required: false
   });
@@ -52,10 +58,10 @@ async function configureAuthentication() {
     required: false
   });
   const gpgPrivateKey =
-    core.getInput(constants.INPUT_GPG_PRIVATE_KEY, {required: false}) ||
+    core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
     constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
   const gpgPassphrase =
-    core.getInput(constants.INPUT_GPG_PASSPHRASE, {required: false}) ||
+    core.getInput(constants.INPUT_GPG_PASSPHRASE, { required: false }) ||
     (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
 
   if (gpgPrivateKey) {
@@ -65,7 +71,7 @@ async function configureAuthentication() {
   await auth.configAuthentication(id, username, password, gpgPassphrase);
 
   if (gpgPrivateKey) {
-    core.info('Importing private key');
+    core.info('Importing private gpg key');
     const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
     core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
   }

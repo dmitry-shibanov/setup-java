@@ -8,7 +8,7 @@ describe('util tests', () => {
     delete tempEnv.RUNNER_TEMP;
     delete tempEnv.USERPROFILE;
     process.env = tempEnv;
-    Object.defineProperty(process, 'platform', {value: 'linux'});
+    Object.defineProperty(process, 'platform', { value: 'linux' });
   });
 
   describe('getTempDir', () => {
@@ -22,7 +22,7 @@ describe('util tests', () => {
     });
 
     it('gets temp dir for windows using userprofile', () => {
-      Object.defineProperty(process, 'platform', {value: 'win32'});
+      Object.defineProperty(process, 'platform', { value: 'win32' });
       process.env['USERPROFILE'] = 'winusertmp';
       const util = require('../src/util');
 
@@ -34,7 +34,7 @@ describe('util tests', () => {
     });
 
     it('gets temp dir for windows using c drive', () => {
-      Object.defineProperty(process, 'platform', {value: 'win32'});
+      Object.defineProperty(process, 'platform', { value: 'win32' });
       const util = require('../src/util');
 
       const tempDir = util.getTempDir();
@@ -43,7 +43,7 @@ describe('util tests', () => {
     });
 
     it('gets temp dir for mac', () => {
-      Object.defineProperty(process, 'platform', {value: 'darwin'});
+      Object.defineProperty(process, 'platform', { value: 'darwin' });
       const util = require('../src/util');
 
       const tempDir = util.getTempDir();
