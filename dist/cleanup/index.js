@@ -3137,6 +3137,7 @@ exports.setupFromJdkFile = exports.getVersionFromToolcachePath = exports.getTemp
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const tc = __importStar(__webpack_require__(533));
+const core = __importStar(__webpack_require__(470));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
 exports.IS_MACOS = process.platform === 'darwin';
@@ -3156,19 +3157,24 @@ function getVersionFromToolcachePath(toolPath) {
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function setupFromJdkFile(toolPath) {
     return __awaiter(this, void 0, void 0, function* () {
+        core.info(`toolPath is ${toolPath}`);
         const extension = toolPath.endsWith('.tar.gz')
             ? '.tar.gz'
             : path_1.default.extname(toolPath);
+        core.info(`extension is ${extension}`);
         let extractedJavaPath;
         switch (extension) {
             case '.tar.gz':
             case '.tar':
+                core.info('came to tar');
                 extractedJavaPath = yield tc.extractTar(toolPath);
                 break;
             case '.zip':
+                core.info('came to zip');
                 extractedJavaPath = yield tc.extractZip(toolPath);
                 break;
             default:
+                core.info('came to default');
                 extractedJavaPath = yield tc.extract7z(toolPath);
         }
         return extractedJavaPath;

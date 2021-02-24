@@ -2,6 +2,7 @@ import os from 'os';
 import path from 'path';
 
 import * as tc from '@actions/tool-cache';
+import * as core from '@actions/core';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
@@ -24,19 +25,24 @@ export function getVersionFromToolcachePath(toolPath: string) {
 }
 
 export async function setupFromJdkFile(toolPath: string) {
+  core.info(`toolPath is ${toolPath}`);
   const extension = toolPath.endsWith('.tar.gz')
     ? '.tar.gz'
     : path.extname(toolPath);
+  core.info(`extension is ${extension}`);
   let extractedJavaPath: string;
   switch (extension) {
     case '.tar.gz':
     case '.tar':
+      core.info('came to tar');
       extractedJavaPath = await tc.extractTar(toolPath);
       break;
     case '.zip':
+      core.info('came to zip');
       extractedJavaPath = await tc.extractZip(toolPath);
       break;
     default:
+      core.info('came to default');
       extractedJavaPath = await tc.extract7z(toolPath);
   }
 
