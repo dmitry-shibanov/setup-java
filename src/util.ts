@@ -1,5 +1,6 @@
 import os from 'os';
 import path from 'path';
+import fs from 'fs';
 
 import * as tc from '@actions/tool-cache';
 import * as core from '@actions/core';
@@ -26,9 +27,13 @@ export function getVersionFromToolcachePath(toolPath: string) {
 
 export async function setupFromJdkFile(toolPath: string) {
   core.info(`toolPath is ${toolPath}`);
-  const extension = toolPath.endsWith('.tar.gz')
+  let extension = toolPath.endsWith('.tar.gz')
     ? '.tar.gz'
     : path.extname(toolPath);
+  if (!extension) {
+    const archiveName = fs.readdirSync(toolPath)[0];
+    extension = path.extname(archiveName);
+  }
   core.info(`extension is ${extension}`);
   let extractedJavaPath: string;
   switch (extension) {

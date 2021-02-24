@@ -3136,6 +3136,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setupFromJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
+const fs_1 = __importDefault(__webpack_require__(747));
 const tc = __importStar(__webpack_require__(533));
 const core = __importStar(__webpack_require__(470));
 exports.IS_WINDOWS = process.platform === 'win32';
@@ -3158,9 +3159,13 @@ exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function setupFromJdkFile(toolPath) {
     return __awaiter(this, void 0, void 0, function* () {
         core.info(`toolPath is ${toolPath}`);
-        const extension = toolPath.endsWith('.tar.gz')
+        let extension = toolPath.endsWith('.tar.gz')
             ? '.tar.gz'
             : path_1.default.extname(toolPath);
+        if (!extension) {
+            const archiveName = fs_1.default.readdirSync(toolPath)[0];
+            extension = path_1.default.extname(archiveName);
+        }
         core.info(`extension is ${extension}`);
         let extractedJavaPath;
         switch (extension) {
