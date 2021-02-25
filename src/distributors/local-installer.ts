@@ -40,7 +40,7 @@ export class LocalDistributor extends JavaBase {
       archivePath,
       this.toolcacheFolderName,
       resolvedVersion,
-      this.arch
+      this.architecture
     );
 
     if (process.platform === 'darwin') {

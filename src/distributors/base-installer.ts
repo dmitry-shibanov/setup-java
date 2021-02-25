@@ -13,7 +13,7 @@ import {
 export abstract class JavaBase {
   protected http: httpm.HttpClient;
   protected version: semver.Range;
-  protected arch: string;
+  protected architecture: string;
   protected javaPackage: string;
 
   constructor(
@@ -26,7 +26,7 @@ export abstract class JavaBase {
     });
 
     this.version = this.normalizeVersion(installerOptions.version);
-    this.arch = installerOptions.arch;
+    this.architecture = installerOptions.arch;
     this.javaPackage = installerOptions.javaPackage;
   }
 
@@ -64,7 +64,7 @@ export abstract class JavaBase {
     const javaPath = tc.find(
       this.toolcacheFolderName,
       this.version.raw,
-      this.arch
+      this.architecture
     );
     if (!javaPath) {
       return null;
