@@ -25,27 +25,18 @@ export function getVersionFromToolcachePath(toolPath: string) {
   return toolPath;
 }
 
-export async function setupFromJdkFile(toolPath: string) {
-  let extension = toolPath.endsWith('.tar.gz')
+export async function setupFromJdkFile(toolPath: string, extension?: string) {
+  extension ??= toolPath.endsWith('.tar.gz')
     ? '.tar.gz'
     : path.extname(toolPath);
-  if (!extension) {
-    const archiveName = fs.readdirSync(toolPath)[0];
-    extension = path.extname(archiveName);
-  }
 
-  let extractedJavaPath: string;
   switch (extension) {
     case '.tar.gz':
     case '.tar':
-      extractedJavaPath = await tc.extractTar(toolPath);
-      break;
+      return await tc.extractTar(toolPath);
     case '.zip':
-      extractedJavaPath = await tc.extractZip(toolPath);
-      break;
+      return await tc.extractZip(toolPath);
     default:
-      extractedJavaPath = await tc.extract7z(toolPath);
+      return await tc.extract7z(toolPath);
   }
-
-  return extractedJavaPath;
 }

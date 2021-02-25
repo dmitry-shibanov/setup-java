@@ -2,7 +2,6 @@ export interface JavaInstallerOptions {
   version: string;
   arch: string;
   javaPackage: string;
-  jdkFile?: string;
 }
 
 export interface JavaInstallerResults {

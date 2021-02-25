@@ -12,11 +12,15 @@ enum JavaDistributor {
 
 export function getJavaDistributor(
   distributorName: string,
-  initOptions: JavaInstallerOptions
+  initOptions: JavaInstallerOptions,
+  jdkFile?: string
 ): JavaBase | null {
   switch (distributorName) {
     case 'jdkFile':
-      return new LocalDistributor(initOptions);
+      if(!jdkFile){
+        throw new Error('jdkfile is not specified');
+      }
+      return new LocalDistributor(initOptions, jdkFile);
     case JavaDistributor.AdoptOpenJdk:
       return new AdoptOpenJDKDistributor(initOptions);
     case JavaDistributor.Zulu:

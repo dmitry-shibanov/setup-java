@@ -26,10 +26,9 @@ async function run() {
     const initOptions: JavaInstallerOptions = {
       arch,
       javaPackage,
-      version,
-      jdkFile
+      version
     };
-    const distributor = getJavaDistributor(javaDistributor, initOptions);
+    const distributor = getJavaDistributor(javaDistributor, initOptions, jdkFile);
     if (!distributor) {
       throw new Error(
         `No supported distributor was found for input ${javaDistributor}`
