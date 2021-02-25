@@ -30,15 +30,17 @@ async function run() {
     };
     const distributor = getJavaDistributor(javaDistributor, initOptions, jdkFile);
     if (!distributor) {
-      throw new Error(
-        `No supported distributor was found for input ${javaDistributor}`
-      );
+      throw new Error(`No supported distributor was found for input ${javaDistributor}`);
     }
 
     const result = await distributor.setupJava();
-    core.info(`Java distributor: ${javaDistributor}`);
-    core.info(`Java version: ${result.javaVersion}`);
-    core.info(`Java path: ${result.javaPath}`);
+
+    core.info('');
+    core.info('Java configuration:');
+    core.info(`  Java distributor: ${javaDistributor}`);
+    core.info(`  Java version: ${result.javaVersion}`);
+    core.info(`  Java path: ${result.javaPath}`);
+    core.info('');
 
     const matchersPath = path.join(__dirname, '..', '..', '.github');
     core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);

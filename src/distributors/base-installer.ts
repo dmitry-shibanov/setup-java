@@ -4,11 +4,7 @@ import semver from 'semver';
 import path from 'path';
 import * as httpm from '@actions/http-client';
 import { getVersionFromToolcachePath } from '../util';
-import {
-  JavaDownloadRelease,
-  JavaInstallerOptions,
-  JavaInstallerResults
-} from './base-models';
+import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from './base-models';
 
 export abstract class JavaBase {
   protected http: httpm.HttpClient;
@@ -16,10 +12,7 @@ export abstract class JavaBase {
   protected architecture: string;
   protected javaPackage: string;
 
-  constructor(
-    protected distributor: string,
-    installerOptions: JavaInstallerOptions
-  ) {
+  constructor(protected distributor: string, installerOptions: JavaInstallerOptions) {
     this.http = new httpm.HttpClient('setup-java', undefined, {
       allowRetries: true,
       maxRetries: 3
@@ -30,21 +23,15 @@ export abstract class JavaBase {
     this.javaPackage = installerOptions.javaPackage;
   }
 
-  protected abstract downloadTool(
-    javaRelease: JavaDownloadRelease
-  ): Promise<JavaInstallerResults>;
-  protected abstract findPackageForDownload(
-    range: semver.Range
-  ): Promise<JavaDownloadRelease>;
+  protected abstract downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults>;
+  protected abstract findPackageForDownload(range: semver.Range): Promise<JavaDownloadRelease>;
 
   public async setupJava(): Promise<JavaInstallerResults> {
     let foundJava = this.findInToolcache();
     if (foundJava) {
       core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
     } else {
-      core.info(
-        `Java ${this.version.raw} is not found in tool-cache. Trying to download...`
-      );
+      core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
       const javaRelease = await this.findPackageForDownload(this.version);
       foundJava = await this.downloadTool(javaRelease);
       core.info(`Java ${foundJava.javaVersion} was downloaded`);
@@ -61,11 +48,7 @@ export abstract class JavaBase {
   }
 
   protected findInToolcache(): JavaInstallerResults | null {
-    const javaPath = tc.find(
-      this.toolcacheFolderName,
-      this.version.raw,
-      this.architecture
-    );
+    const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
     if (!javaPath) {
       return null;
     }

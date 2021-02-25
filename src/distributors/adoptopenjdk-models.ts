@@ -1,13 +1,4 @@
 export interface IAdoptAvailableVersions {
-  available_lts_releases: Array<number>;
-  available_releases: Array<number>;
-  most_recent_feature_release: number;
-  most_recent_feature_version: number;
-  most_recent_lts: number;
-  tip_version: number;
-}
-
-export interface IRelease {
   binaries: [
     {
       architecture: string;
