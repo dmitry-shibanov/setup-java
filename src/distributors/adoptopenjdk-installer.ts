@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { IS_WINDOWS, PLATFORM, IS_MACOS, macOSJavaContentDir } from '../util';
+import { IS_WINDOWS, macOSJavaContentDir } from '../util';
 import { JavaBase } from './base-installer';
 import { IRelease, IAdoptAvailableVersions } from './adoptopenjdk-models';
 import {
@@ -22,10 +22,29 @@ export class AdoptOpenJDKDistributor extends JavaBase {
   protected async findPackageForDownload(
     version: semver.Range
   ): Promise<JavaDownloadRelease> {
-    const platform = IS_MACOS ? 'mac' : PLATFORM;
+    const platform = this.getPlatformOption();
+    const arch = this.architecture;
+    const imageType = this.javaPackage;
 
     const resolvedMajorVersion = await this.resolveMajorVersion(version);
-    const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${resolvedMajorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${platform}`;
+
+    const requestArguments = [
+      `os=${platform}`,
+      `architecture=${arch}`,
+      `image_type=${imageType}`,
+      'heap_size=normal',
+      'jvm_impl=hotspot',
+      'project=jdk',
+      'vendor=adoptopenjdk',
+      'sort_method=DEFAULT',
+      'sort_order=DESC',
+      'page=0',
+      'page_size=20'
+    ]
+      .filter(Boolean)
+      .join('&');
+
+    const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${resolvedMajorVersion}/ga?${requestArguments}`;
     const availableVersionsList = (
       await this.http.getJson<IRelease[]>(availableVersionsUrl)
     ).result;
@@ -46,10 +65,11 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     }
 
     if (resolvedFullVersion.binaries.length < 0) {
-      throw new Error('No binaries were found');
+      throw new Error(`No binaries were found for semver ${version.raw}`);
     }
 
-    // Take the first one binary, because all binaries are sorted by DESC
+    // take the first element in 'binaries' array
+    // because it is already filtered by arch and platform options and can't contain > 1 elements
     return {
       resolvedVersion: resolvedFullVersion.version_data.semver,
       link: resolvedFullVersion.binaries[0].package.link
@@ -80,7 +100,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       archivePath,
       this.toolcacheFolderName,
       javaRelease.resolvedVersion,
-      this.arch
+      this.architecture
     );
 
     if (process.platform === 'darwin') {
@@ -122,5 +142,17 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     }
 
     return resolvedMajorVersion;
+  }
+
+  private getPlatformOption(): string {
+    // Adopt has own platform names so need to map them
+    switch (process.platform) {
+      case 'darwin':
+        return 'mac';
+      case 'win32':
+        return 'windows';
+      default:
+        return process.platform;
+    }
   }
 }

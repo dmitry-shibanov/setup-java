@@ -6,48 +6,52 @@ import fs from 'fs';
 import semver from 'semver';
 
 import { JavaBase } from './base-installer';
-import { IZuluVersions, IZuluVersionsDetailed } from './zulu-models';
-import { IS_WINDOWS, IS_MACOS, PLATFORM } from '../util';
+import { IZuluVersions } from './zulu-models';
+import { IS_WINDOWS } from '../util';
 import {
   JavaDownloadRelease,
   JavaInstallerOptions,
   JavaInstallerResults
 } from './base-models';
 
-// TO-DO: validate feature
 export class ZuluDistributor extends JavaBase {
-  private extension = IS_WINDOWS ? 'zip' : 'tar.gz';
-  private platform: string;
   constructor(initOptions: JavaInstallerOptions) {
     super('Zulu', initOptions);
-    this.platform = IS_MACOS ? 'macos' : PLATFORM;
-    if (this.arch === 'x64') {
-      // change architecture to x86 because zulu only provides x86 architecture.
-      this.arch = 'x86';
-    }
   }
 
   protected async findPackageForDownload(
     version: semver.Range
   ): Promise<JavaDownloadRelease> {
-    const resolvedFullVersion = await this.getAvailableVersion(version);
+    const availableVersions = await this.getAvailableVersions();
 
-    // TO-DO: double check all urls and parameters
-    const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
-    const availableZuluRelease = (
-      await this.http.getJson<IZuluVersionsDetailed>(availableZuluReleaseUrl)
-    ).result;
+    const zuluVersions = availableVersions.map(item => {
+      return {
+        resolvedVersion: semver.coerce(item.jdk_version.join('.')) ?? '',
+        link: item.url
+      } as JavaDownloadRelease;
+    });
 
-    if (!availableZuluRelease) {
+    // TO-DO: need to sort by Zulu version after sorting by JDK version?
+    const maxSatisfiedVersion = semver.maxSatisfying(
+      zuluVersions.map(item => item.resolvedVersion),
+      version
+    );
+    const resolvedVersion = zuluVersions.find(
+      item => item.resolvedVersion === maxSatisfiedVersion
+    );
+    if (!resolvedVersion) {
+      const availableOptions = zuluVersions
+        ?.map(item => item.resolvedVersion)
+        .join(', ');
+      const availableOptionsMessage = availableOptions
+        ? `\nAvailable versions: ${availableOptions}`
+        : '';
       throw new Error(
-        `No Zulu packages were found for version ${resolvedFullVersion}`
+        `Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`
       );
     }
 
-    return {
-      link: availableZuluRelease.url,
-      resolvedVersion: resolvedFullVersion
-    };
+    return resolvedVersion;
   }
 
   protected async downloadTool(
@@ -73,35 +77,81 @@ export class ZuluDistributor extends JavaBase {
       archivePath,
       this.toolcacheFolderName,
       javaRelease.resolvedVersion,
-      this.arch
+      this.architecture
     );
 
     return { javaPath, javaVersion: javaRelease.resolvedVersion };
   }
 
-  private async getAvailableVersion(range: semver.Range): Promise<string> {
-    const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
-    const availableVersionsList = (
+  private async getAvailableVersions(): Promise<IZuluVersions[]> {
+    const { arch, hw_bitness, abi } = this.getArchitectureOptions();
+    const [bundleType, features] = this.javaPackage.split('+');
+    const platform = this.getPlatformOption();
+    const extension = IS_WINDOWS ? 'zip' : 'tar.gz';
+
+    // TO-DO: Remove after updating README
+    // java-package field supports features for Azul
+    // if you specify 'jdk+fx', 'fx' will be passed to features
+    // any number of features can be specified with comma
+
+    // TO-DO: Consider adding '&jdk_version=11' argument to speed up request
+
+    const requestArguments = [
+      `os=${platform}`,
+      `ext=${extension}`,
+      `bundle_type=${bundleType}`,
+      `arch=${arch}`,
+      `hw_bitness=${hw_bitness}`,
+      abi ? `abi=${abi}` : null,
+      features ? `features=${features}` : null
+    ]
+      .filter(Boolean)
+      .join('&');
+
+    const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
+    const availableVersions = (
       await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)
     ).result;
 
-    if (!availableVersionsList || availableVersionsList.length === 0) {
+    if (!availableVersions || availableVersions.length === 0) {
       throw new Error(
-        `No versions were found for arch '${this.arch}' and platform '${this.platform}'`
+        `No versions were found using url '${availableVersionsUrl}'`
       );
     }
 
-    const zuluVersions = availableVersionsList
-      .map(item => semver.coerce(item.jdk_version.join('.')))
-      .filter((item): item is semver.SemVer => !!item);
-    const resolvedVersion = semver.maxSatisfying(zuluVersions, range);
+    return availableVersions;
+  }
 
-    if (!resolvedVersion) {
-      throw new Error(
-        `Could not find satisfied version for semver ${range.raw}`
-      );
+  private getArchitectureOptions(): {
+    arch: string;
+    hw_bitness: string;
+    abi: string;
+  } {
+    if (this.architecture == 'x64') {
+      return { arch: 'x86', hw_bitness: '64', abi: '' };
+    } else if (this.architecture == 'x86') {
+      return { arch: 'x86', hw_bitness: '32', abi: '' };
+    } else {
+      // TO-DO: Remove after updating README
+      // support for custom architectures
+      // on Hosted images we have only x64 and x86, we should always specify arch as x86 and hw_bitness depends on arch
+      // on Self-Hosted, there are additional architectures and it is characterized by a few fields: arch, hw_bitness, abi
+      // allow customer to specify every parameter by providing arch in format: '<arch>+<hw_bitness>+<abi>'
+      // examples: 'x86+32+hard_float', 'arm+64+soft_float'
+      const [arch, hw_bitness, abi] = this.architecture.split('+');
+      return { arch, hw_bitness, abi };
     }
+  }
 
-    return resolvedVersion.raw;
+  private getPlatformOption(): string {
+    // Azul has own platform names so need to map them
+    switch (process.platform) {
+      case 'darwin':
+        return 'macos';
+      case 'win32':
+        return 'windows';
+      default:
+        return process.platform;
+    }
   }
 }
