@@ -3157,13 +3157,16 @@ exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function extractJdkFile(toolPath, extension) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!extension) {
-            extension = toolPath.endsWith('.tar.gz') ? '.tar.gz' : path_1.default.extname(toolPath);
+            extension = toolPath.endsWith('.tar.gz') ? 'tar.gz' : path_1.default.extname(toolPath);
+            if (extension.startsWith('.')) {
+                extension = extension.substring(1);
+            }
         }
         switch (extension) {
-            case '.tar.gz':
-            case '.tar':
+            case 'tar.gz':
+            case 'tar':
                 return yield tc.extractTar(toolPath);
-            case '.zip':
+            case 'zip':
                 return yield tc.extractZip(toolPath);
             default:
                 return yield tc.extract7z(toolPath);

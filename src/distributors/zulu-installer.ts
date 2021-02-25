@@ -154,9 +154,9 @@ export class ZuluDistributor extends JavaBase {
   }
 
   private getDownloadArchiveExtension() {
-    let extension = '.tar.gz';
+    let extension = 'tar.gz';
     if (IS_WINDOWS) {
-      extension = '.zip';
+      extension = 'zip';
     }
 
     return extension;

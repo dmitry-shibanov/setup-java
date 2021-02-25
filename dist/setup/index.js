@@ -13413,9 +13413,9 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
         }
     }
     getDownloadArchiveExtension() {
-        let extension = '.tar.gz';
+        let extension = 'tar.gz';
         if (util_1.IS_WINDOWS) {
-            extension = '.zip';
+            extension = 'zip';
         }
         return extension;
     }
@@ -13488,13 +13488,16 @@ exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function extractJdkFile(toolPath, extension) {
     return __awaiter(this, void 0, void 0, function* () {
         if (!extension) {
-            extension = toolPath.endsWith('.tar.gz') ? '.tar.gz' : path_1.default.extname(toolPath);
+            extension = toolPath.endsWith('.tar.gz') ? 'tar.gz' : path_1.default.extname(toolPath);
+            if (extension.startsWith('.')) {
+                extension = extension.substring(1);
+            }
         }
         switch (extension) {
-            case '.tar.gz':
-            case '.tar':
+            case 'tar.gz':
+            case 'tar':
                 return yield tc.extractTar(toolPath);
-            case '.zip':
+            case 'zip':
                 return yield tc.extractZip(toolPath);
             default:
                 return yield tc.extract7z(toolPath);
@@ -14418,6 +14421,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.LocalDistributor = void 0;
 const tc = __importStar(__webpack_require__(139));
+const core = __importStar(__webpack_require__(470));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const util_1 = __webpack_require__(322);
@@ -14439,6 +14443,7 @@ class LocalDistributor extends base_installer_1.JavaBase {
                 if (!stats.isFile()) {
                     throw new Error(`JDK file is not found in path '${jdkFilePath}'`);
                 }
+                core.info(`Extracting Java from '${jdkFilePath}'`);
                 const extractedJavaPath = yield util_1.extractJdkFile(jdkFilePath);
                 const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
                 const archivePath = path_1.default.join(extractedJavaPath, archiveName);
@@ -14452,6 +14457,7 @@ class LocalDistributor extends base_installer_1.JavaBase {
                     javaVersion
                 };
             }
+            core.info(`Setting Java ${foundJava.javaVersion} as default`);
             this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
             return foundJava;
         });
@@ -38883,9 +38889,9 @@ class ZuluDistributor extends base_installer_1.JavaBase {
         }
     }
     getDownloadArchiveExtension() {
-        let extension = '.tar.gz';
+        let extension = 'tar.gz';
         if (util_1.IS_WINDOWS) {
-            extension = '.zip';
+            extension = 'zip';
         }
         return extension;
     }

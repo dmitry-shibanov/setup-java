@@ -1,4 +1,5 @@
 import * as tc from '@actions/tool-cache';
+import * as core from '@actions/core';
 
 import fs from 'fs';
 import path from 'path';
@@ -27,6 +28,8 @@ export class LocalDistributor extends JavaBase {
         throw new Error(`JDK file is not found in path '${jdkFilePath}'`);
       }
 
+      core.info(`Extracting Java from '${jdkFilePath}'`);
+
       const extractedJavaPath = await extractJdkFile(jdkFilePath);
       const archiveName = fs.readdirSync(extractedJavaPath)[0];
       const archivePath = path.join(extractedJavaPath, archiveName);
@@ -48,6 +51,7 @@ export class LocalDistributor extends JavaBase {
         javaVersion
       };
     }
+    core.info(`Setting Java ${foundJava.javaVersion} as default`);
 
     this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
     return foundJava;
