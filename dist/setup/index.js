@@ -38792,8 +38792,8 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            core.info('started caching');
-            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion.trim(), this.architecture);
+            core.info(`started caching ${typeof javaRelease.resolvedVersion} javaRelease.resolvedVersion is ${javaRelease.resolvedVersion}`);
+            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, `${javaRelease.resolvedVersion}`, this.architecture);
             core.info('failed caching');
             return { javaPath, javaVersion: javaRelease.resolvedVersion };
         });
