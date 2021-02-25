@@ -9,7 +9,7 @@ import { JavaBase } from './base-installer';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from './base-models';
 
 export class LocalDistributor extends JavaBase {
-  constructor(installerOptions: JavaInstallerOptions, private jdkFile: string) {
+  constructor(installerOptions: JavaInstallerOptions, private jdkFile?: string) {
     super('LocalJDKFile', installerOptions);
   }
 
@@ -17,24 +17,32 @@ export class LocalDistributor extends JavaBase {
     let foundJava = this.findInToolcache();
 
     if (!foundJava) {
-      const jdkFilePath = path.normalize(this.jdkFile);
-      const stats = fs.statSync(jdkFilePath);
-      if (stats.isFile()) {
-        throw new Error(`Jdk argument ${this.jdkFile} is not a file`);
+      if (!this.jdkFile) {
+        throw new Error("'jdkFile' is not specified");
       }
+      const jdkFilePath = path.resolve(this.jdkFile);
+      const stats = fs.statSync(jdkFilePath);
+
+      if (!stats.isFile()) {
+        throw new Error(`JDK file is not found in path '${jdkFilePath}'`);
+      }
+
       const extractedJavaPath = await extractJdkFile(jdkFilePath);
       const archiveName = fs.readdirSync(extractedJavaPath)[0];
       const archivePath = path.join(extractedJavaPath, archiveName);
       const javaVersion = this.version.raw;
+
       let javaPath = await tc.cacheDir(
         archivePath,
         this.toolcacheFolderName,
         javaVersion,
         this.architecture
       );
+
       if (process.platform === 'darwin') {
         javaPath = path.join(javaPath, macOSJavaContentDir);
       }
+
       foundJava = {
         javaPath,
         javaVersion

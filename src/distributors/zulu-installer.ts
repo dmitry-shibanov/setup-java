@@ -13,8 +13,8 @@ import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from 
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 
 export class ZuluDistributor extends JavaBase {
-  constructor(initOptions: JavaInstallerOptions) {
-    super('Zulu', initOptions);
+  constructor(installerOptions: JavaInstallerOptions) {
+    super('Zulu', installerOptions);
   }
 
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
@@ -55,10 +55,7 @@ export class ZuluDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    let extension = '.tar.gz';
-    if (IS_WINDOWS) {
-      extension = '.zip';
-    }
+    let extension = this.getDownloadArchiveExtension();
 
     extractedJavaPath = await extractJdkFile(javaArchivePath, extension);
 
@@ -78,7 +75,7 @@ export class ZuluDistributor extends JavaBase {
     const { arch, hw_bitness, abi } = this.getArchitectureOptions();
     const [bundleType, features] = this.javaPackage.split('+');
     const platform = this.getPlatformOption();
-    const extension = IS_WINDOWS ? 'zip' : 'tar.gz';
+    const extension = this.getDownloadArchiveExtension();
     const javafx = features?.includes('fx') ?? false;
 
     // TO-DO: Remove after updating README
@@ -154,5 +151,14 @@ export class ZuluDistributor extends JavaBase {
       default:
         return process.platform;
     }
+  }
+
+  private getDownloadArchiveExtension() {
+    let extension = '.tar.gz';
+    if (IS_WINDOWS) {
+      extension = '.zip';
+    }
+
+    return extension;
   }
 }

@@ -10460,17 +10460,14 @@ var JavaDistributor;
     JavaDistributor["AdoptOpenJdk"] = "adoptOpenJdk";
     JavaDistributor["Zulu"] = "zulu";
 })(JavaDistributor || (JavaDistributor = {}));
-function getJavaDistributor(distributorName, initOptions, jdkFile) {
+function getJavaDistributor(distributorName, installerOptions, jdkFile) {
     switch (distributorName) {
         case 'jdkFile':
-            if (!jdkFile) {
-                throw new Error('jdkfile is not specified');
-            }
-            return new local_installer_1.LocalDistributor(initOptions, jdkFile);
+            return new local_installer_1.LocalDistributor(installerOptions, jdkFile);
         case JavaDistributor.AdoptOpenJdk:
-            return new adoptopenjdk_installer_1.AdoptOpenJDKDistributor(initOptions);
+            return new adoptopenjdk_installer_1.AdoptOpenJDKDistributor(installerOptions);
         case JavaDistributor.Zulu:
-            return new zulu_installer_1.ZuluDistributor(initOptions);
+            return new zulu_installer_1.ZuluDistributor(installerOptions);
         default:
             return null;
     }
@@ -13342,10 +13339,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            let extension = '.tar.gz';
-            if (util_1.IS_WINDOWS) {
-                extension = 'zip';
-            }
+            let extension = this.getDownloadArchiveExtension();
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
@@ -13418,6 +13412,13 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
                 return process.platform;
         }
     }
+    getDownloadArchiveExtension() {
+        let extension = '.tar.gz';
+        if (util_1.IS_WINDOWS) {
+            extension = '.zip';
+        }
+        return extension;
+    }
 }
 exports.AdoptOpenJDKDistributor = AdoptOpenJDKDistributor;
 
@@ -13486,7 +13487,9 @@ function getVersionFromToolcachePath(toolPath) {
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function extractJdkFile(toolPath, extension) {
     return __awaiter(this, void 0, void 0, function* () {
-        extension = (extension !== null && extension !== void 0 ? extension : toolPath.endsWith('.tar.gz')) ? '.tar.gz' : path_1.default.extname(toolPath);
+        if (!extension) {
+            extension = toolPath.endsWith('.tar.gz') ? '.tar.gz' : path_1.default.extname(toolPath);
+        }
         switch (extension) {
             case '.tar.gz':
             case '.tar':
@@ -14428,10 +14431,13 @@ class LocalDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             let foundJava = this.findInToolcache();
             if (!foundJava) {
-                const jdkFilePath = path_1.default.normalize(this.jdkFile);
+                if (!this.jdkFile) {
+                    throw new Error("'jdkFile' is not specified");
+                }
+                const jdkFilePath = path_1.default.resolve(this.jdkFile);
                 const stats = fs_1.default.statSync(jdkFilePath);
-                if (stats.isFile()) {
-                    throw new Error(`Jdk argument ${this.jdkFile} is not a file`);
+                if (!stats.isFile()) {
+                    throw new Error(`JDK file is not found in path '${jdkFilePath}'`);
                 }
                 const extractedJavaPath = yield util_1.extractJdkFile(jdkFilePath);
                 const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
@@ -33243,12 +33249,12 @@ function run() {
                 required: false
             });
             // TO-DO: add support of local file (jdkFile)
-            const initOptions = {
+            const installerOptions = {
                 arch,
                 javaPackage,
                 version
             };
-            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions, jdkFile);
+            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, installerOptions, jdkFile);
             if (!distributor) {
                 throw new Error(`No supported distributor was found for input ${javaDistributor}`);
             }
@@ -38762,8 +38768,8 @@ const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 class ZuluDistributor extends base_installer_1.JavaBase {
-    constructor(initOptions) {
-        super('Zulu', initOptions);
+    constructor(installerOptions) {
+        super('Zulu', installerOptions);
     }
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -38794,10 +38800,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            let extension = '.tar.gz';
-            if (util_1.IS_WINDOWS) {
-                extension = '.zip';
-            }
+            let extension = this.getDownloadArchiveExtension();
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
@@ -38811,7 +38814,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const { arch, hw_bitness, abi } = this.getArchitectureOptions();
             const [bundleType, features] = this.javaPackage.split('+');
             const platform = this.getPlatformOption();
-            const extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
+            const extension = this.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
             // TO-DO: Remove after updating README
             // java-package field supports features for Azul
@@ -38878,6 +38881,13 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             default:
                 return process.platform;
         }
+    }
+    getDownloadArchiveExtension() {
+        let extension = '.tar.gz';
+        if (util_1.IS_WINDOWS) {
+            extension = '.zip';
+        }
+        return extension;
     }
 }
 exports.ZuluDistributor = ZuluDistributor;

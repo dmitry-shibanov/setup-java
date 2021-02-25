@@ -56,10 +56,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    let extension = '.tar.gz';
-    if (IS_WINDOWS) {
-      extension = 'zip';
-    }
+    let extension = this.getDownloadArchiveExtension();
 
     extractedJavaPath = await extractJdkFile(javaArchivePath, extension);
 
@@ -147,5 +144,14 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       default:
         return process.platform;
     }
+  }
+
+  private getDownloadArchiveExtension() {
+    let extension = '.tar.gz';
+    if (IS_WINDOWS) {
+      extension = '.zip';
+    }
+
+    return extension;
   }
 }
