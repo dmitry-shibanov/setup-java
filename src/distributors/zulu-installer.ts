@@ -7,7 +7,7 @@ import semver from 'semver';
 
 import { JavaBase } from './base-installer';
 import { IZuluVersions } from './zulu-models';
-import { IS_WINDOWS } from '../util';
+import { extractJdkFile, IS_WINDOWS } from '../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from './base-models';
 
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
@@ -55,18 +55,19 @@ export class ZuluDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
+    let extension = '.tar.gz';
     if (IS_WINDOWS) {
-      extractedJavaPath = await tc.extractZip(javaArchivePath);
-    } else {
-      extractedJavaPath = await tc.extractTar(javaArchivePath);
+      extension = '.zip';
     }
+
+    extractedJavaPath = await extractJdkFile(javaArchivePath, extension);
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
     const javaPath = await tc.cacheDir(
       archivePath,
       this.toolcacheFolderName,
-      `${javaRelease.resolvedVersion}`,
+      javaRelease.resolvedVersion,
       this.architecture
     );
 

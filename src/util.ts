@@ -25,10 +25,8 @@ export function getVersionFromToolcachePath(toolPath: string) {
   return toolPath;
 }
 
-export async function setupFromJdkFile(toolPath: string, extension?: string) {
-  extension ??= toolPath.endsWith('.tar.gz')
-    ? '.tar.gz'
-    : path.extname(toolPath);
+export async function extractJdkFile(toolPath: string, extension?: string) {
+  extension = extension ?? toolPath.endsWith('.tar.gz') ? '.tar.gz' : path.extname(toolPath);
 
   switch (extension) {
     case '.tar.gz':

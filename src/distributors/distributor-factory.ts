@@ -17,7 +17,7 @@ export function getJavaDistributor(
 ): JavaBase | null {
   switch (distributorName) {
     case 'jdkFile':
-      if(!jdkFile){
+      if (!jdkFile) {
         throw new Error('jdkfile is not specified');
       }
       return new LocalDistributor(initOptions, jdkFile);

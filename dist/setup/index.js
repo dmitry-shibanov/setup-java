@@ -10460,10 +10460,13 @@ var JavaDistributor;
     JavaDistributor["AdoptOpenJdk"] = "adoptOpenJdk";
     JavaDistributor["Zulu"] = "zulu";
 })(JavaDistributor || (JavaDistributor = {}));
-function getJavaDistributor(distributorName, initOptions) {
+function getJavaDistributor(distributorName, initOptions, jdkFile) {
     switch (distributorName) {
         case 'jdkFile':
-            return new local_installer_1.LocalDistributor(initOptions);
+            if (!jdkFile) {
+                throw new Error('jdkfile is not specified');
+            }
+            return new local_installer_1.LocalDistributor(initOptions, jdkFile);
         case JavaDistributor.AdoptOpenJdk:
             return new adoptopenjdk_installer_1.AdoptOpenJDKDistributor(initOptions);
         case JavaDistributor.Zulu:
@@ -13339,12 +13342,11 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
+            let extension = '.tar.gz';
             if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
+                extension = 'zip';
             }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
+            extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.architecture);
@@ -13461,10 +13463,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupFromJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
-const fs_1 = __importDefault(__webpack_require__(747));
 const tc = __importStar(__webpack_require__(139));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
@@ -13483,31 +13484,21 @@ function getVersionFromToolcachePath(toolPath) {
     return toolPath;
 }
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
-function setupFromJdkFile(toolPath) {
+function extractJdkFile(toolPath, extension) {
     return __awaiter(this, void 0, void 0, function* () {
-        let extension = toolPath.endsWith('.tar.gz')
-            ? '.tar.gz'
-            : path_1.default.extname(toolPath);
-        if (!extension) {
-            const archiveName = fs_1.default.readdirSync(toolPath)[0];
-            extension = path_1.default.extname(archiveName);
-        }
-        let extractedJavaPath;
+        extension = (extension !== null && extension !== void 0 ? extension : toolPath.endsWith('.tar.gz')) ? '.tar.gz' : path_1.default.extname(toolPath);
         switch (extension) {
             case '.tar.gz':
             case '.tar':
-                extractedJavaPath = yield tc.extractTar(toolPath);
-                break;
+                return yield tc.extractTar(toolPath);
             case '.zip':
-                extractedJavaPath = yield tc.extractZip(toolPath);
-                break;
+                return yield tc.extractZip(toolPath);
             default:
-                extractedJavaPath = yield tc.extract7z(toolPath);
+                return yield tc.extract7z(toolPath);
         }
-        return extractedJavaPath;
     });
 }
-exports.setupFromJdkFile = setupFromJdkFile;
+exports.extractJdkFile = extractJdkFile;
 
 
 /***/ }),
@@ -14429,9 +14420,35 @@ const path_1 = __importDefault(__webpack_require__(622));
 const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
 class LocalDistributor extends base_installer_1.JavaBase {
-    constructor(installerOptions) {
-        super('local_distributor', installerOptions);
-        this.jdkFile = installerOptions.jdkFile;
+    constructor(installerOptions, jdkFile) {
+        super('LocalJDKFile', installerOptions);
+        this.jdkFile = jdkFile;
+    }
+    setupJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let foundJava = this.findInToolcache();
+            if (!foundJava) {
+                const jdkFilePath = path_1.default.normalize(this.jdkFile);
+                const stats = fs_1.default.statSync(jdkFilePath);
+                if (stats.isFile()) {
+                    throw new Error(`Jdk argument ${this.jdkFile} is not a file`);
+                }
+                const extractedJavaPath = yield util_1.extractJdkFile(jdkFilePath);
+                const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
+                const archivePath = path_1.default.join(extractedJavaPath, archiveName);
+                const javaVersion = this.version.raw;
+                let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaVersion, this.architecture);
+                if (process.platform === 'darwin') {
+                    javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                }
+                foundJava = {
+                    javaPath,
+                    javaVersion
+                };
+            }
+            this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
+            return foundJava;
+        });
     }
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -14441,27 +14458,6 @@ class LocalDistributor extends base_installer_1.JavaBase {
     downloadTool(javaRelease) {
         return __awaiter(this, void 0, void 0, function* () {
             throw new Error('Should not be implemented');
-        });
-    }
-    setupJava() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const resolvedVersion = this.version.raw;
-            const jdkFilePath = path_1.default.normalize(this.jdkFile);
-            const stats = fs_1.default.statSync(jdkFilePath);
-            if (stats.isFile()) {
-                const extractedJavaPath = yield util_1.setupFromJdkFile(jdkFilePath);
-                const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
-                const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-                let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, resolvedVersion, this.architecture);
-                if (process.platform === 'darwin') {
-                    javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
-                }
-                this.setJavaDefault(javaPath, resolvedVersion);
-                return { javaPath, javaVersion: resolvedVersion };
-            }
-            else {
-                throw new Error(`Jdk argument ${this.jdkFile} is not a file`);
-            }
         });
     }
 }
@@ -33250,10 +33246,9 @@ function run() {
             const initOptions = {
                 arch,
                 javaPackage,
-                version,
-                jdkFile
+                version
             };
-            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions);
+            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions, jdkFile);
             if (!distributor) {
                 throw new Error(`No supported distributor was found for input ${javaDistributor}`);
             }
@@ -38799,12 +38794,11 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link}...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
+            let extension = '.tar.gz';
             if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
+                extension = '.zip';
             }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
+            extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.architecture);

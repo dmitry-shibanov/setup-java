@@ -3133,10 +3133,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.setupFromJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
-const fs_1 = __importDefault(__webpack_require__(747));
 const tc = __importStar(__webpack_require__(533));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
@@ -3155,31 +3154,21 @@ function getVersionFromToolcachePath(toolPath) {
     return toolPath;
 }
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
-function setupFromJdkFile(toolPath) {
+function extractJdkFile(toolPath, extension) {
     return __awaiter(this, void 0, void 0, function* () {
-        let extension = toolPath.endsWith('.tar.gz')
-            ? '.tar.gz'
-            : path_1.default.extname(toolPath);
-        if (!extension) {
-            const archiveName = fs_1.default.readdirSync(toolPath)[0];
-            extension = path_1.default.extname(archiveName);
-        }
-        let extractedJavaPath;
+        extension = (extension !== null && extension !== void 0 ? extension : toolPath.endsWith('.tar.gz')) ? '.tar.gz' : path_1.default.extname(toolPath);
         switch (extension) {
             case '.tar.gz':
             case '.tar':
-                extractedJavaPath = yield tc.extractTar(toolPath);
-                break;
+                return yield tc.extractTar(toolPath);
             case '.zip':
-                extractedJavaPath = yield tc.extractZip(toolPath);
-                break;
+                return yield tc.extractZip(toolPath);
             default:
-                extractedJavaPath = yield tc.extract7z(toolPath);
+                return yield tc.extract7z(toolPath);
         }
-        return extractedJavaPath;
     });
 }
-exports.setupFromJdkFile = setupFromJdkFile;
+exports.extractJdkFile = extractJdkFile;
 
 
 /***/ }),
