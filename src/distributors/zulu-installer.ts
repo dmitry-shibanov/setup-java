@@ -73,18 +73,12 @@ export class ZuluDistributor extends JavaBase {
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
-    core.info(
-      `started caching ${typeof javaRelease.resolvedVersion} javaRelease.resolvedVersion is ${
-        javaRelease.resolvedVersion
-      }`
-    );
     const javaPath = await tc.cacheDir(
       archivePath,
       this.toolcacheFolderName,
       `${javaRelease.resolvedVersion}`,
       this.architecture
     );
-    core.info('failed caching');
 
     return { javaPath, javaVersion: javaRelease.resolvedVersion };
   }

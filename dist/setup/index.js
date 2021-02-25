@@ -13452,7 +13452,6 @@ const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const fs_1 = __importDefault(__webpack_require__(747));
 const tc = __importStar(__webpack_require__(139));
-const core = __importStar(__webpack_require__(470));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
 exports.IS_MACOS = process.platform === 'darwin';
@@ -13472,7 +13471,6 @@ function getVersionFromToolcachePath(toolPath) {
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
 function setupFromJdkFile(toolPath) {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`toolPath is ${toolPath}`);
         let extension = toolPath.endsWith('.tar.gz')
             ? '.tar.gz'
             : path_1.default.extname(toolPath);
@@ -13480,20 +13478,16 @@ function setupFromJdkFile(toolPath) {
             const archiveName = fs_1.default.readdirSync(toolPath)[0];
             extension = path_1.default.extname(archiveName);
         }
-        core.info(`extension is ${extension}`);
         let extractedJavaPath;
         switch (extension) {
             case '.tar.gz':
             case '.tar':
-                core.info('came to tar');
                 extractedJavaPath = yield tc.extractTar(toolPath);
                 break;
             case '.zip':
-                core.info('came to zip');
                 extractedJavaPath = yield tc.extractZip(toolPath);
                 break;
             default:
-                core.info('came to default');
                 extractedJavaPath = yield tc.extract7z(toolPath);
         }
         return extractedJavaPath;
@@ -14438,15 +14432,22 @@ class LocalDistributor extends base_installer_1.JavaBase {
     setupJava() {
         return __awaiter(this, void 0, void 0, function* () {
             const resolvedVersion = this.version.raw;
-            const extractedJavaPath = yield util_1.setupFromJdkFile(this.jdkFile);
-            const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
-            const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, resolvedVersion, this.architecture);
-            if (process.platform === 'darwin') {
-                javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+            const jdkFilePath = path_1.default.normalize(this.jdkFile);
+            const stats = fs_1.default.statSync(jdkFilePath);
+            if (stats.isFile()) {
+                const extractedJavaPath = yield util_1.setupFromJdkFile(jdkFilePath);
+                const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
+                const archivePath = path_1.default.join(extractedJavaPath, archiveName);
+                let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, resolvedVersion, this.architecture);
+                if (process.platform === 'darwin') {
+                    javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                }
+                this.setJavaDefault(javaPath, resolvedVersion);
+                return { javaPath, javaVersion: resolvedVersion };
             }
-            this.setJavaDefault(javaPath, resolvedVersion);
-            return { javaPath, javaVersion: resolvedVersion };
+            else {
+                throw new Error(`Jdk argument ${this.jdkFile} is not a file`);
+            }
         });
     }
 }
@@ -38792,9 +38793,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            core.info(`started caching ${typeof javaRelease.resolvedVersion} javaRelease.resolvedVersion is ${javaRelease.resolvedVersion}`);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, `${javaRelease.resolvedVersion}`, this.architecture);
-            core.info('failed caching');
             return { javaPath, javaVersion: javaRelease.resolvedVersion };
         });
     }

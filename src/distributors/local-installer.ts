@@ -33,22 +33,28 @@ export class LocalDistributor extends JavaBase {
 
   public async setupJava(): Promise<JavaInstallerResults> {
     const resolvedVersion = this.version.raw;
-    const extractedJavaPath = await setupFromJdkFile(this.jdkFile);
-    const archiveName = fs.readdirSync(extractedJavaPath)[0];
-    const archivePath = path.join(extractedJavaPath, archiveName);
-    let javaPath = await tc.cacheDir(
-      archivePath,
-      this.toolcacheFolderName,
-      resolvedVersion,
-      this.architecture
-    );
+    const jdkFilePath = path.normalize(this.jdkFile);
+    const stats = fs.statSync(jdkFilePath);
+    if (stats.isFile()) {
+      const extractedJavaPath = await setupFromJdkFile(jdkFilePath);
+      const archiveName = fs.readdirSync(extractedJavaPath)[0];
+      const archivePath = path.join(extractedJavaPath, archiveName);
+      let javaPath = await tc.cacheDir(
+        archivePath,
+        this.toolcacheFolderName,
+        resolvedVersion,
+        this.architecture
+      );
 
-    if (process.platform === 'darwin') {
-      javaPath = path.join(javaPath, macOSJavaContentDir);
+      if (process.platform === 'darwin') {
+        javaPath = path.join(javaPath, macOSJavaContentDir);
+      }
+
+      this.setJavaDefault(javaPath, resolvedVersion);
+
+      return { javaPath, javaVersion: resolvedVersion };
+    } else {
+      throw new Error(`Jdk argument ${this.jdkFile} is not a file`);
     }
-
-    this.setJavaDefault(javaPath, resolvedVersion);
-
-    return { javaPath, javaVersion: resolvedVersion };
   }
 }
