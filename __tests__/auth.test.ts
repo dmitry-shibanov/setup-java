@@ -62,9 +62,7 @@ describe('auth tests', () => {
 
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);
-    expect(fs.readFileSync(settingsFile, 'utf-8')).toEqual(
-      auth.generate(id, username, password)
-    );
+    expect(fs.readFileSync(settingsFile, 'utf-8')).toEqual(auth.generate(id, username, password));
   }, 100000);
 
   it('creates settings.xml with additional configuration', async () => {
@@ -96,9 +94,7 @@ describe('auth tests', () => {
 
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);
-    expect(fs.readFileSync(settingsFile, 'utf-8')).toEqual(
-      auth.generate(id, username, password)
-    );
+    expect(fs.readFileSync(settingsFile, 'utf-8')).toEqual(auth.generate(id, username, password));
   }, 100000);
 
   it('generates valid settings.xml with minimal configuration', () => {
@@ -143,8 +139,6 @@ describe('auth tests', () => {
   </servers>
 </settings>`;
 
-    expect(auth.generate(id, username, password, gpgPassphrase)).toEqual(
-      expectedSettings
-    );
+    expect(auth.generate(id, username, password, gpgPassphrase)).toEqual(expectedSettings);
   });
 });

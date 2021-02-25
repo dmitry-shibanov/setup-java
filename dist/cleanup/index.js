@@ -1762,13 +1762,7 @@ function importKey(privateKey) {
                 }
             }
         };
-        yield exec.exec('gpg', [
-            '--batch',
-            '--import-options',
-            'import-show',
-            '--import',
-            exports.PRIVATE_KEY_FILE
-        ], options);
+        yield exec.exec('gpg', ['--batch', '--import-options', 'import-show', '--import', exports.PRIVATE_KEY_FILE], options);
         yield io.rmRF(exports.PRIVATE_KEY_FILE);
         const match = output.match(PRIVATE_KEY_FINGERPRINT_REGEX);
         return match && match[0];
@@ -1777,7 +1771,9 @@ function importKey(privateKey) {
 exports.importKey = importKey;
 function deleteKey(keyFingerprint) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield exec.exec('gpg', ['--batch', '--yes', '--delete-secret-keys', keyFingerprint], { silent: true });
+        yield exec.exec('gpg', ['--batch', '--yes', '--delete-secret-keys', keyFingerprint], {
+            silent: true
+        });
         yield exec.exec('gpg', ['--batch', '--yes', '--delete-keys', keyFingerprint], { silent: true });
     });
 }

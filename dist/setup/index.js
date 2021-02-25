@@ -13306,24 +13306,23 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
         super('AdoptOpenJDK', installerOptions);
     }
+    // TO-DO: Validate that all versions are available through API
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
-            const platform = util_1.IS_MACOS ? 'mac' : util_1.PLATFORM;
-            const resolvedMajorVersion = yield this.resolveMajorVersion(version);
-            const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${resolvedMajorVersion}/ga?heap_size=normal&image_type=${this.javaPackage}&page=0&page_size=1000&project=jdk&sort_method=DEFAULT&sort_order=DESC&vendor=adoptopenjdk&jvm_impl=hotspot&architecture=${this.arch}&os=${platform}`;
-            const availableVersionsList = (yield this.http.getJson(availableVersionsUrl)).result;
-            const resolvedFullVersion = availableVersionsList === null || availableVersionsList === void 0 ? void 0 : availableVersionsList.find(item => semver_1.default.satisfies(item.version_data.semver, version));
+            const availableVersions = yield this.getAvailableVersions();
+            const resolvedFullVersion = availableVersions.find(item => semver_1.default.satisfies(item.version_data.semver, version));
             if (!resolvedFullVersion) {
-                const availableOptions = availableVersionsList === null || availableVersionsList === void 0 ? void 0 : availableVersionsList.map(item => item.version_data.semver).join(', ');
+                const availableOptions = availableVersions.map(item => item.version_data.semver).join(', ');
                 const availableOptionsMessage = availableOptions
                     ? `\nAvailable versions: ${availableOptions}`
                     : '';
                 throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
             }
             if (resolvedFullVersion.binaries.length < 0) {
-                throw new Error('No binaries were found');
+                throw new Error(`No binaries were found for semver ${version.raw}`);
             }
-            // Take the first one binary, because all binaries are sorted by DESC
+            // take the first element in 'binaries' array
+            // because it is already filtered by arch and platform options and can't contain > 1 elements
             return {
                 resolvedVersion: resolvedFullVersion.version_data.semver,
                 link: resolvedFullVersion.binaries[0].package.link
@@ -13345,30 +13344,74 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
+            javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.architecture);
             if (process.platform === 'darwin') {
                 javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
             }
             return { javaPath, javaVersion: javaRelease.resolvedVersion };
         });
     }
-    resolveMajorVersion(range) {
-        var _a;
+    getAvailableVersions() {
         return __awaiter(this, void 0, void 0, function* () {
-            const availableMajorVersionsUrl = 'https://api.adoptopenjdk.net/v3/info/available_releases';
-            const availableMajorVersions = (yield this.http.getJson(availableMajorVersionsUrl)).result;
-            if (!availableMajorVersions) {
-                throw new Error(`Unable to get the list of major versions for '${this.distributor}'`);
+            const platform = this.getPlatformOption();
+            const arch = this.architecture;
+            const imageType = this.javaPackage;
+            const heapSize = 'normal';
+            const jvmImpl = 'hotspot';
+            const versionRange = '[1.0,100.0]';
+            const encodedVersionRange = encodeURI(versionRange);
+            console.time('adopt-retrieve-available-versions');
+            const baseRequestArguments = [
+                `os=${platform}`,
+                `architecture=${arch}`,
+                `heap_size=${heapSize}`,
+                `image_type=${imageType}`,
+                `jvm_impl=${jvmImpl}`,
+                `project=jdk`,
+                'vendor=adoptopenjdk',
+                'sort_method=DEFAULT',
+                'sort_order=DESC',
+                'release_type=ga'
+            ].join('&');
+            // need to iterate through all pages to retrieve the list of all versions
+            // Adopt API doesn't provide way to retrieve the count of pages to iterate so infinity loop
+            let page_index = 0;
+            const availableVersions = [];
+            while (true) {
+                const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
+                const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
+                const paginationPage = (yield this.http.getJson(availableVersionsUrl)).result;
+                if (paginationPage === null || paginationPage.length === 0) {
+                    // break infinity loop because we have reached end of pagination
+                    break;
+                }
+                availableVersions.push(...paginationPage);
+                page_index++;
             }
-            const coercedAvailableVersions = availableMajorVersions.available_releases
-                .map(item => semver_1.default.coerce(item))
-                .filter((item) => !!item);
-            const resolvedMajorVersion = (_a = semver_1.default.maxSatisfying(coercedAvailableVersions, range)) === null || _a === void 0 ? void 0 : _a.major;
-            if (!resolvedMajorVersion) {
-                throw new Error(`Could not find satisfied major version for semver ${range}. \nAvailable versions: ${availableMajorVersions.available_releases.join(', ')}`);
-            }
-            return resolvedMajorVersion;
+            // TO-DO: Debug information, should be removed before release
+            core.startGroup('Print debug information about available versions');
+            console.timeEnd('adopt-retrieve-available-versions');
+            console.log(`Available versions: [${availableVersions.length}]`);
+            console.log(availableVersions.map(item => item.version_data.semver).join(', '));
+            core.endGroup();
+            core.startGroup('Print detailed debug information about available versions');
+            availableVersions.forEach(item => {
+                console.log(JSON.stringify(item));
+            });
+            core.endGroup();
+            return availableVersions;
         });
+    }
+    getPlatformOption() {
+        // Adopt has own platform names so need to map them
+        switch (process.platform) {
+            case 'darwin':
+                return 'mac';
+            case 'win32':
+                return 'windows';
+            default:
+                return process.platform;
+        }
     }
 }
 exports.AdoptOpenJDKDistributor = AdoptOpenJDKDistributor;
@@ -22870,7 +22913,7 @@ class JavaBase {
             maxRetries: 3
         });
         this.version = this.normalizeVersion(installerOptions.version);
-        this.arch = installerOptions.arch;
+        this.architecture = installerOptions.arch;
         this.javaPackage = installerOptions.javaPackage;
     }
     setupJava() {
@@ -22894,7 +22937,7 @@ class JavaBase {
         return `Java_${this.distributor}_${this.javaPackage}`;
     }
     findInToolcache() {
-        const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.arch);
+        const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
         if (!javaPath) {
             return null;
         }
@@ -33073,9 +33116,12 @@ function run() {
                 throw new Error(`No supported distributor was found for input ${javaDistributor}`);
             }
             const result = yield distributor.setupJava();
-            core.info(`Java distributor: ${javaDistributor}`);
-            core.info(`Java version: ${result.javaVersion}`);
-            core.info(`Java path: ${result.javaPath}`);
+            core.info('');
+            core.info('Java configuration:');
+            core.info(`  Java distributor: ${javaDistributor}`);
+            core.info(`  Java version: ${result.javaVersion}`);
+            core.info(`  Java path: ${result.javaPath}`);
+            core.info('');
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
             yield configureAuthentication();
@@ -38304,13 +38350,7 @@ function importKey(privateKey) {
                 }
             }
         };
-        yield exec.exec('gpg', [
-            '--batch',
-            '--import-options',
-            'import-show',
-            '--import',
-            exports.PRIVATE_KEY_FILE
-        ], options);
+        yield exec.exec('gpg', ['--batch', '--import-options', 'import-show', '--import', exports.PRIVATE_KEY_FILE], options);
         yield io.rmRF(exports.PRIVATE_KEY_FILE);
         const match = output.match(PRIVATE_KEY_FINGERPRINT_REGEX);
         return match && match[0];
@@ -38319,7 +38359,9 @@ function importKey(privateKey) {
 exports.importKey = importKey;
 function deleteKey(keyFingerprint) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield exec.exec('gpg', ['--batch', '--yes', '--delete-secret-keys', keyFingerprint], { silent: true });
+        yield exec.exec('gpg', ['--batch', '--yes', '--delete-secret-keys', keyFingerprint], {
+            silent: true
+        });
         yield exec.exec('gpg', ['--batch', '--yes', '--delete-keys', keyFingerprint], { silent: true });
     });
 }
@@ -38581,30 +38623,32 @@ const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
 const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
-// TO-DO: validate feature
+// TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 class ZuluDistributor extends base_installer_1.JavaBase {
     constructor(initOptions) {
         super('Zulu', initOptions);
-        this.extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
-        this.platform = util_1.IS_MACOS ? 'macos' : util_1.PLATFORM;
-        if (this.arch === 'x64') {
-            // change architecture to x86 because zulu only provides x86 architecture.
-            this.arch = 'x86';
-        }
     }
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
-            const resolvedFullVersion = yield this.getAvailableVersion(version);
-            // TO-DO: double check all urls and parameters
-            const availableZuluReleaseUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/latest/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64&jdk_version=${resolvedFullVersion}&bundle_type=${this.javaPackage}`;
-            const availableZuluRelease = (yield this.http.getJson(availableZuluReleaseUrl)).result;
-            if (!availableZuluRelease) {
-                throw new Error(`No Zulu packages were found for version ${resolvedFullVersion}`);
+            const availableVersions = yield this.getAvailableVersions();
+            const zuluVersions = availableVersions.map(item => {
+                var _a, _b;
+                return {
+                    resolvedVersion: (_b = (_a = semver_1.default.coerce(item.jdk_version.join('.'))) === null || _a === void 0 ? void 0 : _a.version) !== null && _b !== void 0 ? _b : '',
+                    link: item.url
+                };
+            });
+            // TO-DO: need to sort by Zulu version after sorting by JDK version?
+            const maxSatisfiedVersion = semver_1.default.maxSatisfying(zuluVersions.map(item => item.resolvedVersion), version);
+            const resolvedVersion = zuluVersions.find(item => item.resolvedVersion === maxSatisfiedVersion);
+            if (!resolvedVersion) {
+                const availableOptions = zuluVersions === null || zuluVersions === void 0 ? void 0 : zuluVersions.map(item => item.resolvedVersion).join(', ');
+                const availableOptionsMessage = availableOptions
+                    ? `\nAvailable versions: ${availableOptions}`
+                    : '';
+                throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
             }
-            return {
-                link: availableZuluRelease.url,
-                resolvedVersion: resolvedFullVersion
-            };
+            return resolvedVersion;
         });
     }
     downloadTool(javaRelease) {
@@ -38621,26 +38665,83 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             }
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.arch);
+            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.architecture);
             return { javaPath, javaVersion: javaRelease.resolvedVersion };
         });
     }
-    getAvailableVersion(range) {
+    getAvailableVersions() {
+        var _a;
         return __awaiter(this, void 0, void 0, function* () {
-            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?ext=${this.extension}&os=${this.platform}&arch=${this.arch}&hw_bitness=64`;
-            const availableVersionsList = (yield this.http.getJson(availableVersionsUrl)).result;
-            if (!availableVersionsList || availableVersionsList.length === 0) {
-                throw new Error(`No versions were found for arch '${this.arch}' and platform '${this.platform}'`);
+            const { arch, hw_bitness, abi } = this.getArchitectureOptions();
+            const [bundleType, features] = this.javaPackage.split('+');
+            const platform = this.getPlatformOption();
+            const extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
+            const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
+            // TO-DO: Remove after updating README
+            // java-package field supports features for Azul
+            // if you specify 'jdk+fx', 'fx' will be passed to features
+            // any number of features can be specified with comma
+            console.time('azul-retrieve-available-versions');
+            const requestArguments = [
+                `os=${platform}`,
+                `ext=${extension}`,
+                `bundle_type=${bundleType}`,
+                `javafx=${javafx}`,
+                `arch=${arch}`,
+                `hw_bitness=${hw_bitness}`,
+                abi ? `abi=${abi}` : null,
+                features ? `features=${features}` : null
+            ]
+                .filter(Boolean)
+                .join('&');
+            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
+            const availableVersions = (yield this.http.getJson(availableVersionsUrl))
+                .result;
+            if (!availableVersions || availableVersions.length === 0) {
+                throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
             }
-            const zuluVersions = availableVersionsList
-                .map(item => semver_1.default.coerce(item.jdk_version.join('.')))
-                .filter((item) => !!item);
-            const resolvedVersion = semver_1.default.maxSatisfying(zuluVersions, range);
-            if (!resolvedVersion) {
-                throw new Error(`Could not find satisfied version for semver ${range.raw}`);
-            }
-            return resolvedVersion.raw;
+            // TO-DO: Debug information, should be removed before release
+            core.startGroup('Print debug information about available versions');
+            console.timeEnd('azul-retrieve-available-versions');
+            console.log(`Available versions: [${availableVersions.length}]`);
+            console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+            core.endGroup();
+            core.startGroup('Print detailed debug information about available versions');
+            availableVersions.forEach(item => {
+                console.log(JSON.stringify(item));
+            });
+            core.endGroup();
+            return availableVersions;
         });
+    }
+    getArchitectureOptions() {
+        if (this.architecture == 'x64') {
+            return { arch: 'x86', hw_bitness: '64', abi: '' };
+        }
+        else if (this.architecture == 'x86') {
+            return { arch: 'x86', hw_bitness: '32', abi: '' };
+        }
+        else {
+            // TO-DO: Remove after updating README
+            // support for custom architectures
+            // on Hosted images we have only x64 and x86, we should always specify arch as x86 and hw_bitness depends on arch
+            // on Self-Hosted, there are additional architectures and it is characterized by a few fields: arch, hw_bitness, abi
+            // allow customer to specify every parameter by providing arch in format: '<arch>+<hw_bitness>+<abi>'
+            // examples: 'x86+32+hard_float', 'arm+64+soft_float'
+            const [arch, hw_bitness, abi] = this.architecture.split('+');
+            return { arch, hw_bitness, abi };
+        }
+    }
+    getPlatformOption() {
+        // Azul has own platform names so need to map them
+        switch (process.platform) {
+            case 'darwin':
+                return 'macos';
+            case 'win32':
+                return 'windows';
+            default:
+                return process.platform;
+        }
     }
 }
 exports.ZuluDistributor = ZuluDistributor;

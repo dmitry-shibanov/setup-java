@@ -28,9 +28,7 @@ describe('util tests', () => {
 
       const tempDir = util.getTempDir();
 
-      expect(tempDir).toEqual(
-        path.join(process.env['USERPROFILE'], 'actions', 'temp')
-      );
+      expect(tempDir).toEqual(path.join(process.env['USERPROFILE'], 'actions', 'temp'));
     });
 
     it('gets temp dir for windows using c drive', () => {

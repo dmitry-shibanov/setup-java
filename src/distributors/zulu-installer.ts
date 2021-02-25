@@ -8,25 +8,21 @@ import semver from 'semver';
 import { JavaBase } from './base-installer';
 import { IZuluVersions } from './zulu-models';
 import { IS_WINDOWS } from '../util';
-import {
-  JavaDownloadRelease,
-  JavaInstallerOptions,
-  JavaInstallerResults
-} from './base-models';
+import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from './base-models';
+
+// TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 
 export class ZuluDistributor extends JavaBase {
   constructor(initOptions: JavaInstallerOptions) {
     super('Zulu', initOptions);
   }
 
-  protected async findPackageForDownload(
-    version: semver.Range
-  ): Promise<JavaDownloadRelease> {
+  protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
     const availableVersions = await this.getAvailableVersions();
 
     const zuluVersions = availableVersions.map(item => {
       return {
-        resolvedVersion: semver.coerce(item.jdk_version.join('.')) ?? '',
+        resolvedVersion: semver.coerce(item.jdk_version.join('.'))?.version ?? '',
         link: item.url
       } as JavaDownloadRelease;
     });
@@ -36,13 +32,9 @@ export class ZuluDistributor extends JavaBase {
       zuluVersions.map(item => item.resolvedVersion),
       version
     );
-    const resolvedVersion = zuluVersions.find(
-      item => item.resolvedVersion === maxSatisfiedVersion
-    );
+    const resolvedVersion = zuluVersions.find(item => item.resolvedVersion === maxSatisfiedVersion);
     if (!resolvedVersion) {
-      const availableOptions = zuluVersions
-        ?.map(item => item.resolvedVersion)
-        .join(', ');
+      const availableOptions = zuluVersions?.map(item => item.resolvedVersion).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -54,9 +46,7 @@ export class ZuluDistributor extends JavaBase {
     return resolvedVersion;
   }
 
-  protected async downloadTool(
-    javaRelease: JavaDownloadRelease
-  ): Promise<JavaInstallerResults> {
+  protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
     let extractedJavaPath: string;
 
     core.info(
@@ -88,18 +78,19 @@ export class ZuluDistributor extends JavaBase {
     const [bundleType, features] = this.javaPackage.split('+');
     const platform = this.getPlatformOption();
     const extension = IS_WINDOWS ? 'zip' : 'tar.gz';
+    const javafx = features?.includes('fx') ?? false;
 
     // TO-DO: Remove after updating README
     // java-package field supports features for Azul
     // if you specify 'jdk+fx', 'fx' will be passed to features
     // any number of features can be specified with comma
 
-    // TO-DO: Consider adding '&jdk_version=11' argument to speed up request
-
+    console.time('azul-retrieve-available-versions');
     const requestArguments = [
       `os=${platform}`,
       `ext=${extension}`,
       `bundle_type=${bundleType}`,
+      `javafx=${javafx}`,
       `arch=${arch}`,
       `hw_bitness=${hw_bitness}`,
       abi ? `abi=${abi}` : null,
@@ -109,15 +100,24 @@ export class ZuluDistributor extends JavaBase {
       .join('&');
 
     const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
-    const availableVersions = (
-      await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)
-    ).result;
+    const availableVersions = (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl))
+      .result;
 
     if (!availableVersions || availableVersions.length === 0) {
-      throw new Error(
-        `No versions were found using url '${availableVersionsUrl}'`
-      );
+      throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
     }
+
+    // TO-DO: Debug information, should be removed before release
+    core.startGroup('Print debug information about available versions');
+    console.timeEnd('azul-retrieve-available-versions');
+    console.log(`Available versions: [${availableVersions.length}]`);
+    console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+    core.endGroup();
+    core.startGroup('Print detailed debug information about available versions');
+    availableVersions.forEach(item => {
+      console.log(JSON.stringify(item));
+    });
+    core.endGroup();
 
     return availableVersions;
   }

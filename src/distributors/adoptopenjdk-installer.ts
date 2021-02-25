@@ -7,55 +7,25 @@ import semver from 'semver';
 
 import { IS_WINDOWS, macOSJavaContentDir } from '../util';
 import { JavaBase } from './base-installer';
-import { IRelease, IAdoptAvailableVersions } from './adoptopenjdk-models';
-import {
-  JavaInstallerOptions,
-  JavaDownloadRelease,
-  JavaInstallerResults
-} from './base-models';
+import { IAdoptAvailableVersions } from './adoptopenjdk-models';
+import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from './base-models';
 
 export class AdoptOpenJDKDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
     super('AdoptOpenJDK', installerOptions);
   }
 
-  protected async findPackageForDownload(
-    version: semver.Range
-  ): Promise<JavaDownloadRelease> {
-    const platform = this.getPlatformOption();
-    const arch = this.architecture;
-    const imageType = this.javaPackage;
+  // TO-DO: Validate that all versions are available through API
 
-    const resolvedMajorVersion = await this.resolveMajorVersion(version);
+  protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
+    const availableVersions = await this.getAvailableVersions();
 
-    const requestArguments = [
-      `os=${platform}`,
-      `architecture=${arch}`,
-      `image_type=${imageType}`,
-      'heap_size=normal',
-      'jvm_impl=hotspot',
-      'project=jdk',
-      'vendor=adoptopenjdk',
-      'sort_method=DEFAULT',
-      'sort_order=DESC',
-      'page=0',
-      'page_size=20'
-    ]
-      .filter(Boolean)
-      .join('&');
-
-    const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/feature_releases/${resolvedMajorVersion}/ga?${requestArguments}`;
-    const availableVersionsList = (
-      await this.http.getJson<IRelease[]>(availableVersionsUrl)
-    ).result;
-    const resolvedFullVersion = availableVersionsList?.find(item =>
+    const resolvedFullVersion = availableVersions.find(item =>
       semver.satisfies(item.version_data.semver, version)
     );
 
     if (!resolvedFullVersion) {
-      const availableOptions = availableVersionsList
-        ?.map(item => item.version_data.semver)
-        .join(', ');
+      const availableOptions = availableVersions.map(item => item.version_data.semver).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -76,9 +46,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     };
   }
 
-  protected async downloadTool(
-    javaRelease: JavaDownloadRelease
-  ): Promise<JavaInstallerResults> {
+  protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
     let javaPath: string;
     let extractedJavaPath: string;
 
@@ -110,38 +78,62 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     return { javaPath, javaVersion: javaRelease.resolvedVersion };
   }
 
-  private async resolveMajorVersion(range: semver.Range) {
-    const availableMajorVersionsUrl =
-      'https://api.adoptopenjdk.net/v3/info/available_releases';
-    const availableMajorVersions = (
-      await this.http.getJson<IAdoptAvailableVersions>(
-        availableMajorVersionsUrl
-      )
-    ).result;
+  private async getAvailableVersions(): Promise<IAdoptAvailableVersions[]> {
+    const platform = this.getPlatformOption();
+    const arch = this.architecture;
+    const imageType = this.javaPackage;
+    const heapSize = 'normal';
+    const jvmImpl = 'hotspot';
+    const versionRange = '[1.0,100.0]';
+    const encodedVersionRange = encodeURI(versionRange);
 
-    if (!availableMajorVersions) {
-      throw new Error(
-        `Unable to get the list of major versions for '${this.distributor}'`
-      );
+    console.time('adopt-retrieve-available-versions');
+    const baseRequestArguments = [
+      `os=${platform}`,
+      `architecture=${arch}`,
+      `heap_size=${heapSize}`,
+      `image_type=${imageType}`,
+      `jvm_impl=${jvmImpl}`,
+      `project=jdk`,
+      'vendor=adoptopenjdk',
+      'sort_method=DEFAULT',
+      'sort_order=DESC',
+      'release_type=ga'
+    ].join('&');
+
+    // need to iterate through all pages to retrieve the list of all versions
+    // Adopt API doesn't provide way to retrieve the count of pages to iterate so infinity loop
+    let page_index = 0;
+    const availableVersions: IAdoptAvailableVersions[] = [];
+    while (true) {
+      const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
+      const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
+
+      const paginationPage = (
+        await this.http.getJson<IAdoptAvailableVersions[]>(availableVersionsUrl)
+      ).result;
+      if (paginationPage === null || paginationPage.length === 0) {
+        // break infinity loop because we have reached end of pagination
+        break;
+      }
+
+      availableVersions.push(...paginationPage);
+      page_index++;
     }
 
-    const coercedAvailableVersions = availableMajorVersions.available_releases
-      .map(item => semver.coerce(item))
-      .filter((item): item is semver.SemVer => !!item);
-    const resolvedMajorVersion = semver.maxSatisfying(
-      coercedAvailableVersions,
-      range
-    )?.major;
+    // TO-DO: Debug information, should be removed before release
+    core.startGroup('Print debug information about available versions');
+    console.timeEnd('adopt-retrieve-available-versions');
+    console.log(`Available versions: [${availableVersions.length}]`);
+    console.log(availableVersions.map(item => item.version_data.semver).join(', '));
+    core.endGroup();
+    core.startGroup('Print detailed debug information about available versions');
+    availableVersions.forEach(item => {
+      console.log(JSON.stringify(item));
+    });
+    core.endGroup();
 
-    if (!resolvedMajorVersion) {
-      throw new Error(
-        `Could not find satisfied major version for semver ${range}. \nAvailable versions: ${availableMajorVersions.available_releases.join(
-          ', '
-        )}`
-      );
-    }
-
-    return resolvedMajorVersion;
+    return availableVersions;
   }
 
   private getPlatformOption(): string {

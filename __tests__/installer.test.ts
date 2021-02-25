@@ -15,16 +15,13 @@ let javaFilePath = '';
 let javaUrl = '';
 if (process.platform === 'win32') {
   javaFilePath = path.join(javaDir, 'java_win.zip');
-  javaUrl =
-    'https://download.java.net/java/GA/jdk12/33/GPL/openjdk-12_windows-x64_bin.zip';
+  javaUrl = 'https://download.java.net/java/GA/jdk12/33/GPL/openjdk-12_windows-x64_bin.zip';
 } else if (process.platform === 'darwin') {
   javaFilePath = path.join(javaDir, 'java_mac.tar.gz');
-  javaUrl =
-    'https://download.java.net/java/GA/jdk12/33/GPL/openjdk-12_osx-x64_bin.tar.gz';
+  javaUrl = 'https://download.java.net/java/GA/jdk12/33/GPL/openjdk-12_osx-x64_bin.tar.gz';
 } else {
   javaFilePath = path.join(javaDir, 'java_linux.tar.gz');
-  javaUrl =
-    'https://download.java.net/java/GA/jdk12/33/GPL/openjdk-12_linux-x64_bin.tar.gz';
+  javaUrl = 'https://download.java.net/java/GA/jdk12/33/GPL/openjdk-12_linux-x64_bin.tar.gz';
 }
 
 describe('installer tests', () => {
@@ -134,12 +131,7 @@ describe('installer tests', () => {
     await io.mkdirP(JavaDir);
     fs.writeFileSync(`${JavaDir}.complete`, 'hello');
     // This will throw if it doesn't find it in the cache (because no such version exists)
-    await installer.getJava(
-      '250',
-      'x64',
-      'path shouldnt matter, found in cache',
-      'jdk'
-    );
+    await installer.getJava('250', 'x64', 'path shouldnt matter, found in cache', 'jdk');
     return;
   });
 
