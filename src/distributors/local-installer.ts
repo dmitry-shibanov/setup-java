@@ -17,7 +17,10 @@ export class LocalDistributor extends JavaBase {
   public async setupJava(): Promise<JavaInstallerResults> {
     let foundJava = this.findInToolcache();
 
-    if (!foundJava) {
+    if (foundJava) {
+      core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
+    } else {
+      core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
       if (!this.jdkFile) {
         throw new Error("'jdkFile' is not specified");
       }
@@ -51,6 +54,7 @@ export class LocalDistributor extends JavaBase {
         javaVersion
       };
     }
+
     core.info(`Setting Java ${foundJava.javaVersion} as default`);
 
     this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);

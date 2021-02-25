@@ -14434,7 +14434,11 @@ class LocalDistributor extends base_installer_1.JavaBase {
     setupJava() {
         return __awaiter(this, void 0, void 0, function* () {
             let foundJava = this.findInToolcache();
-            if (!foundJava) {
+            if (foundJava) {
+                core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
+            }
+            else {
+                core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
                 if (!this.jdkFile) {
                     throw new Error("'jdkFile' is not specified");
                 }
