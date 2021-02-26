@@ -1,9 +1,7 @@
 import os from 'os';
 import path from 'path';
-import fs from 'fs';
 
 import * as tc from '@actions/tool-cache';
-import * as core from '@actions/core';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
