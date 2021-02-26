@@ -84,7 +84,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     const jvmImpl = 'hotspot';
     const versionRange = '[1.0,100.0]';
     const encodedVersionRange = encodeURI(versionRange);
-    let releaseType = this.stable ? 'ga' : 'ea';
+    const releaseType = this.stable ? 'ga' : 'ea';
 
     console.time('adopt-retrieve-available-versions');
 

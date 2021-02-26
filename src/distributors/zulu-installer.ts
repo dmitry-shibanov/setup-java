@@ -77,7 +77,7 @@ export class ZuluDistributor extends JavaBase {
     const platform = this.getPlatformOption();
     const extension = getDownloadArchiveExtension();
     const javafx = features?.includes('fx') ?? false;
-    let releaseStatus = this.stable ? 'ga' : 'ea';
+    const releaseStatus = this.stable ? 'ga' : 'ea';
 
     // TO-DO: Remove after updating README
     // java-package field supports features for Azul

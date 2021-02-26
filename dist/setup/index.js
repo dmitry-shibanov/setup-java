@@ -13359,7 +13359,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             const jvmImpl = 'hotspot';
             const versionRange = '[1.0,100.0]';
             const encodedVersionRange = encodeURI(versionRange);
-            let releaseType = this.stable ? 'ga' : 'ea';
+            const releaseType = this.stable ? 'ga' : 'ea';
             console.time('adopt-retrieve-available-versions');
             const baseRequestArguments = [
                 `os=${platform}`,
@@ -38816,7 +38816,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const platform = this.getPlatformOption();
             const extension = util_1.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
-            let releaseStatus = this.stable ? 'ga' : 'ea';
+            const releaseStatus = this.stable ? 'ga' : 'ea';
             // TO-DO: Remove after updating README
             // java-package field supports features for Azul
             // if you specify 'jdk+fx', 'fx' will be passed to features
