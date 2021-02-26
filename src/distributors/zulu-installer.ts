@@ -7,7 +7,7 @@ import semver from 'semver';
 
 import { JavaBase } from './base-installer';
 import { IZuluVersions } from './zulu-models';
-import { extractJdkFile, IS_WINDOWS } from '../util';
+import { extractJdkFile, getDownloadArchiveExtension } from '../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from './base-models';
 
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
@@ -55,7 +55,7 @@ export class ZuluDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    let extension = this.getDownloadArchiveExtension();
+    let extension = getDownloadArchiveExtension();
 
     extractedJavaPath = await extractJdkFile(javaArchivePath, extension);
 
@@ -75,7 +75,7 @@ export class ZuluDistributor extends JavaBase {
     const { arch, hw_bitness, abi } = this.getArchitectureOptions();
     const [bundleType, features] = this.javaPackage.split('+');
     const platform = this.getPlatformOption();
-    const extension = this.getDownloadArchiveExtension();
+    const extension = getDownloadArchiveExtension();
     const javafx = features?.includes('fx') ?? false;
 
     // TO-DO: Remove after updating README
@@ -151,14 +151,5 @@ export class ZuluDistributor extends JavaBase {
       default:
         return process.platform;
     }
-  }
-
-  private getDownloadArchiveExtension() {
-    let extension = 'tar.gz';
-    if (IS_WINDOWS) {
-      extension = 'zip';
-    }
-
-    return extension;
   }
 }

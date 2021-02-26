@@ -43,3 +43,7 @@ export async function extractJdkFile(toolPath: string, extension?: string) {
       return await tc.extract7z(toolPath);
   }
 }
+
+export function getDownloadArchiveExtension() {
+  return IS_WINDOWS ? 'zip' : 'tar.gz';
+}

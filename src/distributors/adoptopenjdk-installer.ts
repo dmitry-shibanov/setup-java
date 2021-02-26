@@ -5,7 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { extractJdkFile, IS_WINDOWS, macOSJavaContentDir } from '../util';
+import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../util';
 import { JavaBase } from './base-installer';
 import { IAdoptAvailableVersions } from './adoptopenjdk-models';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from './base-models';
@@ -56,7 +56,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    let extension = this.getDownloadArchiveExtension();
+    let extension = getDownloadArchiveExtension();
 
     extractedJavaPath = await extractJdkFile(javaArchivePath, extension);
 
@@ -144,14 +144,5 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       default:
         return process.platform;
     }
-  }
-
-  private getDownloadArchiveExtension() {
-    let extension = 'tar.gz';
-    if (IS_WINDOWS) {
-      extension = 'zip';
-    }
-
-    return extension;
   }
 }

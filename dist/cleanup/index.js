@@ -3133,7 +3133,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const tc = __importStar(__webpack_require__(533));
@@ -3174,6 +3174,10 @@ function extractJdkFile(toolPath, extension) {
     });
 }
 exports.extractJdkFile = extractJdkFile;
+function getDownloadArchiveExtension() {
+    return exports.IS_WINDOWS ? 'zip' : 'tar.gz';
+}
+exports.getDownloadArchiveExtension = getDownloadArchiveExtension;
 
 
 /***/ }),

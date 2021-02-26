@@ -13339,7 +13339,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            let extension = this.getDownloadArchiveExtension();
+            let extension = util_1.getDownloadArchiveExtension();
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
@@ -13412,13 +13412,6 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
                 return process.platform;
         }
     }
-    getDownloadArchiveExtension() {
-        let extension = 'tar.gz';
-        if (util_1.IS_WINDOWS) {
-            extension = 'zip';
-        }
-        return extension;
-    }
 }
 exports.AdoptOpenJDKDistributor = AdoptOpenJDKDistributor;
 
@@ -13464,7 +13457,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const tc = __importStar(__webpack_require__(139));
@@ -13505,6 +13498,10 @@ function extractJdkFile(toolPath, extension) {
     });
 }
 exports.extractJdkFile = extractJdkFile;
+function getDownloadArchiveExtension() {
+    return exports.IS_WINDOWS ? 'zip' : 'tar.gz';
+}
+exports.getDownloadArchiveExtension = getDownloadArchiveExtension;
 
 
 /***/ }),
@@ -38810,7 +38807,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             core.info(`Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            let extension = this.getDownloadArchiveExtension();
+            let extension = util_1.getDownloadArchiveExtension();
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
@@ -38824,7 +38821,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const { arch, hw_bitness, abi } = this.getArchitectureOptions();
             const [bundleType, features] = this.javaPackage.split('+');
             const platform = this.getPlatformOption();
-            const extension = this.getDownloadArchiveExtension();
+            const extension = util_1.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
             // TO-DO: Remove after updating README
             // java-package field supports features for Azul
@@ -38891,13 +38888,6 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             default:
                 return process.platform;
         }
-    }
-    getDownloadArchiveExtension() {
-        let extension = 'tar.gz';
-        if (util_1.IS_WINDOWS) {
-            extension = 'zip';
-        }
-        return extension;
     }
 }
 exports.ZuluDistributor = ZuluDistributor;
