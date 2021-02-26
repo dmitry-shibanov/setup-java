@@ -91,7 +91,7 @@ export abstract class JavaBase {
       //   if (version[0] >= '0' && version[0] <= '9') {
       //     version = '>=' + version;
       //   }
-      version.replace('-ea', '');
+      version = version.replace('-ea', '');
       stable = false;
     }
 
