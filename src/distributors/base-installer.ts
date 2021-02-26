@@ -11,6 +11,7 @@ export abstract class JavaBase {
   protected version: semver.Range;
   protected architecture: string;
   protected javaPackage: string;
+  protected stable: boolean;
 
   constructor(protected distributor: string, installerOptions: JavaInstallerOptions) {
     this.http = new httpm.HttpClient('setup-java', undefined, {
@@ -18,7 +19,9 @@ export abstract class JavaBase {
       maxRetries: 3
     });
 
-    this.version = this.normalizeVersion(installerOptions.version);
+    const javaVersionOptions = this.normalizeVersion(installerOptions.version);
+    this.version = javaVersionOptions.version;
+    this.stable = javaVersionOptions.stable;
     this.architecture = installerOptions.arch;
     this.javaPackage = installerOptions.javaPackage;
   }
@@ -68,7 +71,8 @@ export abstract class JavaBase {
   }
 
   // this function validates and parse java version to its normal semver notation
-  protected normalizeVersion(version: string): semver.Range {
+  protected normalizeVersion(version: string) {
+    let stable = true;
     if (version.startsWith('1.')) {
       // Trim leading 1. for versions like 1.8 and 1.7
       version = version.slice(2);
@@ -87,11 +91,7 @@ export abstract class JavaBase {
       if (version[0] >= '0' && version[0] <= '9') {
         version = '>=' + version;
       }
-    } else if (version.split('.').length < 3) {
-      // For non-ea versions, add trailing .x if it is missing
-      if (version[version.length - 1] != 'x') {
-        version = version + '.x';
-      }
+      stable = false;
     }
 
     if (!semver.validRange(version)) {
@@ -100,6 +100,9 @@ export abstract class JavaBase {
       );
     }
 
-    return new semver.Range(version);
+    return {
+      version: new semver.Range(version),
+      stable
+    };
   }
 }

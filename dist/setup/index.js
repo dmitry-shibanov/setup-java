@@ -13359,7 +13359,11 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             const jvmImpl = 'hotspot';
             const versionRange = '[1.0,100.0]';
             const encodedVersionRange = encodeURI(versionRange);
+            let release_type = 'ga';
             console.time('adopt-retrieve-available-versions');
+            if (!this.stable) {
+                release_type = 'ea';
+            }
             const baseRequestArguments = [
                 `os=${platform}`,
                 `architecture=${arch}`,
@@ -13370,7 +13374,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
                 'vendor=adoptopenjdk',
                 'sort_method=DEFAULT',
                 'sort_order=DESC',
-                'release_type=ga'
+                `release_type=${release_type}`
             ].join('&');
             // need to iterate through all pages to retrieve the list of all versions
             // Adopt API doesn't provide way to retrieve the count of pages to iterate so infinity loop
@@ -23062,7 +23066,9 @@ class JavaBase {
             allowRetries: true,
             maxRetries: 3
         });
-        this.version = this.normalizeVersion(installerOptions.version);
+        const javaVersionOptions = this.normalizeVersion(installerOptions.version);
+        this.version = javaVersionOptions.version;
+        this.stable = javaVersionOptions.stable;
         this.architecture = installerOptions.arch;
         this.javaPackage = installerOptions.javaPackage;
     }
@@ -23105,6 +23111,7 @@ class JavaBase {
     }
     // this function validates and parse java version to its normal semver notation
     normalizeVersion(version) {
+        let stable = true;
         if (version.startsWith('1.')) {
             // Trim leading 1. for versions like 1.8 and 1.7
             version = version.slice(2);
@@ -23122,17 +23129,15 @@ class JavaBase {
             if (version[0] >= '0' && version[0] <= '9') {
                 version = '>=' + version;
             }
-        }
-        else if (version.split('.').length < 3) {
-            // For non-ea versions, add trailing .x if it is missing
-            if (version[version.length - 1] != 'x') {
-                version = version + '.x';
-            }
+            stable = false;
         }
         if (!semver_1.default.validRange(version)) {
             throw new Error(`The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`);
         }
-        return new semver_1.default.Range(version);
+        return {
+            version: new semver_1.default.Range(version),
+            stable
+        };
     }
 }
 exports.JavaBase = JavaBase;
@@ -38823,6 +38828,10 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const platform = this.getPlatformOption();
             const extension = util_1.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
+            let release_status = 'ga';
+            if (!this.stable) {
+                release_status = 'ea';
+            }
             // TO-DO: Remove after updating README
             // java-package field supports features for Azul
             // if you specify 'jdk+fx', 'fx' will be passed to features
@@ -38835,6 +38844,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
                 `javafx=${javafx}`,
                 `arch=${arch}`,
                 `hw_bitness=${hw_bitness}`,
+                `release_status=${release_status}`,
                 abi ? `abi=${abi}` : null,
                 features ? `features=${features}` : null
             ]
