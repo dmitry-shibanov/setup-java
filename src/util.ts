@@ -1,5 +1,9 @@
 import os from 'os';
 import path from 'path';
+import fs from 'fs';
+
+import * as tc from '@actions/tool-cache';
+import * as core from '@actions/core';
 
 export const IS_WINDOWS = process.platform === 'win32';
 export const IS_LINUX = process.platform === 'linux';
@@ -19,4 +23,27 @@ export function getVersionFromToolcachePath(toolPath: string) {
   }
 
   return toolPath;
+}
+
+export async function extractJdkFile(toolPath: string, extension?: string) {
+  if (!extension) {
+    extension = toolPath.endsWith('.tar.gz') ? 'tar.gz' : path.extname(toolPath);
+    if (extension.startsWith('.')) {
+      extension = extension.substring(1);
+    }
+  }
+
+  switch (extension) {
+    case 'tar.gz':
+    case 'tar':
+      return await tc.extractTar(toolPath);
+    case 'zip':
+      return await tc.extractZip(toolPath);
+    default:
+      return await tc.extract7z(toolPath);
+  }
+}
+
+export function getDownloadArchiveExtension() {
+  return IS_WINDOWS ? 'zip' : 'tar.gz';
 }

@@ -10452,6 +10452,7 @@ exports.isomorphicDecode = isomorphicDecode;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getJavaDistributor = void 0;
 const adoptopenjdk_installer_1 = __webpack_require__(318);
+const local_installer_1 = __webpack_require__(403);
 const zulu_installer_1 = __webpack_require__(908);
 // TO-DO: confirm distributor names
 var JavaDistributor;
@@ -10459,12 +10460,14 @@ var JavaDistributor;
     JavaDistributor["AdoptOpenJdk"] = "adoptOpenJdk";
     JavaDistributor["Zulu"] = "zulu";
 })(JavaDistributor || (JavaDistributor = {}));
-function getJavaDistributor(distributorName, initOptions) {
+function getJavaDistributor(distributorName, installerOptions, jdkFile) {
     switch (distributorName) {
+        case 'jdkFile':
+            return new local_installer_1.LocalDistributor(installerOptions, jdkFile);
         case JavaDistributor.AdoptOpenJdk:
-            return new adoptopenjdk_installer_1.AdoptOpenJDKDistributor(initOptions);
+            return new adoptopenjdk_installer_1.AdoptOpenJDKDistributor(installerOptions);
         case JavaDistributor.Zulu:
-            return new zulu_installer_1.ZuluDistributor(initOptions);
+            return new zulu_installer_1.ZuluDistributor(installerOptions);
         default:
             return null;
     }
@@ -13333,15 +13336,11 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             let javaPath;
             let extractedJavaPath;
-            core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
+            core.info(`Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
-            }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
+            let extension = util_1.getDownloadArchiveExtension();
+            extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.architecture);
@@ -13426,13 +13425,42 @@ exports.AdoptOpenJDKDistributor = AdoptOpenJDKDistributor;
 
 "use strict";
 
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
+const tc = __importStar(__webpack_require__(139));
 exports.IS_WINDOWS = process.platform === 'win32';
 exports.IS_LINUX = process.platform === 'linux';
 exports.IS_MACOS = process.platform === 'darwin';
@@ -13450,6 +13478,30 @@ function getVersionFromToolcachePath(toolPath) {
     return toolPath;
 }
 exports.getVersionFromToolcachePath = getVersionFromToolcachePath;
+function extractJdkFile(toolPath, extension) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!extension) {
+            extension = toolPath.endsWith('.tar.gz') ? 'tar.gz' : path_1.default.extname(toolPath);
+            if (extension.startsWith('.')) {
+                extension = extension.substring(1);
+            }
+        }
+        switch (extension) {
+            case 'tar.gz':
+            case 'tar':
+                return yield tc.extractTar(toolPath);
+            case 'zip':
+                return yield tc.extractZip(toolPath);
+            default:
+                return yield tc.extract7z(toolPath);
+        }
+    });
+}
+exports.extractJdkFile = extractJdkFile;
+function getDownloadArchiveExtension() {
+    return exports.IS_WINDOWS ? 'zip' : 'tar.gz';
+}
+exports.getDownloadArchiveExtension = getDownloadArchiveExtension;
 
 
 /***/ }),
@@ -14327,7 +14379,105 @@ exports.NamespacePrefixMap = NamespacePrefixMap;
 /* 400 */,
 /* 401 */,
 /* 402 */,
-/* 403 */,
+/* 403 */
+/***/ (function(__unusedmodule, exports, __webpack_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LocalDistributor = void 0;
+const tc = __importStar(__webpack_require__(139));
+const core = __importStar(__webpack_require__(470));
+const fs_1 = __importDefault(__webpack_require__(747));
+const path_1 = __importDefault(__webpack_require__(622));
+const util_1 = __webpack_require__(322);
+const base_installer_1 = __webpack_require__(534);
+class LocalDistributor extends base_installer_1.JavaBase {
+    constructor(installerOptions, jdkFile) {
+        super('LocalJDKFile', installerOptions);
+        this.jdkFile = jdkFile;
+    }
+    setupJava() {
+        return __awaiter(this, void 0, void 0, function* () {
+            let foundJava = this.findInToolcache();
+            if (foundJava) {
+                core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
+            }
+            else {
+                core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
+                if (!this.jdkFile) {
+                    throw new Error("'jdkFile' is not specified");
+                }
+                const jdkFilePath = path_1.default.resolve(this.jdkFile);
+                const stats = fs_1.default.statSync(jdkFilePath);
+                if (!stats.isFile()) {
+                    throw new Error(`JDK file is not found in path '${jdkFilePath}'`);
+                }
+                core.info(`Extracting Java from '${jdkFilePath}'`);
+                const extractedJavaPath = yield util_1.extractJdkFile(jdkFilePath);
+                const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
+                const archivePath = path_1.default.join(extractedJavaPath, archiveName);
+                const javaVersion = this.version.raw;
+                let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaVersion, this.architecture);
+                if (process.platform === 'darwin') {
+                    javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                }
+                foundJava = {
+                    javaPath,
+                    javaVersion
+                };
+            }
+            core.info(`Setting Java ${foundJava.javaVersion} as default`);
+            this.setJavaDefault(foundJava.javaPath, foundJava.javaVersion);
+            return foundJava;
+        });
+    }
+    findPackageForDownload(version) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Should not be implemented');
+        });
+    }
+    downloadTool(javaRelease) {
+        return __awaiter(this, void 0, void 0, function* () {
+            throw new Error('Should not be implemented');
+        });
+    }
+}
+exports.LocalDistributor = LocalDistributor;
+
+
+/***/ }),
 /* 404 */,
 /* 405 */,
 /* 406 */,
@@ -33106,12 +33256,12 @@ function run() {
                 required: false
             });
             // TO-DO: add support of local file (jdkFile)
-            const initOptions = {
+            const installerOptions = {
                 arch,
                 javaPackage,
                 version
             };
-            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, initOptions);
+            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, installerOptions, jdkFile);
             if (!distributor) {
                 throw new Error(`No supported distributor was found for input ${javaDistributor}`);
             }
@@ -38625,8 +38775,8 @@ const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 class ZuluDistributor extends base_installer_1.JavaBase {
-    constructor(initOptions) {
-        super('Zulu', initOptions);
+    constructor(installerOptions) {
+        super('Zulu', installerOptions);
     }
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
@@ -38654,15 +38804,11 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     downloadTool(javaRelease) {
         return __awaiter(this, void 0, void 0, function* () {
             let extractedJavaPath;
-            core.info(`Downloading ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link}...`);
+            core.info(`Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.link);
             core.info(`Extracting Java archive...`);
-            if (util_1.IS_WINDOWS) {
-                extractedJavaPath = yield tc.extractZip(javaArchivePath);
-            }
-            else {
-                extractedJavaPath = yield tc.extractTar(javaArchivePath);
-            }
+            let extension = util_1.getDownloadArchiveExtension();
+            extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.resolvedVersion, this.architecture);
@@ -38675,7 +38821,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const { arch, hw_bitness, abi } = this.getArchitectureOptions();
             const [bundleType, features] = this.javaPackage.split('+');
             const platform = this.getPlatformOption();
-            const extension = util_1.IS_WINDOWS ? 'zip' : 'tar.gz';
+            const extension = util_1.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
             // TO-DO: Remove after updating README
             // java-package field supports features for Azul

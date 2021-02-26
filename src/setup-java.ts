@@ -23,12 +23,12 @@ async function run() {
     });
     // TO-DO: add support of local file (jdkFile)
 
-    const initOptions: JavaInstallerOptions = {
+    const installerOptions: JavaInstallerOptions = {
       arch,
       javaPackage,
       version
     };
-    const distributor = getJavaDistributor(javaDistributor, initOptions);
+    const distributor = getJavaDistributor(javaDistributor, installerOptions, jdkFile);
     if (!distributor) {
       throw new Error(`No supported distributor was found for input ${javaDistributor}`);
     }

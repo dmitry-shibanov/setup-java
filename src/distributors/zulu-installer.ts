@@ -7,14 +7,14 @@ import semver from 'semver';
 
 import { JavaBase } from './base-installer';
 import { IZuluVersions } from './zulu-models';
-import { IS_WINDOWS } from '../util';
+import { extractJdkFile, getDownloadArchiveExtension } from '../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from './base-models';
 
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 
 export class ZuluDistributor extends JavaBase {
-  constructor(initOptions: JavaInstallerOptions) {
-    super('Zulu', initOptions);
+  constructor(installerOptions: JavaInstallerOptions) {
+    super('Zulu', installerOptions);
   }
 
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
@@ -55,11 +55,9 @@ export class ZuluDistributor extends JavaBase {
     const javaArchivePath = await tc.downloadTool(javaRelease.link);
 
     core.info(`Extracting Java archive...`);
-    if (IS_WINDOWS) {
-      extractedJavaPath = await tc.extractZip(javaArchivePath);
-    } else {
-      extractedJavaPath = await tc.extractTar(javaArchivePath);
-    }
+    let extension = getDownloadArchiveExtension();
+
+    extractedJavaPath = await extractJdkFile(javaArchivePath, extension);
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
@@ -77,7 +75,7 @@ export class ZuluDistributor extends JavaBase {
     const { arch, hw_bitness, abi } = this.getArchitectureOptions();
     const [bundleType, features] = this.javaPackage.split('+');
     const platform = this.getPlatformOption();
-    const extension = IS_WINDOWS ? 'zip' : 'tar.gz';
+    const extension = getDownloadArchiveExtension();
     const javafx = features?.includes('fx') ?? false;
 
     // TO-DO: Remove after updating README
