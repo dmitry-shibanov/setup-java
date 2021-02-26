@@ -23116,14 +23116,6 @@ class JavaBase {
         }
         // TO-DO: rework ea/ga logic
         if (version.endsWith('-ea')) {
-            // convert e.g. 14-ea to 14.0.0-ea
-            //   if (version.indexOf('.') == -1) {
-            //     version = version.slice(0, version.length - 3) + '.0.0-ea';
-            //   }
-            //   // match anything in -ea.X (semver won't do .x matching on pre-release versions)
-            //   if (version[0] >= '0' && version[0] <= '9') {
-            //     version = '>=' + version;
-            //   }
             version = version.replace('-ea', '');
             stable = false;
         }
