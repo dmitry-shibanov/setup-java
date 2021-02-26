@@ -19,9 +19,9 @@ export abstract class JavaBase {
       maxRetries: 3
     });
 
-    const javaVersionOptions = this.normalizeVersion(installerOptions.version);
-    this.version = javaVersionOptions.version;
-    this.stable = javaVersionOptions.stable;
+    ({ version: this.version, stable: this.stable } = this.normalizeVersion(
+      installerOptions.version
+    ));
     this.architecture = installerOptions.arch;
     this.javaPackage = installerOptions.javaPackage;
   }

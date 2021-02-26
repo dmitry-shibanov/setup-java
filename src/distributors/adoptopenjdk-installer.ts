@@ -84,13 +84,9 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     const jvmImpl = 'hotspot';
     const versionRange = '[1.0,100.0]';
     const encodedVersionRange = encodeURI(versionRange);
-    let release_type = 'ga';
+    let releaseType = this.stable ? 'ga' : 'ea';
 
     console.time('adopt-retrieve-available-versions');
-
-    if (!this.stable) {
-      release_type = 'ea';
-    }
 
     const baseRequestArguments = [
       `os=${platform}`,
@@ -102,7 +98,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       'vendor=adoptopenjdk',
       'sort_method=DEFAULT',
       'sort_order=DESC',
-      `release_type=${release_type}`
+      `release_type=${releaseType}`
     ].join('&');
 
     // need to iterate through all pages to retrieve the list of all versions
