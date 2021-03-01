@@ -6,7 +6,7 @@ import { ZuluDistributor } from './zulu/zulu-installer';
 
 // TO-DO: confirm distributor names
 enum JavaDistributor {
-  Adoptium = 'Adoptium',
+  Adoptium = 'adoptium',
   Zulu = 'zulu',
   JdkFile = 'jdkfile'
 }

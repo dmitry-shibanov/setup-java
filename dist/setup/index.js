@@ -10457,7 +10457,7 @@ const zulu_installer_1 = __webpack_require__(490);
 // TO-DO: confirm distributor names
 var JavaDistributor;
 (function (JavaDistributor) {
-    JavaDistributor["Adoptium"] = "Adoptium";
+    JavaDistributor["Adoptium"] = "adoptium";
     JavaDistributor["Zulu"] = "zulu";
     JavaDistributor["JdkFile"] = "jdkfile";
 })(JavaDistributor || (JavaDistributor = {}));
