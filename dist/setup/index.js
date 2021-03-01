@@ -14376,7 +14376,7 @@ const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
 class AdoptiumDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
-        super('AdoptiumJDK', installerOptions);
+        super('Adoptium', installerOptions);
     }
     // TO-DO: Validate that all versions are available through API
     findPackageForDownload(version) {

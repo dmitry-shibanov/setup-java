@@ -12,7 +12,7 @@ import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from 
 
 export class AdoptiumDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
-    super('AdoptiumJDK', installerOptions);
+    super('Adoptium', installerOptions);
   }
 
   // TO-DO: Validate that all versions are available through API
