@@ -28,6 +28,7 @@ jobs:
           - distribution: 'zulu'
             java-package: jdk+fx
             java: '8.x'
+            os: [macos-latest, windows-latest, ubuntu-18.04]
 
     steps:
       - name: Checkout
