@@ -1,8 +1,8 @@
-import { AdoptiumDistributor } from './adoptium/adoptium-installer';
+import { AdoptiumDistributor } from './adoptium/installer';
 import { JavaBase } from './base-installer';
 import { JavaInstallerOptions } from './base-models';
-import { LocalDistributor } from './local-installer';
-import { ZuluDistributor } from './zulu/zulu-installer';
+import { LocalDistributor } from './local/installer';
+import { ZuluDistributor } from './zulu/installer';
 
 // TO-DO: confirm distributor names
 enum JavaDistributor {

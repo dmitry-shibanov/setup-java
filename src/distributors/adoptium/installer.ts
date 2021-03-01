@@ -7,7 +7,7 @@ import semver from 'semver';
 
 import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../../util';
 import { JavaBase } from '../base-installer';
-import { IAdoptiumAvailableVersions } from './adoptium-models';
+import { IAdoptiumAvailableVersions } from './models';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
 
 export class AdoptiumDistributor extends JavaBase {

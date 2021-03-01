@@ -6,7 +6,7 @@ import fs from 'fs';
 import semver from 'semver';
 
 import { JavaBase } from '../base-installer';
-import { IZuluVersions } from './zulu-models';
+import { IZuluVersions } from './models';
 import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
 
