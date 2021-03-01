@@ -10457,15 +10457,16 @@ const zulu_installer_1 = __webpack_require__(490);
 // TO-DO: confirm distributor names
 var JavaDistributor;
 (function (JavaDistributor) {
-    JavaDistributor["AdoptOpenJdk"] = "adoptium";
+    JavaDistributor["Adoptium"] = "Adoptium";
     JavaDistributor["Zulu"] = "zulu";
+    JavaDistributor["JdkFile"] = "jdkfile";
 })(JavaDistributor || (JavaDistributor = {}));
 function getJavaDistributor(distributorName, installerOptions, jdkFile) {
     switch (distributorName) {
-        case 'jdkFile':
+        case JavaDistributor.JdkFile:
             return new local_installer_1.LocalDistributor(installerOptions, jdkFile);
-        case JavaDistributor.AdoptOpenJdk:
-            return new adoptium_installer_1.AdoptOpenJDKDistributor(installerOptions);
+        case JavaDistributor.Adoptium:
+            return new adoptium_installer_1.AdoptiumDistributor(installerOptions);
         case JavaDistributor.Zulu:
             return new zulu_installer_1.ZuluDistributor(installerOptions);
         default:
@@ -14365,7 +14366,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.AdoptOpenJDKDistributor = void 0;
+exports.AdoptiumDistributor = void 0;
 const core = __importStar(__webpack_require__(470));
 const tc = __importStar(__webpack_require__(139));
 const fs_1 = __importDefault(__webpack_require__(747));
@@ -14373,9 +14374,9 @@ const path_1 = __importDefault(__webpack_require__(622));
 const semver_1 = __importDefault(__webpack_require__(280));
 const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
-class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
+class AdoptiumDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
-        super('AdoptOpenJDK', installerOptions);
+        super('AdoptiumJDK', installerOptions);
     }
     // TO-DO: Validate that all versions are available through API
     findPackageForDownload(version) {
@@ -14415,7 +14416,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
             if (process.platform === 'darwin') {
                 javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
             }
-            return { javaPath, javaVersion: javaRelease.url };
+            return { javaPath, javaVersion: javaRelease.version };
         });
     }
     getAvailableVersions() {
@@ -14482,7 +14483,7 @@ class AdoptOpenJDKDistributor extends base_installer_1.JavaBase {
         }
     }
 }
-exports.AdoptOpenJDKDistributor = AdoptOpenJDKDistributor;
+exports.AdoptiumDistributor = AdoptiumDistributor;
 
 
 /***/ }),
@@ -23281,7 +23282,6 @@ class JavaBase {
                 throw new Error('1. is not a valid version');
             }
         }
-        // TO-DO: rework ea/ga logic
         if (version.endsWith('-ea')) {
             version = version.replace('-ea', '');
             stable = false;

@@ -10,9 +10,9 @@ import { JavaBase } from '../base-installer';
 import { IAdoptiumAvailableVersions } from './adoptium-models';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
 
-export class AdoptOpenJDKDistributor extends JavaBase {
+export class AdoptiumDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
-    super('AdoptOpenJDK', installerOptions);
+    super('AdoptiumJDK', installerOptions);
   }
 
   // TO-DO: Validate that all versions are available through API
@@ -73,7 +73,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       javaPath = path.join(javaPath, macOSJavaContentDir);
     }
 
-    return { javaPath, javaVersion: javaRelease.url };
+    return { javaPath, javaVersion: javaRelease.version };
   }
 
   private async getAvailableVersions(): Promise<IAdoptiumAvailableVersions[]> {
