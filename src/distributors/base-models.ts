@@ -9,10 +9,7 @@ export interface JavaInstallerResults {
   javaPath: string;
 }
 
-// TO-DO: rename properties
-// resolvedVersion => version
-// link => url
 export interface JavaDownloadRelease {
-  resolvedVersion: string;
-  link: string;
+  version: string;
+  url: string;
 }

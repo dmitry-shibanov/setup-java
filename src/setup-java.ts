@@ -21,7 +21,6 @@ async function run() {
     const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {
       required: false
     });
-    // TO-DO: add support of local file (jdkFile)
 
     const installerOptions: JavaInstallerOptions = {
       arch,

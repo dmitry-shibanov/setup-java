@@ -5,14 +5,14 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../util';
-import { JavaBase } from './base-installer';
-import { IAdoptAvailableVersions } from './adoptopenjdk-models';
-import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from './base-models';
+import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../../util';
+import { JavaBase } from '../base-installer';
+import { IAdoptiumAvailableVersions } from './models';
+import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
 
-export class AdoptOpenJDKDistributor extends JavaBase {
+export class AdoptiumDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
-    super('AdoptOpenJDK', installerOptions);
+    super('Adoptium', installerOptions);
   }
 
   // TO-DO: Validate that all versions are available through API
@@ -41,8 +41,8 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     // take the first element in 'binaries' array
     // because it is already filtered by arch and platform options and can't contain > 1 elements
     return {
-      resolvedVersion: resolvedFullVersion.version_data.semver,
-      link: resolvedFullVersion.binaries[0].package.link
+      version: resolvedFullVersion.version_data.semver,
+      url: resolvedFullVersion.binaries[0].package.link
     };
   }
 
@@ -51,9 +51,9 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     let extractedJavaPath: string;
 
     core.info(
-      `Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`
+      `Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`
     );
-    const javaArchivePath = await tc.downloadTool(javaRelease.link);
+    const javaArchivePath = await tc.downloadTool(javaRelease.url);
 
     core.info(`Extracting Java archive...`);
     let extension = getDownloadArchiveExtension();
@@ -65,7 +65,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     javaPath = await tc.cacheDir(
       archivePath,
       this.toolcacheFolderName,
-      javaRelease.resolvedVersion,
+      javaRelease.version,
       this.architecture
     );
 
@@ -73,10 +73,10 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       javaPath = path.join(javaPath, macOSJavaContentDir);
     }
 
-    return { javaPath, javaVersion: javaRelease.resolvedVersion };
+    return { javaPath, javaVersion: javaRelease.version };
   }
 
-  private async getAvailableVersions(): Promise<IAdoptAvailableVersions[]> {
+  private async getAvailableVersions(): Promise<IAdoptiumAvailableVersions[]> {
     const platform = this.getPlatformOption();
     const arch = this.architecture;
     const imageType = this.javaPackage;
@@ -104,13 +104,13 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     // need to iterate through all pages to retrieve the list of all versions
     // Adopt API doesn't provide way to retrieve the count of pages to iterate so infinity loop
     let page_index = 0;
-    const availableVersions: IAdoptAvailableVersions[] = [];
+    const availableVersions: IAdoptiumAvailableVersions[] = [];
     while (true) {
       const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
       const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
 
       const paginationPage = (
-        await this.http.getJson<IAdoptAvailableVersions[]>(availableVersionsUrl)
+        await this.http.getJson<IAdoptiumAvailableVersions[]>(availableVersionsUrl)
       ).result;
       if (paginationPage === null || paginationPage.length === 0) {
         // break infinity loop because we have reached end of pagination
