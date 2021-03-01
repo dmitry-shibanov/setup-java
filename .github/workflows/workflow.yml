@@ -19,10 +19,16 @@ jobs:
         - '1.13.x'
         - '14.x'
         - '15.x'
+        exclude:
+          - os: macos-latest
+            distribution: 'zulu'
+            java-package: 'jre'
+            java-version: '12.x'
+
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }}
+      - name: setup-java ${{ matrix.java }} ${{ matrix.java-package }} ${{ matrix.distribution }}
         uses: ./
         with:
           java-version: ${{ matrix.java }}
@@ -52,7 +58,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }}
+      - name: setup-java ${{ matrix.java }} ${{ matrix.java-package }} ${{ matrix.distribution }}
         uses: ./
         with:
           java-version: ${{ matrix.java }}
@@ -79,7 +85,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }}
+      - name: setup-java ${{ matrix.java }} ${{ matrix.java-package }} ${{ matrix.distribution }}
         uses: ./
         with:
           java-version: ${{ matrix.java }}
