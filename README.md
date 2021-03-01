@@ -12,65 +12,53 @@ This action provides the following functionality for GitHub Actions runners:
 - Configuring runner for using GPG private key
 - Registering problem matchers for error output
 
-# Usage
-Input `distribution` is mandatory and should be provided to use action.
+## What's new in V2
+Release v2 brings support for custom distributions and include support for Zulu OpenJDK and Adopt OpenJDK from the box.
+Also major release contains a set of breaking changes. Please follow [the guide](docs/switching-to-v2.md) to switch to the new version.
+
+## Supported distributions
 Currently, the following distributors are supported:
-| Keyword | Distribution | Documentation | Official site |
-|-|-|-|-|
-| `zulu` | Zulu (Zulu OpenJDK) | Link | Link |
-| `adoptium` | Adoptium (former Adopt OpenJDK) | Link | Link |
+| Keyword | Distribution | Official site |
+|-|-|-|
+| `zulu` | Zulu (Zulu OpenJDK) | Link |
+| `adoptium` | Adoptium (former Adopt OpenJDK) | Link |
 
-Our recommendation is ---------
+**NOTE:** The different distributions can provide discrepant list of available versions / supported configurations
 
-See [action.yml](action.yml) for details on all task inputs.
-## Basic usage
-### Supported version syntax
-Input `java-version` supports version range or exact version in SemVer format:
-- major versions: `8`, `11`, `15`, `11.x`
-- more specific versions: `8.0.232`, `11.0.4`, `11.0`, `11.0.x`
-- an early access (EA) versions: `15-ea`, `15.0.0-ea`, `15.0.0-ea.2`
-- legacy 1.x syntax: `1.8` (same as `8`), `1.8.0.212` (same as `8.0.212`)
+## Usage
+Input `distribution` is mandatory and should be provided to use action.
 
-TO-DO: Do we really want to support this `1.` syntax? Is it a time to drop it in V2?  
-TO-DO: Clarify docs about using syntax with 4 digits  
+TO-DO: Our recommendation is ---------
 
-### Zulu
+### Basic
 ```yaml
 steps:
 - uses: actions/checkout@v2
 - uses: actions/setup-java@v2-preview
   with:
-    distribution: 'zulu'
+    distribution: '<distribution>' # Mandatory input - see 'Supported distributions' for available options
     java-version: '11.x'
-    java-package: jdk # optional (jdk or jre) - defaults to jdk
-    architecture: x64 # optional - defaults to x64
 - run: java -cp java HelloWorldApp
 ```
 
-### Adoptium
-```yaml
-steps:
-- uses: actions/checkout@v2
-- uses: actions/setup-java@v2-preview
-  with:
-    distribution: 'adoptium'
-    java-version: '11.x'
-    java-package: jdk # optional (jdk or jre) - defaults to jdk
-    architecture: x64 # optional - defaults to x64
-- run: java -cp java HelloWorldApp
-```
+### Advanced
+- [Selecting Java distribution](docs/usage.md#Selecting-Java-distribution)
+  - [Supported version syntax](docs/usage.md#Supported-version-syntax)
+  - [Zulu](docs/usage.md#Zulu)
+  - [Adoptium](docs/usage.md#Adoptium)
+- [Installing custom Java package type](docs/usage.md#Installing-custom-Java-package-type)
+- [Installing custom Java architecture](docs/usage.md#Installing-custom-Java-architecture)
+- [Installing custom Java distribution from local file](docs/usage.md#Installing-Java-from-local-file)
+- [Testing against different Java versions](docs/usage.md#Testing-against-different-Java-versions)
+- [Testing against different Java distributions](docs/usage.md#Testing-against-different-Java-distributions)
+- [Publishing using Apache Maven](docs/usage.md#Publishing-using-Apache-Maven)
+- [Publishing using Gradle](docs/usage.md#Publishing-using-Gradle)
 
-## Advanced usage
-- [Installing custom Java distribution from local file](docs/advanced-usage.md#Local-file)
-- [Testing against different Java versions](docs/advanced-usage.md#Testing-against-different-Java-versions)
-- [Testing against different Java distributions](docs/advanced-usage.md#Testing-against-different-Java-distributions)
-- [Publishing using Apache Maven](docs/advanced-usage.md#Publishing-using-Apache-Maven)
-- [Publishing using Gradle](docs/advanced-usage.md#Publishing-using-Gradle)
 
-# License
+## License
 
 The scripts and documentation in this project are released under the [MIT License](LICENSE)
 
-# Contributions
+## Contributions
 
 Contributions are welcome!  See [Contributor's Guide](docs/contributors.md)

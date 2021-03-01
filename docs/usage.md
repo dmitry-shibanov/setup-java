@@ -1,15 +1,91 @@
-# Basic usage
-- [Specifying Java distributor](../README.md#Basic-usage)
-- [Supported version syntax](../README.md#Supported-version-syntax)
-
-# Advanced usage
-- [Installing custom Java distribution from local file](#Local-file)
+# Usage
+- [Selecting Java distribution](#Selecting-Java-distribution)
+  - [Supported version syntax](#Supported-version-syntax)
+  - [Zulu](#Zulu)
+  - [Adoptium](#Adoptium)
+- [Installing custom Java package type](#Installing-custom-Java-package-type)
+- [Installing custom Java architecture](#Installing-custom-Java-architecture)
+- [Installing custom Java distribution from local file](#Installing-Java-from-local-file)
 - [Testing against different Java versions](#Testing-against-different-Java-versions)
 - [Testing against different Java distributions](#Testing-against-different-Java-distributions)
 - [Publishing using Apache Maven](#Publishing-using-Apache-Maven)
 - [Publishing using Gradle](#Publishing-using-Gradle)
 
-## Local file
+See [action.yml](../action.yml) for more details on task inputs.
+
+## Selecting Java distribution
+Input `distribution` is mandatory and should be provided to use action. See [Supported distributions](../README.md#Supported-distributions) for the list of available options.
+
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: '<distribution>' # See 'Supported distributions' for available distribution
+    java-version: '11.x'
+- run: java -cp java HelloWorldApp
+```
+
+### Supported version syntax
+Input `java-version` supports version range or exact version in [SemVer](https://semver.org/) format:
+- major versions: `8`, `11`, `15`, `11.x`
+- more specific versions: `8.0.232`, `11.0.4`, `11.0`, `11.0.x`
+- an early access (EA) versions: `15-ea`, `15.0.0-ea`, `15.0.0-ea.2`
+- legacy 1.x syntax: `1.8` (same as `8`), `1.8.0.212` (same as `8.0.212`)
+
+TO-DO: Do we really want to support this `1.` syntax? Is it a time to drop old syntax in V2?  
+TO-DO: Clarify docs about using syntax with 4 digits  
+
+### Zulu
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: 'zulu'
+    java-version: '11.x'
+    java-package: jdk # optional (jdk or jre) - defaults to jdk
+- run: java -cp java HelloWorldApp
+```
+
+### Adoptium
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: 'adoptium'
+    java-version: '11.x'
+- run: java -cp java HelloWorldApp
+```
+
+## Installing custom Java package type
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: '<distribution>'
+    java-version: '11.x'
+    java-package: jdk # optional (jdk or jre) - defaults to jdk
+- run: java -cp java HelloWorldApp
+```
+
+
+## Installing custom Java architecture
+
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: '<distribution>'
+    java-version: '11.x'
+    architecture: x86 # optional - defaults to x64
+- run: java -cp java HelloWorldApp
+```
+
+## Installing Java from local file
 If your use-case requires using custom distribution or version that is not provided in action by default, you can download it manually and then action will take care about installation and caching version on VM:
 
 TO-DO: Fix example
@@ -42,11 +118,13 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v2-preview
         with:
+          distribution: '<distribution>'
           java-version: ${{ matrix.java }}
       - run: java -cp java HelloWorldApp
 ```
 
 ## Testing against different Java distributions
+**NOTE:** Please pay attention that different distributors provide different list of available versions / supported configurations.
 ```yaml
 jobs:
   build:
@@ -61,8 +139,8 @@ jobs:
       - name: Setup java
         uses: actions/setup-java@v2-preview
         with:
-          java-version: ${{ matrix.java }}
           distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.java }}
       - run: java -cp java HelloWorldApp
 ```
 
@@ -92,10 +170,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+    - name: Set up JDK 8.x
+      uses: actions/setup-java@v2-preview
       with:
-        java-version: 1.8
+        distribution: 'zulu'
+        java-version: 8.x
 
     - name: Build with Maven
       run: mvn -B package --file pom.xml
@@ -106,9 +185,10 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }} # GITHUB_TOKEN is the default env for the password
 
     - name: Set up Apache Maven Central
-      uses: actions/setup-java@v1
+      uses: actions/setup-java@v2-preview
       with: # running setup-java again overwrites the settings.xml
-        java-version: 1.8
+        distribution: 'zulu'
+        java-version: 8.x
         server-id: maven # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: MAVEN_USERNAME # env variable for username in deploy
         server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
