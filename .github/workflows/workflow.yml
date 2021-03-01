@@ -68,11 +68,11 @@ jobs:
           - os: macos-latest
             distribution: 'zulu'
             java-package: 'jre'
-            java: '12.x'
+            java: '12.0.x'
           - os: ubuntu-18.04
             distribution: 'zulu'
             java-package: 'jre'
-            java: '12.x'
+            java: '12.0.x'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
