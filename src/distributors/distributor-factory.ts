@@ -1,4 +1,4 @@
-import { AdoptOpenJDKDistributor } from './adoptium/adoptopenjdk-installer';
+import { AdoptOpenJDKDistributor } from './adoptium/adoptium-installer';
 import { JavaBase } from './base-installer';
 import { JavaInstallerOptions } from './base-models';
 import { LocalDistributor } from './local-installer';

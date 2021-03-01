@@ -7,7 +7,7 @@ import semver from 'semver';
 
 import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../../util';
 import { JavaBase } from '../base-installer';
-import { IAdoptAvailableVersions } from './adoptopenjdk-models';
+import { IAdoptiumAvailableVersions } from './adoptium-models';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
 
 export class AdoptOpenJDKDistributor extends JavaBase {
@@ -76,7 +76,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     return { javaPath, javaVersion: javaRelease.url };
   }
 
-  private async getAvailableVersions(): Promise<IAdoptAvailableVersions[]> {
+  private async getAvailableVersions(): Promise<IAdoptiumAvailableVersions[]> {
     const platform = this.getPlatformOption();
     const arch = this.architecture;
     const imageType = this.javaPackage;
@@ -104,13 +104,13 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     // need to iterate through all pages to retrieve the list of all versions
     // Adopt API doesn't provide way to retrieve the count of pages to iterate so infinity loop
     let page_index = 0;
-    const availableVersions: IAdoptAvailableVersions[] = [];
+    const availableVersions: IAdoptiumAvailableVersions[] = [];
     while (true) {
       const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
       const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
 
       const paginationPage = (
-        await this.http.getJson<IAdoptAvailableVersions[]>(availableVersionsUrl)
+        await this.http.getJson<IAdoptiumAvailableVersions[]>(availableVersionsUrl)
       ).result;
       if (paginationPage === null || paginationPage.length === 0) {
         // break infinity loop because we have reached end of pagination
