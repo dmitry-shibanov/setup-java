@@ -24,11 +24,15 @@ jobs:
             distribution: 'zulu'
             java-package: 'jre'
             java: '12.x'
+          - os: ubuntu-18.04
+            distribution: 'zulu'
+            java-package: 'jre'
+            java: '12.x'
         include:
           - distribution: 'zulu'
             java-package: jdk+fx
             java: '8.x'
-            os: [macos-latest, windows-latest, ubuntu-18.04]
+            os: ubuntu-18.04
 
     steps:
       - name: Checkout
