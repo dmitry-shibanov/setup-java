@@ -64,6 +64,15 @@ jobs:
         - '1.13.0.x'
         - '14.0.x'
         - '15.0.x'
+        exclude:
+          - os: macos-latest
+            distribution: 'zulu'
+            java-package: 'jre'
+            java: '12.x'
+          - os: ubuntu-18.04
+            distribution: 'zulu'
+            java-package: 'jre'
+            java: '12.x'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
