@@ -94,7 +94,7 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-18.04]
         distribution: ['adoptOpenJdk', 'zulu']
-        java-package: ['jdk', 'jre']
+        java-package: ['jdk']
         java:
         - '14.x-ea'
         - '15.x-ea'
