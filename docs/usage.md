@@ -1,8 +1,8 @@
 # Usage
 - [Selecting Java distribution](#Selecting-Java-distribution)
-  - [Supported version syntax](#Supported-version-syntax)
-  - [Zulu](#Zulu)
   - [Adoptium](#Adoptium)
+  - [Zulu](#Zulu)
+- [Supported version syntax](#Supported-version-syntax)
 - [Installing custom Java package type](#Installing-custom-Java-package-type)
 - [Installing custom Java architecture](#Installing-custom-Java-architecture)
 - [Installing custom Java distribution from local file](#Installing-Java-from-local-file)
@@ -16,38 +16,6 @@ See [action.yml](../action.yml) for more details on task inputs.
 ## Selecting Java distribution
 Input `distribution` is mandatory and should be provided to use action. See [Supported distributions](../README.md#Supported-distributions) for the list of available options.
 
-```yaml
-steps:
-- uses: actions/checkout@v2
-- uses: actions/setup-java@v2-preview
-  with:
-    distribution: '<distribution>' # See 'Supported distributions' for available distribution
-    java-version: '11.x'
-- run: java -cp java HelloWorldApp
-```
-
-### Supported version syntax
-Input `java-version` supports version range or exact version in [SemVer](https://semver.org/) format:
-- major versions: `8`, `11`, `15`, `11.x`
-- more specific versions: `8.0.232`, `11.0.4`, `11.0`, `11.0.x`
-- an early access (EA) versions: `15-ea`, `15.0.0-ea`, `15.0.0-ea.2`
-- legacy 1.x syntax: `1.8` (same as `8`), `1.8.0.212` (same as `8.0.212`)
-
-TO-DO: Do we really want to support this `1.` syntax? Is it a time to drop old syntax in V2?  
-TO-DO: Clarify docs about using syntax with 4 digits  
-
-### Zulu
-```yaml
-steps:
-- uses: actions/checkout@v2
-- uses: actions/setup-java@v2-preview
-  with:
-    distribution: 'zulu'
-    java-version: '11.x'
-    java-package: jdk # optional (jdk or jre) - defaults to jdk
-- run: java -cp java HelloWorldApp
-```
-
 ### Adoptium
 ```yaml
 steps:
@@ -58,6 +26,27 @@ steps:
     java-version: '11.x'
 - run: java -cp java HelloWorldApp
 ```
+
+### Zulu
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: 'zulu'
+    java-version: '11.x'
+    java-package: jdk # optional (jdk, jre or jdk+fx) - defaults to jdk
+- run: java -cp java HelloWorldApp
+```
+To use 
+
+## Supported version syntax
+Input `java-version` supports version range or exact version in [SemVer](https://semver.org/) format:
+- major versions: `8`, `11`, `15`, `11.x`
+- more specific versions: `8.0.232`, `11.0.4`, `11.0`, `11.0.x`
+- an early access (EA) versions: `15-ea`, `15.0.0-ea`, `15.0.0-ea.2`
+
+TO-DO: Clarify docs about using syntax with 4 digits  
 
 ## Installing custom Java package type
 ```yaml
@@ -92,12 +81,12 @@ TO-DO: Fix example
 ```yaml
 steps:
 - run: |
-    download_url="https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_mac_hotspot_11.0.10_9.pkg"
-    wget $download_url
+    download_url="https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.10_9.tar.gz"
+    wget -O $RUNNER_TEMP/java_package.tar.gz $download_url
 - uses: actions/setup-java@v2-preview
   with:
     distribution: 'jdkFile'
-    jdkFile: runner.temp # Optional - jdkFile to install java from.
+    jdkFile: ${{ runner.temp }}/java_package.tar.gz
     java-version: '11.0.0'
     architecture: x64
     
@@ -173,7 +162,7 @@ jobs:
     - name: Set up JDK 8.x
       uses: actions/setup-java@v2-preview
       with:
-        distribution: 'zulu'
+        distribution: '<distribution>'
         java-version: 8.x
 
     - name: Build with Maven
@@ -187,7 +176,7 @@ jobs:
     - name: Set up Apache Maven Central
       uses: actions/setup-java@v2-preview
       with: # running setup-java again overwrites the settings.xml
-        distribution: 'zulu'
+        distribution: '<distribution>'
         java-version: 8.x
         server-id: maven # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: MAVEN_USERNAME # env variable for username in deploy
@@ -263,8 +252,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up JDK 1.8
-      uses: actions/setup-java@v1
+    - name: Set up JDK 8
+      uses: actions/setup-java@v2-preview
+      with:
+        distribution: '<distribution>'
+        java-version: 8.x
 
     - name: Build with Gradle
       run: gradle build
@@ -292,10 +284,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 1.8 for Shared Runner
-      uses: actions/setup-java@v1
+    - name: Set up JDK 8 for Shared Runner
+      uses: actions/setup-java@v2-preview
       with:
-        java-version: 1.8
+        distribution: '<distribution>'
+        java-version: 8.x
         server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
         settings-path: ${{ github.workspace }} # location for the settings.xml file
 

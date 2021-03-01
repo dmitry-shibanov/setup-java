@@ -18,10 +18,10 @@ This action provides the following functionality for GitHub Actions runners:
 
 ## Supported distributions
 Currently, the following distributors are supported:
-| Keyword | Distribution | Official site |
-|-|-|-|
-| `zulu` | Zulu (Zulu OpenJDK) | Link |
-| `adoptium` | Adoptium (former Adopt OpenJDK) | Link |
+| Keyword | Distribution | Official site | License |
+|-|-|-|-|
+| `zulu` | Zulu (Zulu OpenJDK) | [Link](https://www.azul.com/downloads/zulu-community/?package=jdk) | [Link](https://www.azul.com/products/zulu-and-zulu-enterprise/zulu-terms-of-use/) |
+| `adoptium` | Adoptium (former Adopt OpenJDK) | [Link](https://adoptopenjdk.net/) | [Link](https://adoptopenjdk.net/about.html)
 
 **NOTE:** The different distributors can provide discrepant list of available versions / supported configurations. Please refer to the official documentation to see the list of supported versions.
 
@@ -43,9 +43,9 @@ steps:
 
 ### Advanced
 - [Selecting Java distribution](docs/usage.md#Selecting-Java-distribution)
-  - [Supported version syntax](docs/usage.md#Supported-version-syntax)
   - [Zulu](docs/usage.md#Zulu)
   - [Adoptium](docs/usage.md#Adoptium)
+- [Supported version syntax](docs/usage.md#Supported-version-syntax)
 - [Installing custom Java package type](docs/usage.md#Installing-custom-Java-package-type)
 - [Installing custom Java architecture](docs/usage.md#Installing-custom-Java-architecture)
 - [Installing custom Java distribution from local file](docs/usage.md#Installing-Java-from-local-file)

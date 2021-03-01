@@ -2,11 +2,39 @@
 ## Java distribution
 The major breaking change in V2 is the new mandatory input `distribution`. This field should be specified with one of supported distributions. See [Supported distributions](../README.md#Supported-distributions) section for the list of available options.  
 Use `zulu` keyword if you would like to continue using the same distributor as in the V1.
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: 'zulu'
+    java-version: '11.x'
+    java-package: jdk # optional (jdk or jre) - defaults to jdk
+- run: java -cp java HelloWorldApp
+```
 
 **General recommendation** — configure CI with the same distribution that is used on your local dev machine.
 
+## Installing custom Java distribution from local file
+Since `distributor` input is required in V2, you should specify it as `jdkFile` to continue installing Java from local file
+```yaml
+steps:
+- run: |
+    download_url="https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.10_9.tar.gz"
+    wget -O $RUNNER_TEMP/java_package.tar.gz $download_url
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: 'jdkFile'
+    jdkFile: ${{ runner.temp }}/java_package.tar.gz
+    java-version: '11.0.0'
+    architecture: x64
+```
 
-TO-DO: Will we drop 1.8, 1.7 syntax?
-TO-DO: Will we stop creating settings.xml for default fields?
-TO-DO: Will we stop installing Java if distributor and java-version are not specified?
-TO-DO: Should we say something about new approach of searching Java versions via Azul API instead of parsing HTML page?
+## Dropping legacy Java version syntax 1.x
+V1 supported legacy Java syntax like `1.8` (same as `8`), `1.8.0.212` (same as `8.0.212`). 
+V2 dropped support of old syntax so workflows should be changed according to it.
+
+
+TO-DO: Will we stop creating settings.xml for default fields?  
+TO-DO: Will we stop installing Java if distributor and java-version are not specified?  
+TO-DO: Should we say something about new approach of searching Java versions via Azul API instead of parsing HTML page?  
