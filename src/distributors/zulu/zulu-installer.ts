@@ -5,10 +5,10 @@ import path from 'path';
 import fs from 'fs';
 import semver from 'semver';
 
-import { JavaBase } from './base-installer';
+import { JavaBase } from '../base-installer';
 import { IZuluVersions } from './zulu-models';
-import { extractJdkFile, getDownloadArchiveExtension } from '../util';
-import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from './base-models';
+import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
+import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
 
 // TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 
@@ -22,19 +22,19 @@ export class ZuluDistributor extends JavaBase {
 
     const zuluVersions = availableVersions.map(item => {
       return {
-        resolvedVersion: semver.coerce(item.jdk_version.join('.'))?.version ?? '',
-        link: item.url
+        version: semver.coerce(item.jdk_version.join('.'))?.version ?? '',
+        url: item.url
       } as JavaDownloadRelease;
     });
 
     // TO-DO: need to sort by Zulu version after sorting by JDK version?
     const maxSatisfiedVersion = semver.maxSatisfying(
-      zuluVersions.map(item => item.resolvedVersion),
+      zuluVersions.map(item => item.version),
       version
     );
-    const resolvedVersion = zuluVersions.find(item => item.resolvedVersion === maxSatisfiedVersion);
+    const resolvedVersion = zuluVersions.find(item => item.version === maxSatisfiedVersion);
     if (!resolvedVersion) {
-      const availableOptions = zuluVersions?.map(item => item.resolvedVersion).join(', ');
+      const availableOptions = zuluVersions?.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -50,9 +50,9 @@ export class ZuluDistributor extends JavaBase {
     let extractedJavaPath: string;
 
     core.info(
-      `Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`
+      `Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`
     );
-    const javaArchivePath = await tc.downloadTool(javaRelease.link);
+    const javaArchivePath = await tc.downloadTool(javaRelease.url);
 
     core.info(`Extracting Java archive...`);
     let extension = getDownloadArchiveExtension();
@@ -64,11 +64,11 @@ export class ZuluDistributor extends JavaBase {
     const javaPath = await tc.cacheDir(
       archivePath,
       this.toolcacheFolderName,
-      javaRelease.resolvedVersion,
+      javaRelease.version,
       this.architecture
     );
 
-    return { javaPath, javaVersion: javaRelease.resolvedVersion };
+    return { javaPath, javaVersion: javaRelease.version };
   }
 
   private async getAvailableVersions(): Promise<IZuluVersions[]> {

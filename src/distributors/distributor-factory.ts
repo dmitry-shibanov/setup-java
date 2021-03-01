@@ -1,12 +1,12 @@
-import { AdoptOpenJDKDistributor } from './adoptopenjdk-installer';
+import { AdoptOpenJDKDistributor } from './adoptium/adoptopenjdk-installer';
 import { JavaBase } from './base-installer';
 import { JavaInstallerOptions } from './base-models';
 import { LocalDistributor } from './local-installer';
-import { ZuluDistributor } from './zulu-installer';
+import { ZuluDistributor } from './zulu/zulu-installer';
 
 // TO-DO: confirm distributor names
 enum JavaDistributor {
-  AdoptOpenJdk = 'adoptOpenJdk',
+  AdoptOpenJdk = 'adoptium',
   Zulu = 'zulu'
 }
 

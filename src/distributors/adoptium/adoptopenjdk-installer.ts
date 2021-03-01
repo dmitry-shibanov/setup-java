@@ -5,10 +5,10 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../util';
-import { JavaBase } from './base-installer';
+import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../../util';
+import { JavaBase } from '../base-installer';
 import { IAdoptAvailableVersions } from './adoptopenjdk-models';
-import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from './base-models';
+import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
 
 export class AdoptOpenJDKDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
@@ -41,8 +41,8 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     // take the first element in 'binaries' array
     // because it is already filtered by arch and platform options and can't contain > 1 elements
     return {
-      resolvedVersion: resolvedFullVersion.version_data.semver,
-      link: resolvedFullVersion.binaries[0].package.link
+      version: resolvedFullVersion.version_data.semver,
+      url: resolvedFullVersion.binaries[0].package.link
     };
   }
 
@@ -51,9 +51,9 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     let extractedJavaPath: string;
 
     core.info(
-      `Downloading Java ${javaRelease.resolvedVersion} (${this.distributor}) from ${javaRelease.link} ...`
+      `Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`
     );
-    const javaArchivePath = await tc.downloadTool(javaRelease.link);
+    const javaArchivePath = await tc.downloadTool(javaRelease.url);
 
     core.info(`Extracting Java archive...`);
     let extension = getDownloadArchiveExtension();
@@ -65,7 +65,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
     javaPath = await tc.cacheDir(
       archivePath,
       this.toolcacheFolderName,
-      javaRelease.resolvedVersion,
+      javaRelease.version,
       this.architecture
     );
 
@@ -73,7 +73,7 @@ export class AdoptOpenJDKDistributor extends JavaBase {
       javaPath = path.join(javaPath, macOSJavaContentDir);
     }
 
-    return { javaPath, javaVersion: javaRelease.resolvedVersion };
+    return { javaPath, javaVersion: javaRelease.url };
   }
 
   private async getAvailableVersions(): Promise<IAdoptAvailableVersions[]> {
