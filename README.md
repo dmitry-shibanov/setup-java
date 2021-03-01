@@ -23,7 +23,7 @@ Currently, the following distributors are supported:
 | `zulu` | Zulu (Zulu OpenJDK) | Link |
 | `adoptium` | Adoptium (former Adopt OpenJDK) | Link |
 
-**NOTE:** The different distributions can provide discrepant list of available versions / supported configurations
+**NOTE:** The different distributors can provide discrepant list of available versions / supported configurations. Please refer to the official documentation to see the list of supported versions.
 
 ## Usage
 Input `distribution` is mandatory. See [Supported distributions](../README.md#Supported-distributions) section for the list of available options.
