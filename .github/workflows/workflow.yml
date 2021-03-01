@@ -30,11 +30,6 @@ jobs:
           distribution: ${{ matrix.distribution }}
       - name: Java version
         run: java -version
-      - name: Run java simple
-        if: ${{ matrix.java-package }} == jdk
-        run: |
-          javac ./__tests__/simple.java
-          java ./__tests__/simple
 
 
   setup-java-major-minor-versions:
@@ -65,11 +60,6 @@ jobs:
           distribution: ${{ matrix.distribution }}
       - name: Java version
         run: java -version
-      - name: Run java simple
-        if: ${{ matrix.java-package }} == jdk
-        run: |
-          javac ./__tests__/simple.java
-          java ./__tests__/simple
 
   setup-java-ea-versions:
     name: Setup Java for ea versions ${{ matrix.java }} ${{ matrix.os }}
@@ -97,8 +87,3 @@ jobs:
           distribution: ${{ matrix.distribution }}
       - name: Java version
         run: java -version
-      - name: Run java simple
-        if: ${{ matrix.java-package }} == jdk
-        run: |
-          javac ./__tests__/simple.java
-          java ./__tests__/simple
