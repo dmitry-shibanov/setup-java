@@ -86,7 +86,7 @@ steps:
 ```
 
 ## Installing Java from local file
-If your use-case requires using custom distribution or version that is not provided in action by default, you can download it manually and then action will take care about installation and caching version on VM:
+If your use-case requires custom distribution or version that is not provided by action, you can download it manually and then action will take care about installation and caching of this version on VM:
 
 TO-DO: Fix example
 ```yaml
@@ -97,7 +97,7 @@ steps:
 - uses: actions/setup-java@v2-preview
   with:
     distribution: 'jdkFile'
-    jdkFile: runner.temp # Optional - jdkFile to install java from. Useful for distributions not provided by default
+    jdkFile: runner.temp # Optional - jdkFile to install java from.
     java-version: '11.0.0'
     architecture: x64
     
@@ -124,7 +124,7 @@ jobs:
 ```
 
 ## Testing against different Java distributions
-**NOTE:** Please pay attention that different distributors provide different list of available versions / supported configurations.
+**NOTE:** The different distributors can provide discrepant list of available versions / supported configurations. Please refer to the official documentation to see the list of supported versions.
 ```yaml
 jobs:
   build:

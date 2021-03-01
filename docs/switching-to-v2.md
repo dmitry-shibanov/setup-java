@@ -1,9 +1,9 @@
 # Switching to V2
 ## Java distribution
-The major breaking change in V2 is adding mandatory input `distribution`. This field should be specified with one of supported distributions. See [Supported distributions](../README.md#Supported-distributions) for the list of available options.  
-If you would like to continue using the same distributor that was used in V1, use `zulu` keyword.
+The major breaking change in V2 is the new mandatory input `distribution`. This field should be specified with one of supported distributions. See [Supported distributions](../README.md#Supported-distributions) section for the list of available options.  
+Use `zulu` keyword if you would like to continue using the same distributor as in the V1.
 
-**General recommendation** is configuring CI with the same distribution that is used on local dev machine.
+**General recommendation** — configure CI with the same distribution that is used on your local dev machine.
 
 
 TO-DO: Will we drop 1.8, 1.7 syntax?

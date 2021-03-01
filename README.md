@@ -5,16 +5,16 @@
 </p>
 
 This action provides the following functionality for GitHub Actions runners:
-- Downloading and set up a requested version of Java. See [Usage](#Usage) section for supported distributors
+- Downloading and setting up a requested version of Java. See [Usage](#Usage) section for the list of supported distributors
 - Extracting and caching custom version of Java from local file
 - Configuring runner for publishing using Apache Maven
 - Configuring runner for publishing using Gradle
 - Configuring runner for using GPG private key
 - Registering problem matchers for error output
 
-## What's new in V2
-Release v2 brings support for custom distributions and include support for Zulu OpenJDK and Adopt OpenJDK from the box.
-Also major release contains a set of breaking changes. Please follow [the guide](docs/switching-to-v2.md) to switch to the new version.
+## V2 vs V1
+- V2 has support of custom distributions and provides support of Zulu OpenJDK and Adoptium (former AdoptOpenJDK) out of the box. V1 supports only Zulu OpenJDK
+- V2 requires you to specify distributor along with the version. V1 defaults to Zulu OpenJDK, only version input is required. Follow [the migration guide](docs/switching-to-v2.md) to switch from V1 to V2
 
 ## Supported distributions
 Currently, the following distributors are supported:
@@ -26,7 +26,7 @@ Currently, the following distributors are supported:
 **NOTE:** The different distributions can provide discrepant list of available versions / supported configurations
 
 ## Usage
-Input `distribution` is mandatory and should be provided to use action.
+Input `distribution` is mandatory. See [Supported distributions](../README.md#Supported-distributions) section for the list of available options.
 
 TO-DO: Our recommendation is ---------
 
@@ -36,7 +36,7 @@ steps:
 - uses: actions/checkout@v2
 - uses: actions/setup-java@v2-preview
   with:
-    distribution: '<distribution>' # Mandatory input - see 'Supported distributions' for available options
+    distribution: '<distribution>' # See 'Supported distributions' for available options
     java-version: '11.x'
 - run: java -cp java HelloWorldApp
 ```
