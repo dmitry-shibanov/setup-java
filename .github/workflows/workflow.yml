@@ -23,7 +23,11 @@ jobs:
           - os: macos-latest
             distribution: 'zulu'
             java-package: 'jre'
-            java-version: '12.x'
+            java: '12.x'
+        include:
+          - distribution: 'zulu'
+            java-package: jdk+fx
+            java: '8.x'
 
     steps:
       - name: Checkout
