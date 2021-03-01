@@ -81,7 +81,6 @@ export abstract class JavaBase {
       }
     }
 
-    // TO-DO: rework ea/ga logic
     if (version.endsWith('-ea')) {
       version = version.replace('-ea', '');
       stable = false;

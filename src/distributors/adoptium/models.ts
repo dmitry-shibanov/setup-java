@@ -1,4 +1,4 @@
-export interface IAdoptAvailableVersions {
+export interface IAdoptiumAvailableVersions {
   binaries: [
     {
       architecture: string;
