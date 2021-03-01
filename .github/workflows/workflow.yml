@@ -3,8 +3,8 @@ on:
   push:
   pull_request:
 jobs:
-  setup-java:
-    name: Setup Java ${{ matrix.java }} ${{ matrix.os }}
+  setup-java-major-versions:
+    name: Setup Java for major versions ${{ matrix.java }} ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -14,6 +14,11 @@ jobs:
         java-package: ['jdk', 'jre']
         java:
         - '8.x'
+        - '1.11.x'
+        - '12.x'
+        - '1.13.x'
+        - '14.x'
+        - '15.x'
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -25,3 +30,75 @@ jobs:
           distribution: ${{ matrix.distribution }}
       - name: Java version
         run: java -version
+      - name: Run java simple
+        if: ${{ matrix.java-package }} == jdk
+        run: |
+          javac ./__tests__/simple.java
+          java ./__tests__/simple
+
+
+  setup-java-major-minor-versions:
+    name: Setup Java for major minor versions ${{ matrix.java }} ${{ matrix.os }}
+    needs: setup-java-major-versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-18.04]
+        distribution: ['adoptOpenJdk', 'zulu']
+        java-package: ['jdk', 'jre']
+        java:
+        - '8.0.x'
+        - '1.11.0.x'
+        - '12.0.x'
+        - '1.13.0.x'
+        - '14.0.x'
+        - '15.0.x'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: setup-java ${{ matrix.java }}
+        uses: ./
+        with:
+          java-version: ${{ matrix.java }}
+          java-package: ${{ matrix.java-package }}
+          distribution: ${{ matrix.distribution }}
+      - name: Java version
+        run: java -version
+      - name: Run java simple
+        if: ${{ matrix.java-package }} == jdk
+        run: |
+          javac ./__tests__/simple.java
+          java ./__tests__/simple
+
+  setup-java-ea-versions:
+    name: Setup Java for ea versions ${{ matrix.java }} ${{ matrix.os }}
+    needs: setup-java-major-minor-versions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-18.04]
+        distribution: ['adoptOpenJdk', 'zulu']
+        java-package: ['jdk', 'jre']
+        java:
+        - '14.x-ea'
+        - '15.x-ea'
+        - '14-ea'
+        - '15-ea'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: setup-java ${{ matrix.java }}
+        uses: ./
+        with:
+          java-version: ${{ matrix.java }}
+          java-package: ${{ matrix.java-package }}
+          distribution: ${{ matrix.distribution }}
+      - name: Java version
+        run: java -version
+      - name: Run java simple
+        if: ${{ matrix.java-package }} == jdk
+        run: |
+          javac ./__tests__/simple.java
+          java ./__tests__/simple
