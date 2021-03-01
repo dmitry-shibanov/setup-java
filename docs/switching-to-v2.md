@@ -32,7 +32,7 @@ steps:
 
 ## Dropping legacy Java version syntax 1.x
 V1 supported legacy Java syntax like `1.8` (same as `8`), `1.8.0.212` (same as `8.0.212`). 
-V2 dropped support of old syntax so workflows should be changed according to it.
+V2 dropped support of old syntax so workflows should be changed accordingly.
 
 
 TO-DO: Will we stop creating settings.xml for default fields?  

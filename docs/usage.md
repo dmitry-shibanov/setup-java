@@ -38,7 +38,6 @@ steps:
     java-package: jdk # optional (jdk, jre or jdk+fx) - defaults to jdk
 - run: java -cp java HelloWorldApp
 ```
-To use 
 
 ## Supported version syntax
 Input `java-version` supports version range or exact version in [SemVer](https://semver.org/) format:
