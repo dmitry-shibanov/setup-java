@@ -10093,7 +10093,8 @@ exports.HTMLCollectionImpl = HTMLCollectionImpl;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_DISTRIBUTION = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = void 0;
+exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_DISTRIBUTION = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = exports.macOSJavaContentDir = void 0;
+exports.macOSJavaContentDir = 'Contents/Home';
 exports.INPUT_JAVA_VERSION = 'java-version';
 exports.INPUT_ARCHITECTURE = 'architecture';
 exports.INPUT_JAVA_PACKAGE = 'java-package';
@@ -10265,8 +10266,9 @@ const tc = __importStar(__webpack_require__(139));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const semver_1 = __importDefault(__webpack_require__(280));
-const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
+const constants_1 = __webpack_require__(211);
+const util_1 = __webpack_require__(322);
 class AdoptiumDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
         super('Adoptium', installerOptions);
@@ -10307,7 +10309,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.version, this.architecture);
             if (process.platform === 'darwin') {
-                javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
             }
             return { javaPath, javaVersion: javaRelease.version };
         });
@@ -13459,15 +13461,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const tc = __importStar(__webpack_require__(139));
-exports.IS_WINDOWS = process.platform === 'win32';
-exports.IS_LINUX = process.platform === 'linux';
-exports.IS_MACOS = process.platform === 'darwin';
-exports.PLATFORM = exports.IS_WINDOWS ? 'windows' : process.platform;
-exports.macOSJavaContentDir = 'Contents/Home';
 function getTempDir() {
     let tempDirectory = process.env['RUNNER_TEMP'] || os_1.default.tmpdir();
     return tempDirectory;
@@ -13501,7 +13498,7 @@ function extractJdkFile(toolPath, extension) {
 }
 exports.extractJdkFile = extractJdkFile;
 function getDownloadArchiveExtension() {
-    return exports.IS_WINDOWS ? 'zip' : 'tar.gz';
+    return process.platform === 'win32' ? 'zip' : 'tar.gz';
 }
 exports.getDownloadArchiveExtension = getDownloadArchiveExtension;
 
@@ -22734,8 +22731,9 @@ const tc = __importStar(__webpack_require__(139));
 const core = __importStar(__webpack_require__(470));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
-const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
+const util_1 = __webpack_require__(322);
+const constants_1 = __webpack_require__(211);
 class LocalDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions, jdkFile) {
         super('LocalJDKFile', installerOptions);
@@ -22764,7 +22762,7 @@ class LocalDistributor extends base_installer_1.JavaBase {
                 const javaVersion = this.version.raw;
                 let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaVersion, this.architecture);
                 if (process.platform === 'darwin') {
-                    javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                    javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
                 }
                 foundJava = {
                     javaPath,

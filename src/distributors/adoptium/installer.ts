@@ -5,10 +5,11 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../../util';
 import { JavaBase } from '../base-installer';
 import { IAdoptiumAvailableVersions } from './models';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
+import { macOSJavaContentDir } from '../../constants';
+import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 
 export class AdoptiumDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {

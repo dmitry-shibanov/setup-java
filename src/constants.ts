@@ -1,3 +1,4 @@
+export const macOSJavaContentDir = 'Contents/Home';
 export const INPUT_JAVA_VERSION = 'java-version';
 export const INPUT_ARCHITECTURE = 'architecture';
 export const INPUT_JAVA_PACKAGE = 'java-package';

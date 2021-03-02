@@ -3133,15 +3133,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const tc = __importStar(__webpack_require__(533));
-exports.IS_WINDOWS = process.platform === 'win32';
-exports.IS_LINUX = process.platform === 'linux';
-exports.IS_MACOS = process.platform === 'darwin';
-exports.PLATFORM = exports.IS_WINDOWS ? 'windows' : process.platform;
-exports.macOSJavaContentDir = 'Contents/Home';
 function getTempDir() {
     let tempDirectory = process.env['RUNNER_TEMP'] || os_1.default.tmpdir();
     return tempDirectory;
@@ -3175,7 +3170,7 @@ function extractJdkFile(toolPath, extension) {
 }
 exports.extractJdkFile = extractJdkFile;
 function getDownloadArchiveExtension() {
-    return exports.IS_WINDOWS ? 'zip' : 'tar.gz';
+    return process.platform === 'win32' ? 'zip' : 'tar.gz';
 }
 exports.getDownloadArchiveExtension = getDownloadArchiveExtension;
 
@@ -4896,7 +4891,8 @@ function isUnixExecutable(stats) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_DISTRIBUTION = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = void 0;
+exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_DISTRIBUTION = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = exports.macOSJavaContentDir = void 0;
+exports.macOSJavaContentDir = 'Contents/Home';
 exports.INPUT_JAVA_VERSION = 'java-version';
 exports.INPUT_ARCHITECTURE = 'architecture';
 exports.INPUT_JAVA_PACKAGE = 'java-package';
