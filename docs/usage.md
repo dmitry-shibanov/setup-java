@@ -2,7 +2,6 @@
 - [Selecting Java distribution](#Selecting-Java-distribution)
   - [Adoptium](#Adoptium)
   - [Zulu](#Zulu)
-- [Supported version syntax](#Supported-version-syntax)
 - [Installing custom Java package type](#Installing-custom-Java-package-type)
 - [Installing custom Java architecture](#Installing-custom-Java-architecture)
 - [Installing custom Java distribution from local file](#Installing-Java-from-local-file)
@@ -38,14 +37,6 @@ steps:
     java-package: jdk # optional (jdk, jre or jdk+fx) - defaults to jdk
 - run: java -cp java HelloWorldApp
 ```
-
-## Supported version syntax
-Input `java-version` supports version range or exact version in [SemVer](https://semver.org/) format:
-- major versions: `8`, `11`, `15`, `11.x`
-- more specific versions: `8.0.232`, `11.0.4`, `11.0`, `11.0.x`
-- an early access (EA) versions: `15-ea`, `15.0.0-ea`, `15.0.0-ea.2`
-
-TO-DO: Clarify docs about using syntax with 4 digits  
 
 ## Installing custom Java package type
 ```yaml

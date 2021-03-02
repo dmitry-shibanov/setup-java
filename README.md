@@ -16,7 +16,27 @@ This action provides the following functionality for GitHub Actions runners:
 - V2 has support of custom distributions and provides support of Zulu OpenJDK and Adoptium (former AdoptOpenJDK) out of the box. V1 supports only Zulu OpenJDK
 - V2 requires you to specify distributor along with the version. V1 defaults to Zulu OpenJDK, only version input is required. Follow [the migration guide](docs/switching-to-v2.md) to switch from V1 to V2
 
-## Supported distributions
+## Usage
+Input `distribution` is mandatory. See [Supported distributions](../README.md#Supported-distributions) section for the list of available options.
+
+### Basic
+```yaml
+steps:
+- uses: actions/checkout@v2
+- uses: actions/setup-java@v2-preview
+  with:
+    distribution: 'adoptium' # See 'Supported distributions' for available options
+    java-version: '11.x'
+- run: java -cp java HelloWorldApp
+```
+
+#### Supported version syntax
+Input `java-version` supports version range or exact version in [SemVer](https://semver.org/) format:
+- major versions: `8`, `11`, `15`, `11.x`
+- more specific versions: `8.0.232`, `11.0.4`, `11.0`, `11.0.x`
+- an early access (EA) versions: `15-ea`, `15.0.0-ea`, `15.0.0-ea.2`
+
+#### Supported distributions
 Currently, the following distributors are supported:
 | Keyword | Distribution | Official site | License |
 |-|-|-|-|
@@ -25,20 +45,23 @@ Currently, the following distributors are supported:
 
 **NOTE:** The different distributors can provide discrepant list of available versions / supported configurations. Please refer to the official documentation to see the list of supported versions.
 
-## Usage
-Input `distribution` is mandatory. See [Supported distributions](../README.md#Supported-distributions) section for the list of available options.
-
-TO-DO: Our recommendation is ---------
-
-### Basic
+#### Testing against different Java versions
 ```yaml
-steps:
-- uses: actions/checkout@v2
-- uses: actions/setup-java@v2-preview
-  with:
-    distribution: '<distribution>' # See 'Supported distributions' for available options
-    java-version: '11.x'
-- run: java -cp java HelloWorldApp
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        java: [ '8', '11', '13', '15' ]
+    name: Java ${{ matrix.Java }} sample
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup java
+        uses: actions/setup-java@v2-preview
+        with:
+          distribution: '<distribution>'
+          java-version: ${{ matrix.java }}
+      - run: java -cp java HelloWorldApp
 ```
 
 ### Advanced
