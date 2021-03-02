@@ -5,8 +5,8 @@
 - [Installing custom Java package type](#Installing-custom-Java-package-type)
 - [Installing custom Java architecture](#Installing-custom-Java-architecture)
 - [Installing custom Java distribution from local file](#Installing-Java-from-local-file)
-- [Testing against different Java versions](#Testing-against-different-Java-versions)
 - [Testing against different Java distributions](#Testing-against-different-Java-distributions)
+- [Testing against different platforms](#Testing-against-different-platforms)
 - [Publishing using Apache Maven](#Publishing-using-Apache-Maven)
 - [Publishing using Gradle](#Publishing-using-Gradle)
 
@@ -83,25 +83,6 @@ steps:
 - run: java -cp java HelloWorldApp
 ```
 
-## Testing against different Java versions
-```yaml
-jobs:
-  build:
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        java: [ '8', '11', '13', '15' ]
-    name: Java ${{ matrix.Java }} sample
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup java
-        uses: actions/setup-java@v2-preview
-        with:
-          distribution: '<distribution>'
-          java-version: ${{ matrix.java }}
-      - run: java -cp java HelloWorldApp
-```
-
 ## Testing against different Java distributions
 **NOTE:** The different distributors can provide discrepant list of available versions / supported configurations. Please refer to the official documentation to see the list of supported versions.
 ```yaml
@@ -119,6 +100,26 @@ jobs:
         uses: actions/setup-java@v2-preview
         with:
           distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.java }}
+      - run: java -cp java HelloWorldApp
+```
+
+#### Testing against different platforms
+```yaml
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        java: [ '8', '11' ]
+        os: [ 'ubuntu-latest', 'macos-latest', 'windows-latest' ]
+    name: Java ${{ matrix.Java }} (${{ matrix.os }}) sample
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup java
+        uses: actions/setup-java@v2-preview
+        with:
+          distribution: 'adoptium'
           java-version: ${{ matrix.java }}
       - run: java -cp java HelloWorldApp
 ```

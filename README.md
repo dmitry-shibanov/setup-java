@@ -65,17 +65,16 @@ jobs:
 ```
 
 ### Advanced
-- [Selecting Java distribution](docs/usage.md#Selecting-Java-distribution)
-  - [Zulu](docs/usage.md#Zulu)
-  - [Adoptium](docs/usage.md#Adoptium)
-- [Supported version syntax](docs/usage.md#Supported-version-syntax)
-- [Installing custom Java package type](docs/usage.md#Installing-custom-Java-package-type)
-- [Installing custom Java architecture](docs/usage.md#Installing-custom-Java-architecture)
-- [Installing custom Java distribution from local file](docs/usage.md#Installing-Java-from-local-file)
-- [Testing against different Java versions](docs/usage.md#Testing-against-different-Java-versions)
-- [Testing against different Java distributions](docs/usage.md#Testing-against-different-Java-distributions)
-- [Publishing using Apache Maven](docs/usage.md#Publishing-using-Apache-Maven)
-- [Publishing using Gradle](docs/usage.md#Publishing-using-Gradle)
+- [Selecting Java distribution](docs/advanced-usage.md#Selecting-Java-distribution)
+  - [Adoptium](docs/advanced-usage.md#Adoptium)
+  - [Zulu](docs/advanced-usage.md#Zulu)
+- [Installing custom Java package type](docs/advanced-usage.md#Installing-custom-Java-package-type)
+- [Installing custom Java architecture](docs/advanced-usage.md#Installing-custom-Java-architecture)
+- [Installing custom Java distribution from local file](docs/advanced-usage.md#Installing-Java-from-local-file)
+- [Testing against different Java distributions](docs/advanced-usage.md#Testing-against-different-Java-distributions)
+- [Testing against different platforms](docs/advanced-usage.md#Testing-against-different-platforms)
+- [Publishing using Apache Maven](docs/advanced-usage.md#Publishing-using-Apache-Maven)
+- [Publishing using Gradle](docs/advanced-usage.md#Publishing-using-Gradle)
 
 
 ## License
