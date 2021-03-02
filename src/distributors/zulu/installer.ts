@@ -132,14 +132,7 @@ export class ZuluDistributor extends JavaBase {
     } else if (this.architecture == 'x86') {
       return { arch: 'x86', hw_bitness: '32', abi: '' };
     } else {
-      // TO-DO: Remove after updating README
-      // support for custom architectures
-      // on Hosted images we have only x64 and x86, we should always specify arch as x86 and hw_bitness depends on arch
-      // on Self-Hosted, there are additional architectures and it is characterized by a few fields: arch, hw_bitness, abi
-      // allow customer to specify every parameter by providing arch in format: '<arch>+<hw_bitness>+<abi>'
-      // examples: 'x86+32+hard_float', 'arm+64+soft_float'
-      const [arch, hw_bitness, abi] = this.architecture.split('+');
-      return { arch, hw_bitness, abi };
+      return { arch: this.architecture, hw_bitness: '', abi: '' };
     }
   }
 
