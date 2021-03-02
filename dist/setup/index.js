@@ -13742,7 +13742,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generate = exports.configAuthentication = exports.configureAuthentication = exports.SETTINGS_FILE = exports.M2_DIR = void 0;
+exports.generate = exports.configureAuthentication = exports.SETTINGS_FILE = exports.M2_DIR = void 0;
 const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
@@ -13755,21 +13755,16 @@ exports.M2_DIR = '.m2';
 exports.SETTINGS_FILE = 'settings.xml';
 function configureAuthentication() {
     return __awaiter(this, void 0, void 0, function* () {
-        const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
-        const username = core.getInput(constants.INPUT_SERVER_USERNAME, {
-            required: false
-        });
-        const password = core.getInput(constants.INPUT_SERVER_PASSWORD, {
-            required: false
-        });
-        const gpgPrivateKey = core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
-            constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
-        const gpgPassphrase = core.getInput(constants.INPUT_GPG_PASSPHRASE, { required: false }) ||
+        const id = core.getInput(constants.INPUT_SERVER_ID);
+        const username = core.getInput(constants.INPUT_SERVER_USERNAME);
+        const password = core.getInput(constants.INPUT_SERVER_PASSWORD);
+        const gpgPrivateKey = core.getInput(constants.INPUT_GPG_PRIVATE_KEY) || constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
+        const gpgPassphrase = core.getInput(constants.INPUT_GPG_PASSPHRASE) ||
             (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
         if (gpgPrivateKey) {
             core.setSecret(gpgPrivateKey);
         }
-        core.info(`creating ${exports.SETTINGS_FILE} with server-id: ${id};
+        core.info(`Creating ${exports.SETTINGS_FILE} with server-id: ${id};
      environment variables:
      username=\$${username},
      password=\$${password},
@@ -13787,21 +13782,6 @@ function configureAuthentication() {
     });
 }
 exports.configureAuthentication = configureAuthentication;
-function configAuthentication(id, username, password, gpgPassphrase) {
-    return __awaiter(this, void 0, void 0, function* () {
-        core.info(`creating ${exports.SETTINGS_FILE} with server-id: ${id};
-     environment variables:
-     username=\$${username},
-     password=\$${password},
-     and gpg-passphrase=${gpgPassphrase ? '$' + gpgPassphrase : null}`);
-        // when an alternate m2 location is specified use only that location (no .m2 directory)
-        // otherwise use the home/.m2/ path
-        const settingsDirectory = path.join(core.getInput(constants.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants.INPUT_SETTINGS_PATH) ? '' : exports.M2_DIR);
-        yield io.mkdirP(settingsDirectory);
-        yield write(settingsDirectory, generate(id, username, password, gpgPassphrase));
-    });
-}
-exports.configAuthentication = configAuthentication;
 // only exported for testing purposes
 function generate(id, username, password, gpgPassphrase) {
     const xmlObj = {
@@ -13838,10 +13818,10 @@ function write(directory, settings) {
     return __awaiter(this, void 0, void 0, function* () {
         const location = path.join(directory, exports.SETTINGS_FILE);
         if (fs.existsSync(location)) {
-            core.warning(`overwriting existing file ${location}`);
+            core.warning(`Overwriting existing file ${location}`);
         }
         else {
-            core.info(`writing ${location}`);
+            core.info(`Writing ${location}`);
         }
         return fs.writeFileSync(location, settings, {
             encoding: 'utf-8',

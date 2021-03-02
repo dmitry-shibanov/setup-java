@@ -8,7 +8,10 @@ inputs:
        or semver Java version, or 1.x syntax (e.g. 1.8 => Java 8.x).
        Early access versions can be specified in the form of e.g. 14-ea,
        14.0.0-ea, or 14.0.0-ea.28'
-    required: true
+    required: false
+  distribution:
+    description: 'Java distributor. See the list of supported distributors in README file.'
+    required: false
   java-package:
     description: 'The package type (jre, jdk, jdk+fx)'
     required: false
@@ -21,9 +24,6 @@ inputs:
     description: 'Path to where the compressed JDK is located. The path could
        be in your source repository or a local path on the agent.'
     required: false
-  distribution:
-    description: 'Java distributor. See the list of supported distributors in README file.'
-    required: true
   server-id:
     description: 'ID of the distributionManagement repository in the pom.xml
        file. Default is `github`'
