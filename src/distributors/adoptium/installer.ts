@@ -79,7 +79,7 @@ export class AdoptiumDistributor extends JavaBase {
   private async getAvailableVersions(): Promise<IAdoptiumAvailableVersions[]> {
     const platform = this.getPlatformOption();
     const arch = this.architecture;
-    const imageType = this.javaPackage;
+    const imageType = this.packageType;
     const heapSize = 'normal';
     const jvmImpl = 'hotspot';
     const versionRange = '[1.0,100.0]';

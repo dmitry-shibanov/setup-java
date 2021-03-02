@@ -73,7 +73,7 @@ export class ZuluDistributor extends JavaBase {
 
   private async getAvailableVersions(): Promise<IZuluVersions[]> {
     const { arch, hw_bitness, abi } = this.getArchitectureOptions();
-    const [bundleType, features] = this.javaPackage.split('+');
+    const [bundleType, features] = this.packageType.split('+');
     const platform = this.getPlatformOption();
     const extension = getDownloadArchiveExtension();
     const javafx = features?.includes('fx') ?? false;

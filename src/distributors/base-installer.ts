@@ -10,7 +10,7 @@ export abstract class JavaBase {
   protected http: httpm.HttpClient;
   protected version: semver.Range;
   protected architecture: string;
-  protected javaPackage: string;
+  protected packageType: string;
   protected stable: boolean;
 
   constructor(protected distributor: string, installerOptions: JavaInstallerOptions) {
@@ -23,7 +23,7 @@ export abstract class JavaBase {
       installerOptions.version
     ));
     this.architecture = installerOptions.arch;
-    this.javaPackage = installerOptions.javaPackage;
+    this.packageType = installerOptions.packageType;
   }
 
   protected abstract downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults>;
@@ -47,7 +47,7 @@ export abstract class JavaBase {
   }
 
   protected get toolcacheFolderName(): string {
-    return `Java_${this.distributor}_${this.javaPackage}`;
+    return `Java_${this.distributor}_${this.packageType}`;
   }
 
   protected findInToolcache(): JavaInstallerResults | null {

@@ -7,9 +7,52 @@ import * as os from 'os';
 
 import { create as xmlCreate } from 'xmlbuilder2';
 import * as constants from './constants';
+import * as gpg from './gpg';
 
 export const M2_DIR = '.m2';
 export const SETTINGS_FILE = 'settings.xml';
+
+export async function configureAuthentication() {
+  const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
+  const username = core.getInput(constants.INPUT_SERVER_USERNAME, {
+    required: false
+  });
+  const password = core.getInput(constants.INPUT_SERVER_PASSWORD, {
+    required: false
+  });
+  const gpgPrivateKey =
+    core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
+    constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
+  const gpgPassphrase =
+    core.getInput(constants.INPUT_GPG_PASSPHRASE, { required: false }) ||
+    (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
+
+  if (gpgPrivateKey) {
+    core.setSecret(gpgPrivateKey);
+  }
+
+  core.info(
+    `creating ${SETTINGS_FILE} with server-id: ${id};
+     environment variables:
+     username=\$${username},
+     password=\$${password},
+     and gpg-passphrase=${gpgPassphrase ? '$' + gpgPassphrase : null}`
+  );
+  // when an alternate m2 location is specified use only that location (no .m2 directory)
+  // otherwise use the home/.m2/ path
+  const settingsDirectory: string = path.join(
+    core.getInput(constants.INPUT_SETTINGS_PATH) || os.homedir(),
+    core.getInput(constants.INPUT_SETTINGS_PATH) ? '' : M2_DIR
+  );
+  await io.mkdirP(settingsDirectory);
+  await write(settingsDirectory, generate(id, username, password, gpgPassphrase));
+
+  if (gpgPrivateKey) {
+    core.info('Importing private gpg key');
+    const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
+    core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+  }
+}
 
 export async function configAuthentication(
   id: string,
