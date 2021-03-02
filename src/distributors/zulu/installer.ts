@@ -50,7 +50,7 @@ export class ZuluDistributor extends JavaBase {
     let extractedJavaPath: string;
 
     core.info(
-      `Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`
+      `Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`
     );
     const javaArchivePath = await tc.downloadTool(javaRelease.url);
 

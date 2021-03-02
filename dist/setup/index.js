@@ -10298,7 +10298,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             let javaPath;
             let extractedJavaPath;
-            core.info(`Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`);
+            core.info(`Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.url);
             core.info(`Extracting Java archive...`);
             let extension = util_1.getDownloadArchiveExtension();
@@ -23073,8 +23073,8 @@ const path_1 = __importDefault(__webpack_require__(622));
 const httpm = __importStar(__webpack_require__(539));
 const util_1 = __webpack_require__(322);
 class JavaBase {
-    constructor(distributor, installerOptions) {
-        this.distributor = distributor;
+    constructor(distribution, installerOptions) {
+        this.distribution = distribution;
         this.http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
@@ -23101,7 +23101,7 @@ class JavaBase {
         });
     }
     get toolcacheFolderName() {
-        return `Java_${this.distributor}_${this.packageType}`;
+        return `Java_${this.distribution}_${this.packageType}`;
     }
     findInToolcache() {
         const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
@@ -23116,7 +23116,7 @@ class JavaBase {
     setJavaDefault(toolPath, version) {
         core.exportVariable('JAVA_HOME', toolPath);
         core.addPath(path_1.default.join(toolPath, 'bin'));
-        core.setOutput('distributor', this.distributor);
+        core.setOutput('distribution', this.distribution);
         core.setOutput('path', toolPath);
         core.setOutput('version', version);
     }
@@ -33263,9 +33263,9 @@ function run() {
                 const result = yield distributor.setupJava();
                 core.info('');
                 core.info('Java configuration:');
-                core.info(`  Java distributor: ${distributionName}`);
-                core.info(`  Java version: ${result.javaVersion}`);
-                core.info(`  Java path: ${result.javaPath}`);
+                core.info(`  Distribution: ${distributionName}`);
+                core.info(`  Version: ${result.javaVersion}`);
+                core.info(`  Path: ${result.javaPath}`);
                 core.info('');
             }
             const matchersPath = path.join(__dirname, '..', '..', '.github');
@@ -37424,7 +37424,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     downloadTool(javaRelease) {
         return __awaiter(this, void 0, void 0, function* () {
             let extractedJavaPath;
-            core.info(`Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`);
+            core.info(`Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.url);
             core.info(`Extracting Java archive...`);
             let extension = util_1.getDownloadArchiveExtension();
