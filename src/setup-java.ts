@@ -16,7 +16,9 @@ async function run() {
 
     if (version || distributionName) {
       if (!version || !distributionName) {
-        throw new Error(`Either ‘${constants.INPUT_JAVA_VERSION}’ or ‘${constants.INPUT_DISTRIBUTION}’ are not specified. Both inputs are required when using together`);
+        throw new Error(
+          `Both ‘${constants.INPUT_JAVA_VERSION}’ and ‘${constants.INPUT_DISTRIBUTION}’ inputs are required if one of them is specified`
+        );
       }
 
       const installerOptions: JavaInstallerOptions = {
