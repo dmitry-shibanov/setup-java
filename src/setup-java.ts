@@ -36,9 +36,9 @@ async function run() {
 
       core.info('');
       core.info('Java configuration:');
-      core.info(`  Java distributor: ${distributionName}`);
-      core.info(`  Java version: ${result.javaVersion}`);
-      core.info(`  Java path: ${result.javaPath}`);
+      core.info(`  Distribution: ${distributionName}`);
+      core.info(`  Version: ${result.javaVersion}`);
+      core.info(`  Path: ${result.javaPath}`);
       core.info('');
     }
 
