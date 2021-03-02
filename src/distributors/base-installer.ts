@@ -73,13 +73,6 @@ export abstract class JavaBase {
   // this function validates and parse java version to its normal semver notation
   protected normalizeVersion(version: string) {
     let stable = true;
-    if (version.startsWith('1.')) {
-      // Trim leading 1. for versions like 1.8 and 1.7
-      version = version.slice(2);
-      if (!version) {
-        throw new Error('1. is not a valid version');
-      }
-    }
 
     if (version.endsWith('-ea')) {
       version = version.replace('-ea', '');
