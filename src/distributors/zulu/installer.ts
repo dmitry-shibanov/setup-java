@@ -50,7 +50,7 @@ export class ZuluDistributor extends JavaBase {
     let extractedJavaPath: string;
 
     core.info(
-      `Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`
+      `Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`
     );
     const javaArchivePath = await tc.downloadTool(javaRelease.url);
 
@@ -73,7 +73,7 @@ export class ZuluDistributor extends JavaBase {
 
   private async getAvailableVersions(): Promise<IZuluVersions[]> {
     const { arch, hw_bitness, abi } = this.getArchitectureOptions();
-    const [bundleType, features] = this.javaPackage.split('+');
+    const [bundleType, features] = this.packageType.split('+');
     const platform = this.getPlatformOption();
     const extension = getDownloadArchiveExtension();
     const javafx = features?.includes('fx') ?? false;

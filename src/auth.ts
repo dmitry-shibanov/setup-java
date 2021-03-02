@@ -7,18 +7,27 @@ import * as os from 'os';
 
 import { create as xmlCreate } from 'xmlbuilder2';
 import * as constants from './constants';
+import * as gpg from './gpg';
 
 export const M2_DIR = '.m2';
 export const SETTINGS_FILE = 'settings.xml';
 
-export async function configAuthentication(
-  id: string,
-  username: string,
-  password: string,
-  gpgPassphrase?: string | undefined
-) {
+export async function configureAuthentication() {
+  const id = core.getInput(constants.INPUT_SERVER_ID);
+  const username = core.getInput(constants.INPUT_SERVER_USERNAME);
+  const password = core.getInput(constants.INPUT_SERVER_PASSWORD);
+  const gpgPrivateKey =
+    core.getInput(constants.INPUT_GPG_PRIVATE_KEY) || constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
+  const gpgPassphrase =
+    core.getInput(constants.INPUT_GPG_PASSPHRASE) ||
+    (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
+
+  if (gpgPrivateKey) {
+    core.setSecret(gpgPrivateKey);
+  }
+
   core.info(
-    `creating ${SETTINGS_FILE} with server-id: ${id};
+    `Creating ${SETTINGS_FILE} with server-id: ${id};
      environment variables:
      username=\$${username},
      password=\$${password},
@@ -32,6 +41,12 @@ export async function configAuthentication(
   );
   await io.mkdirP(settingsDirectory);
   await write(settingsDirectory, generate(id, username, password, gpgPassphrase));
+
+  if (gpgPrivateKey) {
+    core.info('Importing private gpg key');
+    const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
+    core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+  }
 }
 
 // only exported for testing purposes
@@ -77,9 +92,9 @@ export function generate(
 async function write(directory: string, settings: string) {
   const location = path.join(directory, SETTINGS_FILE);
   if (fs.existsSync(location)) {
-    core.warning(`overwriting existing file ${location}`);
+    core.warning(`Overwriting existing file ${location}`);
   } else {
-    core.info(`writing ${location}`);
+    core.info(`Writing ${location}`);
   }
 
   return fs.writeFileSync(location, settings, {

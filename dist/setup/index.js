@@ -10093,11 +10093,12 @@ exports.HTMLCollectionImpl = HTMLCollectionImpl;
 "use strict";
 
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = exports.INPUT_VERSION = void 0;
-exports.INPUT_VERSION = 'version';
+exports.STATE_GPG_PRIVATE_KEY_FINGERPRINT = exports.INPUT_DEFAULT_GPG_PASSPHRASE = exports.INPUT_DEFAULT_GPG_PRIVATE_KEY = exports.INPUT_GPG_PASSPHRASE = exports.INPUT_GPG_PRIVATE_KEY = exports.INPUT_SETTINGS_PATH = exports.INPUT_SERVER_PASSWORD = exports.INPUT_SERVER_USERNAME = exports.INPUT_SERVER_ID = exports.INPUT_JDK_FILE = exports.INPUT_DISTRIBUTION = exports.INPUT_JAVA_PACKAGE = exports.INPUT_ARCHITECTURE = exports.INPUT_JAVA_VERSION = exports.macOSJavaContentDir = void 0;
+exports.macOSJavaContentDir = 'Contents/Home';
 exports.INPUT_JAVA_VERSION = 'java-version';
 exports.INPUT_ARCHITECTURE = 'architecture';
 exports.INPUT_JAVA_PACKAGE = 'java-package';
+exports.INPUT_DISTRIBUTION = 'distribution';
 exports.INPUT_JDK_FILE = 'jdkFile';
 exports.INPUT_SERVER_ID = 'server-id';
 exports.INPUT_SERVER_USERNAME = 'server-username';
@@ -10265,8 +10266,9 @@ const tc = __importStar(__webpack_require__(139));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
 const semver_1 = __importDefault(__webpack_require__(280));
-const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
+const constants_1 = __webpack_require__(211);
+const util_1 = __webpack_require__(322);
 class AdoptiumDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
         super('Adoptium', installerOptions);
@@ -10298,7 +10300,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             let javaPath;
             let extractedJavaPath;
-            core.info(`Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`);
+            core.info(`Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.url);
             core.info(`Extracting Java archive...`);
             let extension = util_1.getDownloadArchiveExtension();
@@ -10307,7 +10309,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.version, this.architecture);
             if (process.platform === 'darwin') {
-                javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
             }
             return { javaPath, javaVersion: javaRelease.version };
         });
@@ -10316,7 +10318,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
         return __awaiter(this, void 0, void 0, function* () {
             const platform = this.getPlatformOption();
             const arch = this.architecture;
-            const imageType = this.javaPackage;
+            const imageType = this.packageType;
             const heapSize = 'normal';
             const jvmImpl = 'hotspot';
             const versionRange = '[1.0,100.0]';
@@ -13459,15 +13461,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = exports.macOSJavaContentDir = exports.PLATFORM = exports.IS_MACOS = exports.IS_LINUX = exports.IS_WINDOWS = void 0;
+exports.getDownloadArchiveExtension = exports.extractJdkFile = exports.getVersionFromToolcachePath = exports.getTempDir = void 0;
 const os_1 = __importDefault(__webpack_require__(87));
 const path_1 = __importDefault(__webpack_require__(622));
 const tc = __importStar(__webpack_require__(139));
-exports.IS_WINDOWS = process.platform === 'win32';
-exports.IS_LINUX = process.platform === 'linux';
-exports.IS_MACOS = process.platform === 'darwin';
-exports.PLATFORM = exports.IS_WINDOWS ? 'windows' : process.platform;
-exports.macOSJavaContentDir = 'Contents/Home';
 function getTempDir() {
     let tempDirectory = process.env['RUNNER_TEMP'] || os_1.default.tmpdir();
     return tempDirectory;
@@ -13501,7 +13498,7 @@ function extractJdkFile(toolPath, extension) {
 }
 exports.extractJdkFile = extractJdkFile;
 function getDownloadArchiveExtension() {
-    return exports.IS_WINDOWS ? 'zip' : 'tar.gz';
+    return process.platform === 'win32' ? 'zip' : 'tar.gz';
 }
 exports.getDownloadArchiveExtension = getDownloadArchiveExtension;
 
@@ -13742,7 +13739,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generate = exports.configAuthentication = exports.SETTINGS_FILE = exports.M2_DIR = void 0;
+exports.generate = exports.configureAuthentication = exports.SETTINGS_FILE = exports.M2_DIR = void 0;
 const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
@@ -13750,11 +13747,21 @@ const fs = __importStar(__webpack_require__(747));
 const os = __importStar(__webpack_require__(87));
 const xmlbuilder2_1 = __webpack_require__(255);
 const constants = __importStar(__webpack_require__(211));
+const gpg = __importStar(__webpack_require__(884));
 exports.M2_DIR = '.m2';
 exports.SETTINGS_FILE = 'settings.xml';
-function configAuthentication(id, username, password, gpgPassphrase) {
+function configureAuthentication() {
     return __awaiter(this, void 0, void 0, function* () {
-        core.info(`creating ${exports.SETTINGS_FILE} with server-id: ${id};
+        const id = core.getInput(constants.INPUT_SERVER_ID);
+        const username = core.getInput(constants.INPUT_SERVER_USERNAME);
+        const password = core.getInput(constants.INPUT_SERVER_PASSWORD);
+        const gpgPrivateKey = core.getInput(constants.INPUT_GPG_PRIVATE_KEY) || constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
+        const gpgPassphrase = core.getInput(constants.INPUT_GPG_PASSPHRASE) ||
+            (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
+        if (gpgPrivateKey) {
+            core.setSecret(gpgPrivateKey);
+        }
+        core.info(`Creating ${exports.SETTINGS_FILE} with server-id: ${id};
      environment variables:
      username=\$${username},
      password=\$${password},
@@ -13764,9 +13771,14 @@ function configAuthentication(id, username, password, gpgPassphrase) {
         const settingsDirectory = path.join(core.getInput(constants.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants.INPUT_SETTINGS_PATH) ? '' : exports.M2_DIR);
         yield io.mkdirP(settingsDirectory);
         yield write(settingsDirectory, generate(id, username, password, gpgPassphrase));
+        if (gpgPrivateKey) {
+            core.info('Importing private gpg key');
+            const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
+            core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+        }
     });
 }
-exports.configAuthentication = configAuthentication;
+exports.configureAuthentication = configureAuthentication;
 // only exported for testing purposes
 function generate(id, username, password, gpgPassphrase) {
     const xmlObj = {
@@ -13803,10 +13815,10 @@ function write(directory, settings) {
     return __awaiter(this, void 0, void 0, function* () {
         const location = path.join(directory, exports.SETTINGS_FILE);
         if (fs.existsSync(location)) {
-            core.warning(`overwriting existing file ${location}`);
+            core.warning(`Overwriting existing file ${location}`);
         }
         else {
-            core.info(`writing ${location}`);
+            core.info(`Writing ${location}`);
         }
         return fs.writeFileSync(location, settings, {
             encoding: 'utf-8',
@@ -22719,8 +22731,9 @@ const tc = __importStar(__webpack_require__(139));
 const core = __importStar(__webpack_require__(470));
 const fs_1 = __importDefault(__webpack_require__(747));
 const path_1 = __importDefault(__webpack_require__(622));
-const util_1 = __webpack_require__(322);
 const base_installer_1 = __webpack_require__(534);
+const util_1 = __webpack_require__(322);
+const constants_1 = __webpack_require__(211);
 class LocalDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions, jdkFile) {
         super('LocalJDKFile', installerOptions);
@@ -22749,7 +22762,7 @@ class LocalDistributor extends base_installer_1.JavaBase {
                 const javaVersion = this.version.raw;
                 let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaVersion, this.architecture);
                 if (process.platform === 'darwin') {
-                    javaPath = path_1.default.join(javaPath, util_1.macOSJavaContentDir);
+                    javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
                 }
                 foundJava = {
                     javaPath,
@@ -23058,15 +23071,15 @@ const path_1 = __importDefault(__webpack_require__(622));
 const httpm = __importStar(__webpack_require__(539));
 const util_1 = __webpack_require__(322);
 class JavaBase {
-    constructor(distributor, installerOptions) {
-        this.distributor = distributor;
+    constructor(distribution, installerOptions) {
+        this.distribution = distribution;
         this.http = new httpm.HttpClient('setup-java', undefined, {
             allowRetries: true,
             maxRetries: 3
         });
         ({ version: this.version, stable: this.stable } = this.normalizeVersion(installerOptions.version));
         this.architecture = installerOptions.arch;
-        this.javaPackage = installerOptions.javaPackage;
+        this.packageType = installerOptions.packageType;
     }
     setupJava() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -23086,7 +23099,7 @@ class JavaBase {
         });
     }
     get toolcacheFolderName() {
-        return `Java_${this.distributor}_${this.javaPackage}`;
+        return `Java_${this.distribution}_${this.packageType}`;
     }
     findInToolcache() {
         const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
@@ -23101,7 +23114,7 @@ class JavaBase {
     setJavaDefault(toolPath, version) {
         core.exportVariable('JAVA_HOME', toolPath);
         core.addPath(path_1.default.join(toolPath, 'bin'));
-        core.setOutput('distributor', this.distributor);
+        core.setOutput('distribution', this.distribution);
         core.setOutput('path', toolPath);
         core.setOutput('version', version);
     }
@@ -33221,72 +33234,44 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", { value: true });
 const core = __importStar(__webpack_require__(470));
 const auth = __importStar(__webpack_require__(331));
-const gpg = __importStar(__webpack_require__(884));
 const constants = __importStar(__webpack_require__(211));
 const path = __importStar(__webpack_require__(622));
 const distributor_factory_1 = __webpack_require__(264);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const version = core.getInput(constants.INPUT_JAVA_VERSION, {
-                required: true
-            });
-            const arch = core.getInput(constants.INPUT_ARCHITECTURE, {
-                required: true
-            });
-            const javaDistributor = core.getInput('distribution');
-            const javaPackage = core.getInput(constants.INPUT_JAVA_PACKAGE, {
-                required: true
-            });
-            const jdkFile = core.getInput(constants.INPUT_JDK_FILE, {
-                required: false
-            });
-            const installerOptions = {
-                arch,
-                javaPackage,
-                version
-            };
-            const distributor = distributor_factory_1.getJavaDistributor(javaDistributor, installerOptions, jdkFile);
-            if (!distributor) {
-                throw new Error(`No supported distributor was found for input ${javaDistributor}`);
+            const version = core.getInput(constants.INPUT_JAVA_VERSION);
+            const arch = core.getInput(constants.INPUT_ARCHITECTURE);
+            const distributionName = core.getInput(constants.INPUT_DISTRIBUTION);
+            const packageType = core.getInput(constants.INPUT_JAVA_PACKAGE);
+            const jdkFile = core.getInput(constants.INPUT_JDK_FILE);
+            if (version || distributionName) {
+                if (!version || !distributionName) {
+                    throw new Error(`Both ‘${constants.INPUT_JAVA_VERSION}’ and ‘${constants.INPUT_DISTRIBUTION}’ inputs are required if one of them is specified`);
+                }
+                const installerOptions = {
+                    arch,
+                    packageType,
+                    version
+                };
+                const distributor = distributor_factory_1.getJavaDistributor(distributionName, installerOptions, jdkFile);
+                if (!distributor) {
+                    throw new Error(`No supported distributor was found for input ${distributionName}`);
+                }
+                const result = yield distributor.setupJava();
+                core.info('');
+                core.info('Java configuration:');
+                core.info(`  Distribution: ${distributionName}`);
+                core.info(`  Version: ${result.javaVersion}`);
+                core.info(`  Path: ${result.javaPath}`);
+                core.info('');
             }
-            const result = yield distributor.setupJava();
-            core.info('');
-            core.info('Java configuration:');
-            core.info(`  Java distributor: ${javaDistributor}`);
-            core.info(`  Java version: ${result.javaVersion}`);
-            core.info(`  Java path: ${result.javaPath}`);
-            core.info('');
             const matchersPath = path.join(__dirname, '..', '..', '.github');
             core.info(`##[add-matcher]${path.join(matchersPath, 'java.json')}`);
-            yield configureAuthentication();
+            yield auth.configureAuthentication();
         }
         catch (error) {
             core.setFailed(error.message);
-        }
-    });
-}
-function configureAuthentication() {
-    return __awaiter(this, void 0, void 0, function* () {
-        const id = core.getInput(constants.INPUT_SERVER_ID, { required: false });
-        const username = core.getInput(constants.INPUT_SERVER_USERNAME, {
-            required: false
-        });
-        const password = core.getInput(constants.INPUT_SERVER_PASSWORD, {
-            required: false
-        });
-        const gpgPrivateKey = core.getInput(constants.INPUT_GPG_PRIVATE_KEY, { required: false }) ||
-            constants.INPUT_DEFAULT_GPG_PRIVATE_KEY;
-        const gpgPassphrase = core.getInput(constants.INPUT_GPG_PASSPHRASE, { required: false }) ||
-            (gpgPrivateKey ? constants.INPUT_DEFAULT_GPG_PASSPHRASE : undefined);
-        if (gpgPrivateKey) {
-            core.setSecret(gpgPrivateKey);
-        }
-        yield auth.configAuthentication(id, username, password, gpgPassphrase);
-        if (gpgPrivateKey) {
-            core.info('Importing private gpg key');
-            const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
-            core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
         }
     });
 }
@@ -37437,7 +37422,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     downloadTool(javaRelease) {
         return __awaiter(this, void 0, void 0, function* () {
             let extractedJavaPath;
-            core.info(`Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`);
+            core.info(`Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`);
             const javaArchivePath = yield tc.downloadTool(javaRelease.url);
             core.info(`Extracting Java archive...`);
             let extension = util_1.getDownloadArchiveExtension();
@@ -37452,7 +37437,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
         var _a;
         return __awaiter(this, void 0, void 0, function* () {
             const { arch, hw_bitness, abi } = this.getArchitectureOptions();
-            const [bundleType, features] = this.javaPackage.split('+');
+            const [bundleType, features] = this.packageType.split('+');
             const platform = this.getPlatformOption();
             const extension = util_1.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;

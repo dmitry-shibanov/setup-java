@@ -4,10 +4,11 @@ import * as core from '@actions/core';
 import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
-import { macOSJavaContentDir, extractJdkFile } from '../../util';
 
 import { JavaBase } from '../base-installer';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
+import { extractJdkFile } from '../../util';
+import { macOSJavaContentDir } from '../../constants';
 
 export class LocalDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions, private jdkFile?: string) {

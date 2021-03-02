@@ -5,10 +5,11 @@ import fs from 'fs';
 import path from 'path';
 import semver from 'semver';
 
-import { extractJdkFile, getDownloadArchiveExtension, macOSJavaContentDir } from '../../util';
 import { JavaBase } from '../base-installer';
 import { IAdoptiumAvailableVersions } from './models';
 import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
+import { macOSJavaContentDir } from '../../constants';
+import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 
 export class AdoptiumDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
@@ -51,7 +52,7 @@ export class AdoptiumDistributor extends JavaBase {
     let extractedJavaPath: string;
 
     core.info(
-      `Downloading Java ${javaRelease.version} (${this.distributor}) from ${javaRelease.url} ...`
+      `Downloading Java ${javaRelease.version} (${this.distribution}) from ${javaRelease.url} ...`
     );
     const javaArchivePath = await tc.downloadTool(javaRelease.url);
 
@@ -79,7 +80,7 @@ export class AdoptiumDistributor extends JavaBase {
   private async getAvailableVersions(): Promise<IAdoptiumAvailableVersions[]> {
     const platform = this.getPlatformOption();
     const arch = this.architecture;
-    const imageType = this.javaPackage;
+    const imageType = this.packageType;
     const heapSize = 'normal';
     const jvmImpl = 'hotspot';
     const versionRange = '[1.0,100.0]';

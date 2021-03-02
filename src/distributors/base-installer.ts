@@ -10,10 +10,10 @@ export abstract class JavaBase {
   protected http: httpm.HttpClient;
   protected version: semver.Range;
   protected architecture: string;
-  protected javaPackage: string;
+  protected packageType: string;
   protected stable: boolean;
 
-  constructor(protected distributor: string, installerOptions: JavaInstallerOptions) {
+  constructor(protected distribution: string, installerOptions: JavaInstallerOptions) {
     this.http = new httpm.HttpClient('setup-java', undefined, {
       allowRetries: true,
       maxRetries: 3
@@ -23,7 +23,7 @@ export abstract class JavaBase {
       installerOptions.version
     ));
     this.architecture = installerOptions.arch;
-    this.javaPackage = installerOptions.javaPackage;
+    this.packageType = installerOptions.packageType;
   }
 
   protected abstract downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults>;
@@ -47,7 +47,7 @@ export abstract class JavaBase {
   }
 
   protected get toolcacheFolderName(): string {
-    return `Java_${this.distributor}_${this.javaPackage}`;
+    return `Java_${this.distribution}_${this.packageType}`;
   }
 
   protected findInToolcache(): JavaInstallerResults | null {
@@ -65,7 +65,7 @@ export abstract class JavaBase {
   protected setJavaDefault(toolPath: string, version: string) {
     core.exportVariable('JAVA_HOME', toolPath);
     core.addPath(path.join(toolPath, 'bin'));
-    core.setOutput('distributor', this.distributor);
+    core.setOutput('distribution', this.distribution);
     core.setOutput('path', toolPath);
     core.setOutput('version', version);
   }
