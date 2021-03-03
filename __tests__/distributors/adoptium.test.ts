@@ -108,7 +108,6 @@ describe('findPackageForDownload', () => {
       //['15.0.1.9', '15.0.1+9.1'], // is not supported yet
       ['11.x', '11.0.10+9'],
       ['x', '15.0.2+7'],
-      ['12.0-13.0', '13.0.2.8.1'],
       ['12', '12.0.2+10.3'] // make sure that '12.0.2+10.1', '12.0.2+10.3', '12.0.2+10.2' are sorted correctly
     ])('%s -> %s', async (input, expected) => {
       const distributor = new AdoptiumDistributor({

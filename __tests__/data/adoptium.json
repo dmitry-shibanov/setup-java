@@ -1,5 +1,85 @@
-
 [
+    {
+        "binaries": [
+            {
+                "architecture": "x64",
+                "download_count": 74181,
+                "heap_size": "normal",
+                "image_type": "jdk",
+                "jvm_impl": "hotspot",
+                "os": "mac",
+                "package": {
+                    "checksum": "09b7e6ab5d5eb4b73813f4caa793a0b616d33794a17988fa6a6b7c972e8f3dd3",
+                    "checksum_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz.sha256.txt",
+                    "download_count": 23872,
+                    "link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz",
+                    "metadata_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz.json",
+                    "name": "OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz",
+                    "size": 195705010
+                },
+                "project": "jdk",
+                "scm_ref": "jdk-14.0.2+12_adopt",
+                "updated_at": "2020-07-16T08:55:45Z"
+            }
+        ],
+        "download_count": 477080,
+        "id": "MDc6UmVsZWFzZTI4NjIyMDc4.+ve8KojpqJUpsA==",
+        "release_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/tag/jdk-14.0.2%2B12",
+        "release_name": "jdk-14.0.2+12",
+        "release_type": "ga",
+        "timestamp": "2020-07-16T08:54:16Z",
+        "updated_at": "2020-07-16T08:54:16Z",
+        "vendor": "adoptopenjdk",
+        "version_data": {
+            "build": 12,
+            "major": 14,
+            "minor": 0,
+            "openjdk_version": "14.0.2+12",
+            "security": 2,
+            "semver": "14.0.2+12"
+        }
+    },
+    {
+        "binaries": [
+            {
+                "architecture": "x64",
+                "download_count": 58023,
+                "heap_size": "normal",
+                "image_type": "jdk",
+                "jvm_impl": "hotspot",
+                "os": "mac",
+                "package": {
+                    "checksum": "b11cb192312530bcd84607631203d0c1727e672af12813078e6b525e3cce862d",
+                    "checksum_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz.sha256.txt",
+                    "download_count": 25276,
+                    "link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz",
+                    "metadata_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz.json",
+                    "name": "OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz",
+                    "size": 195769653
+                },
+                "project": "jdk",
+                "scm_ref": "jdk-14.0.1+7_adopt",
+                "updated_at": "2020-04-20T12:54:23Z"
+            }
+        ],
+        "download_count": 198607,
+        "id": "MDc6UmVsZWFzZTI1Njc4MzEw.z3NqYG25PFlG+Q==",
+        "release_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/tag/jdk-14.0.1%2B7",
+        "release_name": "jdk-14.0.1+7",
+        "release_type": "ga",
+        "timestamp": "2020-04-20T12:52:51Z",
+        "updated_at": "2020-04-20T12:52:51Z",
+        "vendor": "adoptopenjdk",
+        "version_data": {
+            "adopt_build_number": 1,
+            "build": 7,
+            "major": 14,
+            "minor": 0,
+            "openjdk_version": "14.0.1+7",
+            "security": 1,
+            "semver": "14.0.1+7.1"
+        }
+    },
     {
         "binaries": [
             {
@@ -159,87 +239,6 @@
             "openjdk_version": "15+36",
             "security": 0,
             "semver": "15.0.0+36"
-        }
-    },
-    {
-        "binaries": [
-            {
-                "architecture": "x64",
-                "download_count": 74181,
-                "heap_size": "normal",
-                "image_type": "jdk",
-                "jvm_impl": "hotspot",
-                "os": "mac",
-                "package": {
-                    "checksum": "09b7e6ab5d5eb4b73813f4caa793a0b616d33794a17988fa6a6b7c972e8f3dd3",
-                    "checksum_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz.sha256.txt",
-                    "download_count": 23872,
-                    "link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz",
-                    "metadata_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.2%2B12/OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz.json",
-                    "name": "OpenJDK14U-jdk_x64_mac_hotspot_14.0.2_12.tar.gz",
-                    "size": 195705010
-                },
-                "project": "jdk",
-                "scm_ref": "jdk-14.0.2+12_adopt",
-                "updated_at": "2020-07-16T08:55:45Z"
-            }
-        ],
-        "download_count": 477080,
-        "id": "MDc6UmVsZWFzZTI4NjIyMDc4.+ve8KojpqJUpsA==",
-        "release_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/tag/jdk-14.0.2%2B12",
-        "release_name": "jdk-14.0.2+12",
-        "release_type": "ga",
-        "timestamp": "2020-07-16T08:54:16Z",
-        "updated_at": "2020-07-16T08:54:16Z",
-        "vendor": "adoptopenjdk",
-        "version_data": {
-            "build": 12,
-            "major": 14,
-            "minor": 0,
-            "openjdk_version": "14.0.2+12",
-            "security": 2,
-            "semver": "14.0.2+12"
-        }
-    },
-    {
-        "binaries": [
-            {
-                "architecture": "x64",
-                "download_count": 58023,
-                "heap_size": "normal",
-                "image_type": "jdk",
-                "jvm_impl": "hotspot",
-                "os": "mac",
-                "package": {
-                    "checksum": "b11cb192312530bcd84607631203d0c1727e672af12813078e6b525e3cce862d",
-                    "checksum_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz.sha256.txt",
-                    "download_count": 25276,
-                    "link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz",
-                    "metadata_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/download/jdk-14.0.1%2B7/OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz.json",
-                    "name": "OpenJDK14U-jdk_x64_mac_hotspot_14.0.1_7.tar.gz",
-                    "size": 195769653
-                },
-                "project": "jdk",
-                "scm_ref": "jdk-14.0.1+7_adopt",
-                "updated_at": "2020-04-20T12:54:23Z"
-            }
-        ],
-        "download_count": 198607,
-        "id": "MDc6UmVsZWFzZTI1Njc4MzEw.z3NqYG25PFlG+Q==",
-        "release_link": "https://github.com/AdoptOpenJDK/openjdk14-binaries/releases/tag/jdk-14.0.1%2B7",
-        "release_name": "jdk-14.0.1+7",
-        "release_type": "ga",
-        "timestamp": "2020-04-20T12:52:51Z",
-        "updated_at": "2020-04-20T12:52:51Z",
-        "vendor": "adoptopenjdk",
-        "version_data": {
-            "adopt_build_number": 1,
-            "build": 7,
-            "major": 14,
-            "minor": 0,
-            "openjdk_version": "14.0.1+7",
-            "security": 1,
-            "semver": "14.0.1+7.1"
         }
     },
     {

@@ -85,8 +85,7 @@ export class AdoptiumDistributor extends JavaBase {
     const platform = this.getPlatformOption();
     const arch = this.architecture;
     const imageType = this.packageType;
-    const heapSize = 'normal';
-    const versionRange = '[1.0,100.0]';
+    const versionRange = '[1.0,100.0]'; // retrieve all available versions
     const encodedVersionRange = encodeURI(versionRange);
     const releaseType = this.stable ? 'ga' : 'ea';
 
