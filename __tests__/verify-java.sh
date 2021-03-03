@@ -21,13 +21,3 @@ if [ "$2" != "$JAVA_HOME" ]; then
   echo "::error::Unexpected path"
   exit 1
 fi
-
-if [ -z "$3" ]; then
-  echo "::error::Must supply java version argument"
-  exit 1
-fi
-
-if [ "$1" != "$3" ]; then
-  echo "::error::Unexpected version"
-  exit 1
-fi

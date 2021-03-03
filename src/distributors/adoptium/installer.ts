@@ -31,12 +31,12 @@ export class AdoptiumDistributor extends JavaBase {
         ? `\nAvailable versions: ${availableOptions}`
         : '';
       throw new Error(
-        `Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`
+        `Could not find satisfied version for SemVer '${version.raw}'. ${availableOptionsMessage}`
       );
     }
 
     if (resolvedFullVersion.binaries.length < 0) {
-      throw new Error(`No binaries were found for semver ${version.raw}`);
+      throw new Error(`No binaries were found for SemVer '${version.raw}'`);
     }
 
     // take the first element in 'binaries' array

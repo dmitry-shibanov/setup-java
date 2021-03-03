@@ -12,7 +12,7 @@ on:
 
 jobs:
   setup-java-major-versions:
-    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64)
+    name: ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64) - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -39,7 +39,7 @@ jobs:
 
 
   setup-java-major-minor-versions:
-    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64)
+    name: ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64) - ${{ matrix.os }}
     needs: setup-java-major-versions
     runs-on: ${{ matrix.os }}
     strategy:
@@ -73,7 +73,7 @@ jobs:
         run: java -version
 
   setup-java-ea-versions:
-    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64)
+    name: ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64) - ${{ matrix.os }}
     needs: setup-java-major-minor-versions
     runs-on: ${{ matrix.os }}
     strategy:
@@ -102,7 +102,7 @@ jobs:
         run: java -version
 
   setup-java-custom-package-type:
-    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (${{ matrix.java-package }}-x64)
+    name: ${{ matrix.distribution }} ${{ matrix.java }} (${{ matrix.java-package }}-x64) - ${{ matrix.os }}
     needs: setup-java-major-minor-versions
     runs-on: ${{ matrix.os }}
     strategy:
@@ -152,7 +152,7 @@ jobs:
         run: java -version
 
   setup-java-custom-architecture:
-    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x86)
+    name: ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x86) - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

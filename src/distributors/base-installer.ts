@@ -81,7 +81,7 @@ export abstract class JavaBase {
 
     if (!semver.validRange(version)) {
       throw new Error(
-        `The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`
+        `The string '${version}' is not valid SemVer notation for Java version. Please check README file for code snippets and more detailed information`
       );
     }
 

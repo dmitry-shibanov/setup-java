@@ -10283,10 +10283,10 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
                 const availableOptionsMessage = availableOptions
                     ? `\nAvailable versions: ${availableOptions}`
                     : '';
-                throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
+                throw new Error(`Could not find satisfied version for SemVer '${version.raw}'. ${availableOptionsMessage}`);
             }
             if (resolvedFullVersion.binaries.length < 0) {
-                throw new Error(`No binaries were found for semver ${version.raw}`);
+                throw new Error(`No binaries were found for SemVer '${version.raw}'`);
             }
             // take the first element in 'binaries' array
             // because it is already filtered by arch and platform options and can't contain > 1 elements
@@ -23126,7 +23126,7 @@ class JavaBase {
             stable = false;
         }
         if (!semver_1.default.validRange(version)) {
-            throw new Error(`The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`);
+            throw new Error(`The string '${version}' is not valid SemVer notation for Java version. Please check README file for code snippets and more detailed information`);
         }
         return {
             version: new semver_1.default.Range(version),
