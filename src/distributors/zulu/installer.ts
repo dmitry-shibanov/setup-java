@@ -102,17 +102,18 @@ export class ZuluDistributor extends JavaBase {
       throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
     }
 
-    // TO-DO: Debug information, should be removed before release
-    // core.startGroup('Print debug information about available versions');
-    // console.timeEnd('azul-retrieve-available-versions');
-    // console.log(`Available versions: [${availableVersions.length}]`);
-    // console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
-    // core.endGroup();
-    // core.startGroup('Print detailed debug information about available versions');
-    // availableVersions.forEach(item => {
-    //   console.log(JSON.stringify(item));
-    // });
-    // core.endGroup();
+    if (core.isDebug()) {
+      core.startGroup('Print information about available versions');
+      console.timeEnd('azul-retrieve-available-versions');
+      console.log(`Available versions: [${availableVersions.length}]`);
+      console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+      core.endGroup();
+      core.startGroup('Print full information about available versions');
+      availableVersions.forEach(item => {
+        console.log(JSON.stringify(item));
+      });
+      core.endGroup();
+    }
 
     return availableVersions;
   }
