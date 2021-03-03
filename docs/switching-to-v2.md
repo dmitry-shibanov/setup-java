@@ -32,9 +32,4 @@ steps:
 
 ## Dropping legacy Java version syntax 1.x
 V1 supported legacy Java syntax like `1.8` (same as `8`), `1.8.0.212` (same as `8.0.212`). 
-V2 dropped support of old syntax so workflows should be changed accordingly.
-
-
-TO-DO: Will we stop creating settings.xml for default fields?  
-TO-DO: Will we stop installing Java if distributor and java-version are not specified?  
-TO-DO: Should we say something about new approach of searching Java versions via Azul API instead of parsing HTML page?  
+V2 dropped support of old syntax so workflows should be changed accordingly. 

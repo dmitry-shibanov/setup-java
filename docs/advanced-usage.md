@@ -34,7 +34,7 @@ steps:
   with:
     distribution: 'zulu'
     java-version: '11.x'
-    java-package: jdk # optional (jdk, jre or jdk+fx) - defaults to jdk
+    java-package: jdk # optional (jdk, jre, jdk+fx or jre+fx) - defaults to jdk
 - run: java -cp java HelloWorldApp
 ```
 
@@ -67,7 +67,6 @@ steps:
 ## Installing Java from local file
 If your use-case requires custom distribution or version that is not provided by action, you can download it manually and then action will take care about installation and caching of this version on VM:
 
-TO-DO: Fix example
 ```yaml
 steps:
 - run: |
@@ -167,8 +166,6 @@ jobs:
     - name: Set up Apache Maven Central
       uses: actions/setup-java@v2-preview
       with: # running setup-java again overwrites the settings.xml
-        distribution: '<distribution>'
-        java-version: 8.x
         server-id: maven # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: MAVEN_USERNAME # env variable for username in deploy
         server-password: MAVEN_CENTRAL_TOKEN # env variable for token in deploy
