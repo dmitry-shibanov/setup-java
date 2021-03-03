@@ -448,19 +448,19 @@ describe('setupJava', () => {
 
     [
       { version: '8', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '8.0.282', javaPath: 'Java_Zulu_jdk/8.0.282/x86' }
+      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jdk', '8.0.282', 'x86') }
     ],
     [
       { version: '11', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '11.0.10', javaPath: 'Java_Zulu_jdk/11.0.10/x86' }
+      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jdk', '11.0.10', 'x86') }
     ],
     [
       { version: '8.0', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '8.0.282', javaPath: 'Java_Zulu_jdk/8.0.282/x86' }
+      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jdk', '8.0.282', 'x86') }
     ],
     [
       { version: '11.0', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '11.0.10', javaPath: 'Java_Zulu_jdk/11.0.10/x86' }
+      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jdk', '11.0.10', 'x86') }
     ],
     [
       { version: '8', arch: 'x86', packageType: 'jdk+fx' },
