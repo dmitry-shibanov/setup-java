@@ -41,6 +41,7 @@ describe('auth tests', () => {
           return commonObject.password;
         case constants.INPUT_GPG_PASSPHRASE:
           console.log(commonObject.gpgPassphrase);
+          return commonObject.gpgPassphrase;
         default:
           return '';
       }
