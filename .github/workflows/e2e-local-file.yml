@@ -24,9 +24,9 @@ jobs:
       - run: |
           if ($IsLinux) {
             $downloadUrl = "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_linux_hotspot_11.0.10_9.tar.gz"
-          } else if ($IsMacOS) {
+          } elseif ($IsMacOS) {
             $downloadUrl = "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_mac_hotspot_11.0.10_9.tar.gz"
-          } else if ($IsWindows) {
+          } elseif ($IsWindows) {
             $downloadUrl = "https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.10%2B9/OpenJDK11U-jdk_x64_windows_hotspot_11.0.10_9.zip"
           }
           wget -O $RUNNER_TEMP/java_package.tar.gz $downloadUrl
@@ -55,9 +55,9 @@ jobs:
       - run: |
           if ($IsLinux) {
             $downloadUrl = "https://cdn.azul.com/zulu/bin/zulu11.2.3-jdk11.0.1-linux_x64.tar.gz"
-          } else if ($IsMacOS) {
+          } elseif ($IsMacOS) {
             $downloadUrl = "https://cdn.azul.com/zulu/bin/zulu11.2.3-jdk11.0.1-macosx_x64.tar.gz"
-          } else if ($IsWindows) {
+          } elseif ($IsWindows) {
             $downloadUrl = "https://cdn.azul.com/zulu/bin/zulu11.45.27-ca-jdk11.0.10-win_x64.zip"
           }
           wget -O $RUNNER_TEMP/java_package.tar.gz $downloadUrl
