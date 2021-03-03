@@ -13,8 +13,8 @@ fi
 EXPECTED_JAVA_VERSION=$1
 EXPECTED_PATH=$2
 
-if [[ $EXPECTED_JAVA_VERSION == 8.* ]]; then
-  $EXPECTED_JAVA_VERSION="1.${EXPECTED_JAVA_VERSION}"
+if [[ $EXPECTED_JAVA_VERSION == 8 ]] || [[ $EXPECTED_JAVA_VERSION == 8.* ]]; then
+  EXPECTED_JAVA_VERSION="1.${EXPECTED_JAVA_VERSION}"
 fi
 
 ACTUAL_JAVA_VERSION="$(java -version 2>&1)"
@@ -23,10 +23,13 @@ echo "Found java version: $ACTUAL_JAVA_VERSION"
 GREP_RESULT=$(echo $ACTUAL_JAVA_VERSION | grep "^openjdk version \"$EXPECTED_JAVA_VERSION")
 if [ -z "$GREP_RESULT" ]; then
   echo "::error::Unexpected version"
+  echo "Expected version: $EXPECTED_JAVA_VERSION"
   exit 1
 fi
 
 if [ "$EXPECTED_PATH" != "$JAVA_HOME" ]; then
   echo "::error::Unexpected path"
+  echo "Actual path: $JAVA_HOME"
+  echo "Expected path: $EXPECTED_PATH"
   exit 1
 fi

@@ -30,8 +30,6 @@ jobs:
           java-version: ${{ matrix.version }}
           java-package: 'jdk'
           distribution: ${{ matrix.distribution }}
-      - name: Java version
-        run: java -version
       - name: Verify Java
         run: bash __tests__/verify-java.sh "${{ matrix.version }}" "${{ steps.setup-java.outputs.path }}"
         shell: bash
