@@ -464,56 +464,56 @@ describe('setupJava', () => {
     ],
     [
       { version: '8', arch: 'x86', packageType: 'jdk+fx' },
-      { javaVersion: '8.0.282', javaPath: 'Java_Zulu_jdk+fx/8.0.282/x86' }
+      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jdk+fx', '8.0.282', 'x86') }
     ],
     [
       { version: '11', arch: 'x86', packageType: 'jdk+fx' },
-      { javaVersion: '11.0.10', javaPath: 'Java_Zulu_jdk+fx/11.0.10/x86' }
+      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jdk+fx', '11.0.10', 'x86') }
     ],
     [
       { version: '15', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '15.0.2', javaPath: 'Java_Zulu_jdk/15.0.2/x86' }
+      { javaVersion: '15.0.2', javaPath: path.join('Java_Zulu_jdk', '15.0.2', 'x86') }
     ],
     [
       { version: '15-ea', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '15.0.0', javaPath: 'Java_Zulu_jdk/15.0.0/x86' }
+      { javaVersion: '15.0.0', javaPath: path.join('Java_Zulu_jdk', '15.0.0', 'x86') }
     ],
 
     // jre
 
     [
       { version: '8', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '8.0.282', javaPath: 'Java_Zulu_jre/8.0.282/x86' }
+      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jre', '8.0.282', 'x86') }
     ],
     [
       { version: '11', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '11.0.10', javaPath: 'Java_Zulu_jre/11.0.10/x86' }
+      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jre', '11.0.10', 'x86') }
     ],
     [
       { version: '8.0', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '8.0.282', javaPath: 'Java_Zulu_jre/8.0.282/x86' }
+      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jre', '8.0.282', 'x86') }
     ],
     [
       { version: '11.0', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '11.0.10', javaPath: 'Java_Zulu_jre/11.0.10/x86' }
+      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jre', '11.0.10', 'x86') }
     ],
     [
       { version: '8', arch: 'x86', packageType: 'jre+fx' },
-      { javaVersion: '8.0.282', javaPath: 'Java_Zulu_jre+fx/8.0.282/x86' }
+      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jre+fx', '8.0.282', 'x86') }
     ],
     [
       { version: '11', arch: 'x86', packageType: 'jre+fx' },
-      { javaVersion: '11.0.10', javaPath: 'Java_Zulu_jre+fx/11.0.10/x86' }
+      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jre+fx', '11.0.10', 'x86') }
     ],
     [
       { version: '15', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '15.0.2', javaPath: 'Java_Zulu_jre/15.0.2/x86' }
+      { javaVersion: '15.0.2', javaPath: path.join('Java_Zulu_jre', '15.0.2', 'x86') }
     ],
 
     // in toolcache
     [
       { version: '18', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '18.1.10', javaPath: 'Java_Zulu_jdk/18.1.10/x86' }
+      { javaVersion: '18.1.10', javaPath: path.join('Java_Zulu_jdk', '18.1.10', 'x86') }
     ]
   ])('input %o -> result %o', async (input, expected) => {
     let zuluDistributor = new ZuluDistributor(input);

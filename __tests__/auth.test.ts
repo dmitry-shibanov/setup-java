@@ -26,7 +26,7 @@ describe('auth tests', () => {
     gpgPassphrase: ''
   };
   beforeEach(async () => {
-    await io.rmRF(m2Dir);
+    fs.existsSync(m2Dir) && await io.rmRF(m2Dir);
     coreSpyGetInput = jest.spyOn(core, 'getInput');
     coreSpyGetInput.mockImplementation((input: string) => {
       switch (input) {
@@ -62,7 +62,7 @@ describe('auth tests', () => {
 
     const altHome = path.join(__dirname, 'runner', 'settings');
     const altSettingsFile = path.join(altHome, auth.SETTINGS_FILE);
-    process.env[`INPUT_SETTINGS-PATH`] = altHome;
+    process.env[`INPUT_SETTINGS_PATH`] = altHome;
     await io.rmRF(altHome); // ensure it doesn't already exist
 
     commonObject.id = id;
@@ -79,7 +79,7 @@ describe('auth tests', () => {
       auth.generate(id, username, password)
     );
 
-    delete process.env[`INPUT_SETTINGS-PATH`];
+    delete process.env[`INPUT_SETTINGS_PATH`];
     await io.rmRF(altHome);
   }, 100000);
 
