@@ -12,14 +12,14 @@ on:
 
 jobs:
   setup-java-major-versions:
-    name: ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64) - ${{ matrix.os }}
+    name: ${{ matrix.distribution }} ${{ matrix.version }} (jdk-x64) - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         distribution: ['adoptium', 'zulu']
-        java:
+        version:
         - '8'
         - '11'
         - '14'
@@ -31,11 +31,14 @@ jobs:
       - name: setup-java
         uses: ./
         with:
-          java-version: ${{ matrix.java }}
+          java-version: ${{ matrix.version }}
           java-package: 'jdk'
           distribution: ${{ matrix.distribution }}
       - name: Java version
         run: java -version
+      - name: Verify Java
+        run: bash __tests__/verify-java.sh "${{ matrix.version }}" "${{ steps.setup-java.outputs.path }}"
+        shell: bash
 
 
   setup-java-major-minor-versions:
@@ -157,8 +160,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-        distribution: ['adoptium', 'zulu']
+        # Only Zulu provides x86 arch for now and only for windows / ubuntu
+        os: [windows-latest, ubuntu-latest]
+        distribution: ['zulu']
         java:
         - '8'
         - '11'

@@ -31,4 +31,4 @@ jobs:
       #- run: npm test
       - name: Verify no unstaged changes
         if: runner.os != 'windows'
-        run: __tests__/verify-no-unstaged-changes.sh
+        run: bash __tests__/verify-no-unstaged-changes.sh
