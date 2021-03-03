@@ -28,7 +28,6 @@ jobs:
           server-id: maven
           server-username: MAVEN_USERNAME
           server-password: MAVEN_CENTRAL_TOKEN
-          gpg-private-key: fake_gpg_key_secret
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - run: |
           $xmlPath = Join-Path $env:HOME ".m2" "settings.xml"
@@ -63,7 +62,6 @@ jobs:
           server-id: maven
           server-username: MAVEN_USERNAME
           server-password: MAVEN_CENTRAL_TOKEN
-          gpg-private-key: fake_gpg_key
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
           settings-path: ${{ runner.temp }}
       - run: |
