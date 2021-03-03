@@ -30,11 +30,11 @@ jobs:
           server-password: MAVEN_CENTRAL_TOKEN
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - run: |
-          $home = $env:USERPROFILE
-          if (-not $home) {
-            $home = $env:HOME
+          $homePath = $env:USERPROFILE
+          if (-not $homePath) {
+            $homePath = $env:HOME
           }
-          $xmlPath = Join-Path $home ".m2" "settings.xml"
+          $xmlPath = Join-Path $homePath ".m2" "settings.xml"
 
           Get-Content $xmlPath | ForEach-Object { Write-Host $_ }
 
