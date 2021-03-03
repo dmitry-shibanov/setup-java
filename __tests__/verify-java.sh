@@ -10,7 +10,7 @@ if [ -z "$2" ]; then
   exit 1
 fi
 
-EXPECTED_JAVA_VERSION=$1
+EXPECTED_JAVA_VERSION=${1/-ea/}
 EXPECTED_PATH=$2
 
 if [[ $EXPECTED_JAVA_VERSION == 8 ]] || [[ $EXPECTED_JAVA_VERSION == 8.* ]]; then

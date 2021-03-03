@@ -79,7 +79,7 @@ jobs:
       matrix:
         os: [macos-latest, windows-latest, ubuntu-latest]
         distribution: ['adoptium', 'zulu']
-        version: ['11-ea', '15-ea']
+        version: ['14-ea', '15-ea']
     steps:
       - name: Checkout
         uses: actions/checkout@v2
