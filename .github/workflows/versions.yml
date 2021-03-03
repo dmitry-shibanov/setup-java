@@ -157,6 +157,7 @@ jobs:
 
   setup-java-custom-architecture:
     name: ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x86) - ${{ matrix.os }}
+    needs: setup-java-major-minor-versions
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
