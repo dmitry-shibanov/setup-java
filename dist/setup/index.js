@@ -22761,7 +22761,8 @@ class LocalDistributor extends base_installer_1.JavaBase {
                 const archivePath = path_1.default.join(extractedJavaPath, archiveName);
                 const javaVersion = this.version.raw;
                 let javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaVersion, this.architecture);
-                if (process.platform === 'darwin') {
+                if (process.platform === 'darwin' &&
+                    fs_1.default.existsSync(path_1.default.join(javaPath, constants_1.macOSJavaContentDir))) {
                     javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
                 }
                 foundJava = {
@@ -37467,16 +37468,16 @@ class ZuluDistributor extends base_installer_1.JavaBase {
                 throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
             }
             // TO-DO: Debug information, should be removed before release
-            core.startGroup('Print debug information about available versions');
-            console.timeEnd('azul-retrieve-available-versions');
-            console.log(`Available versions: [${availableVersions.length}]`);
-            console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
-            core.endGroup();
-            core.startGroup('Print detailed debug information about available versions');
-            availableVersions.forEach(item => {
-                console.log(JSON.stringify(item));
-            });
-            core.endGroup();
+            // core.startGroup('Print debug information about available versions');
+            // console.timeEnd('azul-retrieve-available-versions');
+            // console.log(`Available versions: [${availableVersions.length}]`);
+            // console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+            // core.endGroup();
+            // core.startGroup('Print detailed debug information about available versions');
+            // availableVersions.forEach(item => {
+            //   console.log(JSON.stringify(item));
+            // });
+            // core.endGroup();
             return availableVersions;
         });
     }

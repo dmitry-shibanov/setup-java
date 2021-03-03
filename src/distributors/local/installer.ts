@@ -46,7 +46,10 @@ export class LocalDistributor extends JavaBase {
         this.architecture
       );
 
-      if (process.platform === 'darwin') {
+      if (
+        process.platform === 'darwin' &&
+        fs.existsSync(path.join(javaPath, macOSJavaContentDir))
+      ) {
         javaPath = path.join(javaPath, macOSJavaContentDir);
       }
 
