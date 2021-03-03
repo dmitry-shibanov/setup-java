@@ -35,7 +35,7 @@ jobs:
           Get-Content $xmlPath | ForEach-Object { Write-Host $_ }
 
           [xml]$xml = Get-Content $xmlPath
-          $servers = $xml.settings.servers
+          $servers = $xml.settings.servers.server
           if (($server[0].id -ne 'maven') -or ($server[0].username -ne '${env.MAVEN_USERNAME}') -or ($server[0].password -ne '${env.MAVEN_CENTRAL_TOKEN}')) {
             throw "Generated XML file is incorrect"
           }
