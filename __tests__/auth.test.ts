@@ -26,7 +26,7 @@ describe('auth tests', () => {
     gpgPassphrase: ''
   };
   beforeEach(async () => {
-    fs.existsSync(m2Dir) && await io.rmRF(m2Dir);
+    fs.existsSync(m2Dir) && (await io.rmRF(m2Dir));
     coreSpyGetInput = jest.spyOn(core, 'getInput');
     coreSpyGetInput.mockImplementation((input: string) => {
       switch (input) {

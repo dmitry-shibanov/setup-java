@@ -126,7 +126,10 @@ describe('Test setupJava', () => {
     [
       { version: actualJavaVersion, arch: 'x86', packageType: 'jdk' },
       'not_existing_one',
-      { javaVersion: actualJavaVersion, javaPath: path.join('Java_LocalJDKFile_jdk', actualJavaVersion, 'x86') }
+      {
+        javaVersion: actualJavaVersion,
+        javaPath: path.join('Java_LocalJDKFile_jdk', actualJavaVersion, 'x86')
+      }
     ]
   ])('inputs %o, jdkfile %s, result %o', async (inputs, jdkFile, expected) => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
