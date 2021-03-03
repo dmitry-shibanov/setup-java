@@ -1,12 +1,18 @@
 name: Validate Java e2e
-# To-Do in final review add filter by main branch
-# To-Do update actions yml
-on: 
+on:
   push:
+    branches:
+      - main
+      - releases/*
+    paths-ignore:
+      - '**.md'
   pull_request:
+    paths-ignore:
+      - '**.md'
+
 jobs:
   setup-java-major-versions:
-    name: Setup Java for major versions ${{ matrix.java }} ${{ matrix.os }} ${{ matrix.distribution }}
+    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -22,7 +28,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }} 'jdk' ${{ matrix.distribution }}
+      - name: setup-java
         uses: ./
         with:
           java-version: ${{ matrix.java }}
@@ -33,7 +39,7 @@ jobs:
 
 
   setup-java-major-minor-versions:
-    name: Setup Java for major minor versions ${{ matrix.java }} ${{ matrix.os }} ${{ matrix.distribution }}
+    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64)
     needs: setup-java-major-versions
     runs-on: ${{ matrix.os }}
     strategy:
@@ -57,7 +63,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }} jdk ${{ matrix.distribution }}
+      - name: setup-java
         uses: ./
         with:
           java-version: ${{ matrix.java }}
@@ -67,7 +73,7 @@ jobs:
         run: java -version
 
   setup-java-ea-versions:
-    name: Setup Java for ea versions ${{ matrix.java }} ${{ matrix.os }} ${{ matrix.distribution }}
+    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x64)
     needs: setup-java-major-minor-versions
     runs-on: ${{ matrix.os }}
     strategy:
@@ -86,7 +92,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }} jdk ${{ matrix.distribution }}
+      - name: setup-java
         uses: ./
         with:
           java-version: ${{ matrix.java }}
@@ -95,8 +101,8 @@ jobs:
       - name: Java version
         run: java -version
 
-  setup-java-major-minor-versions-for-non-standart:
-    name: Setup Java for major minor versions ${{ matrix.java }} ${{ matrix.os }} ${{ matrix.distribution }}
+  setup-java-custom-package-type:
+    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (${{ matrix.java-package }}-x64)
     needs: setup-java-major-minor-versions
     runs-on: ${{ matrix.os }}
     strategy:
@@ -136,11 +142,36 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: setup-java ${{ matrix.java }} ${{ matrix.java-package }} ${{ matrix.distribution }}
+      - name: setup-java
         uses: ./
         with:
           java-version: ${{ matrix.java }}
           java-package: ${{ matrix.java-package }}
           distribution: ${{ matrix.distribution }}
+      - name: Java version
+        run: java -version
+
+  setup-java-custom-architecture:
+    name: ${{ matrix.os }} - ${{ matrix.distribution }} ${{ matrix.java }} (jdk-x86)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+        distribution: ['adoptium', 'zulu']
+        java:
+        - '8'
+        - '11'
+        - '14'
+        - '15'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: setup-java
+        uses: ./
+        with:
+          distribution: ${{ matrix.distribution }}
+          java-version: ${{ matrix.java }}
+          architecture: x86
       - name: Java version
         run: java -version
