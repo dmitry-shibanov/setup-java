@@ -21,8 +21,17 @@ export class AdoptiumDistributor extends JavaBase {
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
     const availableVersions = await this.getAvailableVersions();
 
-    const resolvedFullVersion = availableVersions.find(item =>
-      semver.satisfies(item.version_data.semver, version)
+    const availableVersionsWithBinaries = availableVersions.filter(
+      item => item.binaries.length > 0
+    );
+    const satisfiedVersions = semver.rsort(
+      availableVersionsWithBinaries
+        .map(item => item.version_data.semver)
+        .filter(item => semver.satisfies(item, version))
+    );
+    const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
+    const resolvedFullVersion = availableVersions.find(
+      item => item.version_data.semver === maxSatisfiedVersion
     );
 
     if (!resolvedFullVersion) {
@@ -35,12 +44,7 @@ export class AdoptiumDistributor extends JavaBase {
       );
     }
 
-    if (resolvedFullVersion.binaries.length < 0) {
-      throw new Error(`No binaries were found for semver ${version.raw}`);
-    }
-
-    // take the first element in 'binaries' array
-    // because it is already filtered by arch and platform options and can't contain > 1 elements
+    // take the first element in 'binaries' array because it is already filtered above
     return {
       version: resolvedFullVersion.version_data.semver,
       url: resolvedFullVersion.binaries[0].package.link
@@ -82,7 +86,6 @@ export class AdoptiumDistributor extends JavaBase {
     const arch = this.architecture;
     const imageType = this.packageType;
     const heapSize = 'normal';
-    const jvmImpl = 'hotspot';
     const versionRange = '[1.0,100.0]';
     const encodedVersionRange = encodeURI(versionRange);
     const releaseType = this.stable ? 'ga' : 'ea';
@@ -90,15 +93,15 @@ export class AdoptiumDistributor extends JavaBase {
     console.time('adopt-retrieve-available-versions');
 
     const baseRequestArguments = [
-      `os=${platform}`,
-      `architecture=${arch}`,
-      `heap_size=${heapSize}`,
-      `image_type=${imageType}`,
-      `jvm_impl=${jvmImpl}`,
       `project=jdk`,
       'vendor=adoptopenjdk',
+      `heap_size=normal`,
+      `jvm_impl=hotspot`,
       'sort_method=DEFAULT',
       'sort_order=DESC',
+      `os=${platform}`,
+      `architecture=${arch}`,
+      `image_type=${imageType}`,
       `release_type=${releaseType}`
     ].join('&');
 
@@ -123,6 +126,7 @@ export class AdoptiumDistributor extends JavaBase {
     }
 
     // TO-DO: Debug information, should be removed before release
+    /*
     core.startGroup('Print debug information about available versions');
     console.timeEnd('adopt-retrieve-available-versions');
     console.log(`Available versions: [${availableVersions.length}]`);
@@ -133,6 +137,7 @@ export class AdoptiumDistributor extends JavaBase {
       console.log(JSON.stringify(item));
     });
     core.endGroup();
+    */
 
     return availableVersions;
   }

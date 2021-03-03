@@ -79,11 +79,6 @@ export class ZuluDistributor extends JavaBase {
     const javafx = features?.includes('fx') ?? false;
     const releaseStatus = this.stable ? 'ga' : 'ea';
 
-    // TO-DO: Remove after updating README
-    // java-package field supports features for Azul
-    // if you specify 'jdk+fx', 'fx' will be passed to features
-    // any number of features can be specified with comma
-
     console.time('azul-retrieve-available-versions');
     const requestArguments = [
       `os=${platform}`,

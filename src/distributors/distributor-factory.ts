@@ -4,11 +4,10 @@ import { JavaInstallerOptions } from './base-models';
 import { LocalDistributor } from './local/installer';
 import { ZuluDistributor } from './zulu/installer';
 
-// TO-DO: confirm distributor names
 enum JavaDistributor {
   Adoptium = 'adoptium',
   Zulu = 'zulu',
-  JdkFile = 'jdkfile'
+  JdkFile = 'jdkfile' // TO-DO: should be `jdkFile`?
 }
 
 export function getJavaDistributor(
