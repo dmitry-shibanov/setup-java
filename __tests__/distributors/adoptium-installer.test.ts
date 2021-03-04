@@ -44,7 +44,7 @@ describe('getAvailableVersions', () => {
         'os=mac&architecture=x64&image_type=jdk&release_type=ea&page_size=20&page=0'
       ]
     ])(
-      'build correct url for %o',
+      'build correct url for %s',
       async (installerOptions: JavaInstallerOptions, expectedParameters) => {
         const distributor = new AdoptiumDistributor(installerOptions);
         const baseUrl = 'https://api.adoptopenjdk.net/v3/assets/version/%5B1.0,100.0%5D';

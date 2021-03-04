@@ -1,14 +1,4 @@
-import fs from 'fs';
-
-import * as tc from '@actions/tool-cache';
-import * as core from '@actions/core';
-import * as ifm from '@actions/http-client/interfaces';
 import { HttpClient } from '@actions/http-client';
-
-import path from 'path';
-import * as semver from 'semver';
-
-import * as utils from '../../src/util';
 import { ZuluDistributor } from '../../src/distributors/zulu/installer';
 import { IZuluVersions } from '../../src/distributors/zulu/models';
 
@@ -17,31 +7,18 @@ let manifestData = require('../data/zulu/zulu-releases-default.json');
 describe('getAvailableVersions', () => {
   let spyHttpClient: jest.SpyInstance;
   let zuluDistributor: ZuluDistributor;
-  let originalPlatform: NodeJS.Platform;
+  const result = JSON.stringify(manifestData);
 
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
-    spyHttpClient.mockImplementation(
-      async (): Promise<ifm.ITypedResponse<IZuluVersions[]>> => {
-        const result = JSON.stringify(manifestData);
-        return {
-          statusCode: 200,
-          headers: {},
-          result: JSON.parse(result) as IZuluVersions[]
-        };
-      }
-    );
-
-    originalPlatform = process.platform;
-    Object.defineProperty(process, 'platform', {
-      value: 'darwin'
+    spyHttpClient.mockReturnValue({
+      statusCode: 200,
+      headers: {},
+      result: JSON.parse(result) as IZuluVersions[]
     });
   });
 
   afterEach(() => {
-    Object.defineProperty(process, 'platform', {
-      value: originalPlatform
-    });
     jest.resetAllMocks();
     jest.clearAllMocks();
     jest.restoreAllMocks();
@@ -72,27 +49,13 @@ describe('getAvailableVersions', () => {
       { version: '8', arch: 'x64', packageType: 'jre+fx' },
       '?os=macos&ext=tar.gz&bundle_type=jre&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
     ]
-  ])('build correct url for %o -> $s', async (input, parsedUrl) => {
-    spyHttpClient.mockImplementation(
-      async (url): Promise<ifm.ITypedResponse<any>> => {
-        const result = JSON.stringify(manifestData);
-        return {
-          statusCode: 200,
-          headers: {},
-          result: [
-            {
-              url: url,
-              jdk_version: []
-            }
-          ]
-        };
-      }
-    );
-
+  ])('build correct url for %s -> $s', async (input, parsedUrl) => {
     zuluDistributor = new ZuluDistributor(input);
+    zuluDistributor['getPlatformOption'] = () => 'macos';
     const buildUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${parsedUrl}`;
     const releaseCheck = await zuluDistributor['getAvailableVersions']();
-    expect(releaseCheck[0].url).toEqual(buildUrl);
+    expect(spyHttpClient.mock.calls).toHaveLength(1);
+    expect(spyHttpClient.mock.calls[0][0]).toBe(buildUrl);
   });
 
   it('load available versions', async () => {
@@ -101,15 +64,11 @@ describe('getAvailableVersions', () => {
   });
 
   it('Error is thrown for empty response', async () => {
-    spyHttpClient.mockImplementationOnce(
-      async (): Promise<ifm.ITypedResponse<IZuluVersions[]>> => {
-        return {
-          statusCode: 200,
-          headers: {},
-          result: [] as IZuluVersions[]
-        };
-      }
-    );
+    spyHttpClient.mockReturnValue({
+      statusCode: 200,
+      headers: {},
+      result: [] as IZuluVersions[]
+    });
     zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
     await expect(zuluDistributor['getAvailableVersions']()).rejects.toThrowError(
       /No versions were found using url */
@@ -117,15 +76,11 @@ describe('getAvailableVersions', () => {
   });
 
   it('Error is thrown for undefined', async () => {
-    spyHttpClient.mockImplementationOnce(
-      async (): Promise<ifm.ITypedResponse<IZuluVersions[] | undefined>> => {
-        return {
-          statusCode: 200,
-          headers: {},
-          result: undefined
-        };
-      }
-    );
+    spyHttpClient.mockReturnValue({
+      statusCode: 200,
+      headers: {},
+      result: undefined
+    });
     zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
     await expect(zuluDistributor['getAvailableVersions']()).rejects.toThrowError(
       /No versions were found using url */
@@ -139,7 +94,7 @@ describe('getArchitectureOptions', () => {
     [{ architecture: 'x86' }, { arch: 'x86', hw_bitness: '32', abi: '' }],
     [{ architecture: 'x32' }, { arch: 'x32', hw_bitness: '', abi: '' }],
     [{ architecture: 'arm' }, { arch: 'arm', hw_bitness: '', abi: '' }]
-  ])('%o -> %o', (input, expected) => {
+  ])('%s -> %', (input, expected) => {
     let zuluDistributor = new ZuluDistributor({
       version: '11',
       arch: input.architecture,
@@ -152,21 +107,15 @@ describe('getArchitectureOptions', () => {
 describe('findPackageForDownload', () => {
   let spyHttpClient: jest.SpyInstance;
   let zuluDistributor: ZuluDistributor;
+  const result = JSON.stringify(manifestData);
 
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
-    spyHttpClient.mockImplementation(
-      async (): Promise<ifm.ITypedResponse<any[]>> => {
-        manifestData = require('../data/zulu/zulu-releases-default.json');
-
-        const result = JSON.stringify(manifestData);
-        return {
-          statusCode: 200,
-          headers: {},
-          result: JSON.parse(result)
-        };
-      }
-    );
+    spyHttpClient.mockReturnValue({
+      statusCode: 200,
+      headers: {},
+      result: JSON.parse(result)
+    });
   });
 
   afterEach(() => {
@@ -178,15 +127,15 @@ describe('findPackageForDownload', () => {
   it.each([
     // jdk
 
-    ['8.0.282', { version: '8', arch: 'x86', packageType: 'jdk' }],
-    ['11.0.10', { version: '11', arch: 'x86', packageType: 'jdk' }],
-    ['8.0.282', { version: '8.0', arch: 'x86', packageType: 'jdk' }],
-    ['11.0.10', { version: '11.0', arch: 'x86', packageType: 'jdk' }],
-    ['8.0.282', { version: '8', arch: 'x86', packageType: 'jdk+fx' }],
-    ['11.0.10', { version: '11', arch: 'x86', packageType: 'jdk+fx' }],
-    ['15.0.2', { version: '15', arch: 'x86', packageType: 'jdk' }],
-    ['15.0.2', { version: '15-ea', arch: 'x86', packageType: 'jdk' }]
-  ])('version is %s -> %o', async (expected, constructorInput) => {
+    [{ version: '8', arch: 'x86', packageType: 'jdk' }, '8.0.282'],
+    [{ version: '11', arch: 'x86', packageType: 'jdk' }, '11.0.10'],
+    [{ version: '8.0', arch: 'x86', packageType: 'jdk' }, '8.0.282'],
+    [{ version: '11.0', arch: 'x86', packageType: 'jdk' }, '11.0.10'],
+    [{ version: '8', arch: 'x86', packageType: 'jdk+fx' }, '8.0.282'],
+    [{ version: '11', arch: 'x86', packageType: 'jdk+fx' }, '11.0.10'],
+    [{ version: '15', arch: 'x86', packageType: 'jdk' }, '15.0.2'],
+    [{ version: '15-ea', arch: 'x86', packageType: 'jdk' }, '15.0.2']
+  ])('version is %s -> %s', async (constructorInput, expected) => {
     let zuluDistributor = new ZuluDistributor(constructorInput);
     const result = await zuluDistributor['findPackageForDownload'](zuluDistributor['version']);
 
@@ -198,172 +147,5 @@ describe('findPackageForDownload', () => {
     await expect(
       zuluDistributor['findPackageForDownload'](zuluDistributor['version'])
     ).rejects.toThrowError(/Could not find satisfied version for semver */);
-  });
-});
-
-describe('setupJava', () => {
-  let spyHttpClient: jest.SpyInstance;
-  const actualJavaVersion = '18.1.10';
-  const javaPath = path.join('Java_Zulu_jdk', actualJavaVersion, 'x86');
-  let tcFind: jest.SpyInstance;
-  let tcDownloadTool: jest.SpyInstance;
-  let tcCacheDir: jest.SpyInstance;
-  let coreDebug: jest.SpyInstance;
-  let coreInfo: jest.SpyInstance;
-  let coreExportVariable: jest.SpyInstance;
-  let coreAddPath: jest.SpyInstance;
-  let coreSetOutput: jest.SpyInstance;
-  let spyFsReadDir: jest.SpyInstance;
-
-  let utilsExtractJdkFile: jest.SpyInstance;
-
-  beforeEach(() => {
-    spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
-    spyHttpClient.mockImplementation(
-      async (url): Promise<ifm.ITypedResponse<IZuluVersions[]>> => {
-        manifestData = require('../data/zulu/zulu-releases-default.json');
-
-        const result = JSON.stringify(manifestData);
-        return {
-          statusCode: 200,
-          headers: {},
-          result: JSON.parse(result) as IZuluVersions[]
-        };
-      }
-    );
-
-    // Spy on toolcache methods
-
-    tcFind = jest.spyOn(tc, 'find');
-    tcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
-      const semverVersion = new semver.Range(javaVersion);
-
-      if (path.basename(javaPath) !== architecture || !javaPath.includes(toolname)) {
-        return '';
-      }
-
-      return semver.satisfies(actualJavaVersion, semverVersion) ? javaPath : '';
-    });
-
-    tcDownloadTool = jest.spyOn(tc, 'downloadTool');
-    tcDownloadTool.mockImplementation(() => 'javaArchive');
-
-    tcCacheDir = jest.spyOn(tc, 'cacheDir');
-    tcCacheDir.mockImplementation(
-      (archivePath: string, toolcacheFolderName: string, version: string, architecture: string) =>
-        path.join(toolcacheFolderName, version, architecture)
-    );
-
-    // Spy on util methods
-
-    utilsExtractJdkFile = jest.spyOn(utils, 'extractJdkFile');
-    utilsExtractJdkFile.mockImplementation(() => 'some/random/path/');
-
-    // Spy on fs methods
-    spyFsReadDir = jest.spyOn(fs, 'readdirSync');
-    spyFsReadDir.mockImplementation(() => ['JavaTest']);
-
-    // Spy on core methods
-
-    coreDebug = jest.spyOn(core, 'debug');
-    coreDebug.mockImplementation(() => undefined);
-
-    coreInfo = jest.spyOn(core, 'info');
-    coreInfo.mockImplementation(() => undefined);
-
-    coreAddPath = jest.spyOn(core, 'addPath');
-    coreAddPath.mockImplementation(() => undefined);
-
-    coreExportVariable = jest.spyOn(core, 'exportVariable');
-    coreExportVariable.mockImplementation(() => undefined);
-
-    coreSetOutput = jest.spyOn(core, 'setOutput');
-    coreSetOutput.mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  });
-
-  it.each([
-    // jdk
-
-    [
-      { version: '8', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jdk', '8.0.282', 'x86') }
-    ],
-    [
-      { version: '11', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jdk', '11.0.10', 'x86') }
-    ],
-    [
-      { version: '8.0', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jdk', '8.0.282', 'x86') }
-    ],
-    [
-      { version: '11.0', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jdk', '11.0.10', 'x86') }
-    ],
-    [
-      { version: '8', arch: 'x86', packageType: 'jdk+fx' },
-      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jdk+fx', '8.0.282', 'x86') }
-    ],
-    [
-      { version: '11', arch: 'x86', packageType: 'jdk+fx' },
-      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jdk+fx', '11.0.10', 'x86') }
-    ],
-    [
-      { version: '15', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '15.0.2', javaPath: path.join('Java_Zulu_jdk', '15.0.2', 'x86') }
-    ],
-    [
-      { version: '15-ea', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '15.0.2', javaPath: path.join('Java_Zulu_jdk', '15.0.2', 'x86') }
-    ],
-
-    // jre
-
-    [
-      { version: '8', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jre', '8.0.282', 'x86') }
-    ],
-    [
-      { version: '11', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jre', '11.0.10', 'x86') }
-    ],
-    [
-      { version: '8.0', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jre', '8.0.282', 'x86') }
-    ],
-    [
-      { version: '11.0', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jre', '11.0.10', 'x86') }
-    ],
-    [
-      { version: '8', arch: 'x86', packageType: 'jre+fx' },
-      { javaVersion: '8.0.282', javaPath: path.join('Java_Zulu_jre+fx', '8.0.282', 'x86') }
-    ],
-    [
-      { version: '11', arch: 'x86', packageType: 'jre+fx' },
-      { javaVersion: '11.0.10', javaPath: path.join('Java_Zulu_jre+fx', '11.0.10', 'x86') }
-    ],
-    [
-      { version: '15', arch: 'x86', packageType: 'jre' },
-      { javaVersion: '15.0.2', javaPath: path.join('Java_Zulu_jre', '15.0.2', 'x86') }
-    ],
-
-    // in toolcache
-    [
-      { version: '18', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '18.1.10', javaPath: path.join('Java_Zulu_jdk', '18.1.10', 'x86') }
-    ]
-  ])('input %o -> result %o', async (input, expected) => {
-    let zuluDistributor = new ZuluDistributor(input);
-    await expect(zuluDistributor.setupJava()).resolves.toEqual(expected);
-    if (input.version.startsWith('18')) {
-      expect(tcCacheDir).not.toHaveBeenCalled();
-    }
   });
 });

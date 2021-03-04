@@ -100,7 +100,9 @@ describe('setupJava', () => {
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(tcFind).toHaveBeenCalled();
     expect(coreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).not.toHaveBeenCalledWith(`Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`)
+    expect(coreInfo).not.toHaveBeenCalledWith(
+      `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
+    );
   });
 
   it("java is resolved from toolcache, jdkfile doesn't exist", async () => {
@@ -116,7 +118,9 @@ describe('setupJava', () => {
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(tcFind).toHaveBeenCalled();
     expect(coreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).not.toHaveBeenCalledWith(`Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`)
+    expect(coreInfo).not.toHaveBeenCalledWith(
+      `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
+    );
   });
 
   it('java is unpacked from jdkfile', async () => {
@@ -133,7 +137,9 @@ describe('setupJava', () => {
     expect(tcFind).toHaveBeenCalled();
     expect(coreInfo).not.toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
     expect(coreInfo).toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`);
-    expect(coreInfo).toHaveBeenCalledWith(`Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`);
+    expect(coreInfo).toHaveBeenCalledWith(
+      `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
+    );
   });
 
   it('jdk file is not found', async () => {
@@ -151,8 +157,10 @@ describe('setupJava', () => {
     );
     expect(tcFind).toHaveBeenCalled();
     expect(coreInfo).not.toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).not.toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`)
-    expect(coreInfo).toHaveBeenCalledWith(`Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`)
+    expect(coreInfo).not.toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`);
+    expect(coreInfo).toHaveBeenCalledWith(
+      `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
+    );
   });
 
   it.each([
@@ -160,7 +168,7 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
     [{ version: '11.1.11', arch: 'x64', packageType: 'jdk' }, 'not_existing_one']
-  ])('inputs %o, jdkfile %s', async (inputs, jdkFile) => {
+  ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError(/JDK file is not found in path */);
     expect(tcFind).toHaveBeenCalled();
@@ -174,7 +182,7 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '15.0.289', arch: 'x64', packageType: 'jdk' }, undefined]
-  ])('inputs %o, jdkfile %s', async (inputs, jdkFile) => {
+  ])('inputs s, jdkfile %s', async (inputs, jdkFile) => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
     expect(tcFind).toHaveBeenCalled();

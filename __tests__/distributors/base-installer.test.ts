@@ -79,7 +79,7 @@ describe('findInToolcache', () => {
     [{ version: '8', arch: 'x64', packageType: 'jdk' }, null],
     [{ version: '11', arch: 'x86', packageType: 'jdk' }, null],
     [{ version: '11', arch: 'x86', packageType: 'jre' }, null]
-  ])(`should find java for path %o -> %o`, (input, expected) => {
+  ])(`should find java for path %s -> %s`, (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     expect(mockJavaBase['findInToolcache']()).toEqual(expected);
   });
@@ -147,7 +147,7 @@ describe('setupJava', () => {
       { version: '11.1.10', arch: 'x86', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ]
-  ])('should find java for path %o -> %s', (input, expected) => {
+  ])('should find java for path %s -> %s', (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(tcFind).toHaveBeenCalled();
@@ -197,7 +197,7 @@ describe('normalizeVersion', () => {
     ['11.0.10', { version: new semver.Range('11.0.10'), stable: true }],
     ['11-ea', { version: new semver.Range('11'), stable: false }],
     ['11.0.2-ea', { version: new semver.Range('11.0.2'), stable: false }]
-  ])('normalizeVersion from %s to %o', (input, expected) => {
+  ])('normalizeVersion from %s to %s', (input, expected) => {
     expect(DummyJavaBase.prototype.normalizeVersion.call(null, input)).toEqual(expected);
   });
 
