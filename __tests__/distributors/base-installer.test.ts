@@ -18,20 +18,20 @@ class EmptyJavaBase extends JavaBase {
 
   protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
     return {
-        javaVersion: "11.0.8",
-        javaPath: `/toolcache/${this.toolcacheFolderName}/11.0.8`
-    }
+      javaVersion: '11.0.8',
+      javaPath: `/toolcache/${this.toolcacheFolderName}/11.0.8`
+    };
   }
 
   protected async findPackageForDownload(range: semver.Range): Promise<JavaDownloadRelease> {
-    const availableVersion = "11.0.8";
-    if(!semver.satisfies(availableVersion, range)) {
-        throw new Error("Available version not found")
+    const availableVersion = '11.0.8';
+    if (!semver.satisfies(availableVersion, range)) {
+      throw new Error('Available version not found');
     }
 
     return {
-        version: availableVersion,
-        url: `some/random_url/java/${availableVersion}`
+      version: availableVersion,
+      url: `some/random_url/java/${availableVersion}`
     };
   }
 }
@@ -81,8 +81,7 @@ describe('findInToolcache', () => {
     [{ version: '11', arch: 'x64', packageType: 'jre' }, null]
   ])(`should find java for path %o -> %o`, (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
-    const mockJavaBasePrototype = Object.getPrototypeOf(mockJavaBase);
-    expect(mockJavaBasePrototype.findInToolcache.call(mockJavaBase)).toEqual(expected);
+    expect(mockJavaBase['findInToolcache']()).toEqual(expected);
   });
 });
 
@@ -148,27 +147,33 @@ describe('setupJava', () => {
       { version: '11.1.10', arch: 'x86', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ]
-  ])(
-    'should find java for path %o -> %s',
-    (input, expected) => {
-      mockJavaBase = new EmptyJavaBase(input);
-      expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-      expect(tcFind).toHaveBeenCalled();
-    }
-  );
+  ])('should find java for path %o -> %s', (input, expected) => {
+    mockJavaBase = new EmptyJavaBase(input);
+    expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
+    expect(tcFind).toHaveBeenCalled();
+  });
 
   it.each([
-    [{ version: '11', arch: 'x86', packageType: 'jre' }, {javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8'}],
-    [{ version: '11', arch: 'x64', packageType: 'jdk' }, {javaPath: `/toolcache/Java_Empty_jdk/11.0.8`, javaVersion: '11.0.8'}],
-    [{ version: '11', arch: 'x64', packageType: 'jre' }, {javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8'}]
-  ])("download java", async (input, expected) => {
+    [
+      { version: '11', arch: 'x86', packageType: 'jre' },
+      { javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8' }
+    ],
+    [
+      { version: '11', arch: 'x64', packageType: 'jdk' },
+      { javaPath: `/toolcache/Java_Empty_jdk/11.0.8`, javaVersion: '11.0.8' }
+    ],
+    [
+      { version: '11', arch: 'x64', packageType: 'jre' },
+      { javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8' }
+    ]
+  ])('download java', async (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(tcFind).toHaveBeenCalled();
     expect(coreAddPath).toHaveBeenCalled();
     expect(coreExportVariable).toHaveBeenCalled();
     expect(coreSetOutput).toHaveBeenCalled();
-  })
+  });
 
   it.each([
     [{ version: '15', arch: 'x86', packageType: 'jre' }],

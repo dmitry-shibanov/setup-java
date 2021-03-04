@@ -61,17 +61,17 @@ describe('getAvailableVersions', () => {
       '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=64&release_status=ga'
     ],
     [
-        { version: '8', arch: 'x64', packageType: 'jre' },
-        '?os=macos&ext=tar.gz&bundle_type=jre&javafx=false&arch=x86&hw_bitness=64&release_status=ga'
+      { version: '8', arch: 'x64', packageType: 'jre' },
+      '?os=macos&ext=tar.gz&bundle_type=jre&javafx=false&arch=x86&hw_bitness=64&release_status=ga'
     ],
     [
-        { version: '8', arch: 'x64', packageType: 'jdk+fx' },
-        '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
+      { version: '8', arch: 'x64', packageType: 'jdk+fx' },
+      '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
     ],
     [
-        { version: '8', arch: 'x64', packageType: 'jre+fx' },
-        '?os=macos&ext=tar.gz&bundle_type=jre&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
-    ],
+      { version: '8', arch: 'x64', packageType: 'jre+fx' },
+      '?os=macos&ext=tar.gz&bundle_type=jre&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
+    ]
   ])('build correct url for %o -> $s', async (input, parsedUrl) => {
     spyHttpClient.mockImplementation(
       async (url): Promise<ifm.ITypedResponse<any>> => {
@@ -91,17 +91,13 @@ describe('getAvailableVersions', () => {
 
     zuluDistributor = new ZuluDistributor(input);
     const buildUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${parsedUrl}`;
-    const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
-    const releaseCheck = await zuluDistributorPrototype.getAvailableVersions.call(zuluDistributor);
+    const releaseCheck = await zuluDistributor['getAvailableVersions']();
     expect(releaseCheck[0].url).toEqual(buildUrl);
   });
 
   it('load available versions', async () => {
     zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-    const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
-    await expect(
-      zuluDistributorPrototype.getAvailableVersions.call(zuluDistributor)
-    ).resolves.not.toBeNull();
+    await expect(zuluDistributor['getAvailableVersions']()).resolves.not.toBeNull();
   });
 
   it('Error is thrown for empty response', async () => {
@@ -115,10 +111,9 @@ describe('getAvailableVersions', () => {
       }
     );
     zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-    const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
-    await expect(
-      zuluDistributorPrototype.getAvailableVersions.call(zuluDistributor)
-    ).rejects.toThrowError(/No versions were found using url */);
+    await expect(zuluDistributor['getAvailableVersions']()).rejects.toThrowError(
+      /No versions were found using url */
+    );
   });
 
   it('Error is thrown for undefined', async () => {
@@ -132,24 +127,25 @@ describe('getAvailableVersions', () => {
       }
     );
     zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-    const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
-    await expect(
-      zuluDistributorPrototype.getAvailableVersions.call(zuluDistributor)
-    ).rejects.toThrowError(/No versions were found using url */);
+    await expect(zuluDistributor['getAvailableVersions']()).rejects.toThrowError(
+      /No versions were found using url */
+    );
   });
 });
 
 describe('getArchitectureOptions', () => {
-  let zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-  const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
-
   it.each([
     [{ architecture: 'x64' }, { arch: 'x86', hw_bitness: '64', abi: '' }],
     [{ architecture: 'x86' }, { arch: 'x86', hw_bitness: '32', abi: '' }],
     [{ architecture: 'x32' }, { arch: 'x32', hw_bitness: '', abi: '' }],
     [{ architecture: 'arm' }, { arch: 'arm', hw_bitness: '', abi: '' }]
   ])('%o -> %o', (input, expected) => {
-    expect(zuluDistributorPrototype.getArchitectureOptions.call(input)).toEqual(expected);
+    let zuluDistributor = new ZuluDistributor({
+      version: '11',
+      arch: input.architecture,
+      packageType: 'jdk'
+    });
+    expect(zuluDistributor['getArchitectureOptions']()).toEqual(expected);
   });
 });
 
@@ -182,58 +178,25 @@ describe('findPackageForDownload', () => {
   it.each([
     // jdk
 
-    [
-      '8.0.282',
-      { version: '8', arch: 'x86', packageType: 'jdk' }
-    ],
-    [
-      '11.0.10',
-      { version: '11', arch: 'x86', packageType: 'jdk' }
-    ],
-    [
-      '8.0.282',
-      { version: '8.0', arch: 'x86', packageType: 'jdk' }
-    ],
-    [
-      '11.0.10',
-      { version: '11.0', arch: 'x86', packageType: 'jdk' }
-    ],
-    [
-      '8.0.282',
-      { version: '8', arch: 'x86', packageType: 'jdk+fx' }
-    ],
-    [
-      '11.0.10',
-      { version: '11', arch: 'x86', packageType: 'jdk+fx' }
-    ],
-    [
-      '15.0.2',
-      { version: '15', arch: 'x86', packageType: 'jdk' }
-    ],
-    [
-      '15.0.2',
-      { version: '15-ea', arch: 'x86', packageType: 'jdk' }
-    ],
-
+    ['8.0.282', { version: '8', arch: 'x86', packageType: 'jdk' }],
+    ['11.0.10', { version: '11', arch: 'x86', packageType: 'jdk' }],
+    ['8.0.282', { version: '8.0', arch: 'x86', packageType: 'jdk' }],
+    ['11.0.10', { version: '11.0', arch: 'x86', packageType: 'jdk' }],
+    ['8.0.282', { version: '8', arch: 'x86', packageType: 'jdk+fx' }],
+    ['11.0.10', { version: '11', arch: 'x86', packageType: 'jdk+fx' }],
+    ['15.0.2', { version: '15', arch: 'x86', packageType: 'jdk' }],
+    ['15.0.2', { version: '15-ea', arch: 'x86', packageType: 'jdk' }]
   ])('version is %s -> %o', async (expected, constructorInput) => {
     let zuluDistributor = new ZuluDistributor(constructorInput);
-    const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
-    const result = await zuluDistributorPrototype.findPackageForDownload.call(
-      zuluDistributor,
-      zuluDistributor['version']
-    );
+    const result = await zuluDistributor['findPackageForDownload'](zuluDistributor['version']);
 
     expect(result.version).toBe(expected);
   });
 
   it('Should throw an error', async () => {
     zuluDistributor = new ZuluDistributor({ version: '18', arch: 'x86', packageType: 'jdk' });
-    const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
     await expect(
-      zuluDistributorPrototype.findPackageForDownload.call(
-        zuluDistributor,
-        zuluDistributor['version']
-      )
+      zuluDistributor['findPackageForDownload'](zuluDistributor['version'])
     ).rejects.toThrowError(/Could not find satisfied version for semver */);
   });
 });

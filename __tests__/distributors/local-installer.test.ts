@@ -91,9 +91,9 @@ describe('setupJava', () => {
     const inputs = { version: actualJavaVersion, arch: 'x86', packageType: 'jdk' };
     const jdkFile = 'not_existing_one';
     const expected = {
-        javaVersion: actualJavaVersion,
-        javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
-      }
+      javaVersion: actualJavaVersion,
+      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+    };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
@@ -101,13 +101,13 @@ describe('setupJava', () => {
     expect(tcFind).toHaveBeenCalled();
   });
 
-  it('java is resolved from toolcache, jdkfile doesn\'t exist',  async () => {
+  it("java is resolved from toolcache, jdkfile doesn't exist", async () => {
     const inputs = { version: actualJavaVersion, arch: 'x86', packageType: 'jdk' };
     const jdkFile = undefined;
     const expected = {
-        javaVersion: actualJavaVersion,
-        javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
-      }
+      javaVersion: actualJavaVersion,
+      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+    };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
@@ -119,9 +119,9 @@ describe('setupJava', () => {
     const inputs = { version: '11.0.289', arch: 'x86', packageType: 'jdk' };
     const jdkFile = expectedJdkFile;
     const expected = {
-        javaVersion: '11.0.289',
-        javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
-      }
+      javaVersion: '11.0.289',
+      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+    };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
@@ -133,15 +133,17 @@ describe('setupJava', () => {
     const inputs = { version: '11.0.289', arch: 'x86', packageType: 'jdk' };
     const jdkFile = 'not_existing_one';
     const expected = {
-        javaVersion: '11.0.289',
-        javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
-      }
+      javaVersion: '11.0.289',
+      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+    };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
-    await expect(mockJavaBase.setupJava()).rejects.toThrowError("JDK file is not found in path 'not_existing_one'");
+    await expect(mockJavaBase.setupJava()).rejects.toThrowError(
+      "JDK file is not found in path 'not_existing_one'"
+    );
     expect(tcFind).toHaveBeenCalled();
-  })
+  });
 
   it.each([
     [{ version: '8.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
