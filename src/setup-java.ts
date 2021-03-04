@@ -8,7 +8,6 @@ import { JavaInstallerOptions } from './distributors/base-models';
 
 // To-Do need check resolving with 4 numbers
 // To-Do add check that Java resolves from to toolcache to e2e
-// To-Do check sorting for zulu for maxSatisfying
 async function run() {
   try {
     const version = core.getInput(constants.INPUT_JAVA_VERSION);
