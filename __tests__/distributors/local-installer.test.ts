@@ -15,22 +15,22 @@ describe('setupJava', () => {
 
   let mockJavaBase: LocalDistributor;
 
-  let tcFind: jest.SpyInstance;
-  let coreDebug: jest.SpyInstance;
-  let coreInfo: jest.SpyInstance;
-  let coreExportVariable: jest.SpyInstance;
-  let coreAddPath: jest.SpyInstance;
-  let coreSetOutput: jest.SpyInstance;
-  let fsStat: jest.SpyInstance;
+  let spyTcFind: jest.SpyInstance;
+  let spyTcCacheDir: jest.SpyInstance;
+  let spyCoreDebug: jest.SpyInstance;
+  let spyCoreInfo: jest.SpyInstance;
+  let spyCoreExportVariable: jest.SpyInstance;
+  let spyCoreAddPath: jest.SpyInstance;
+  let spyCoreSetOutput: jest.SpyInstance;
+  let spyFsStat: jest.SpyInstance;
   let spyFsReadDir: jest.SpyInstance;
-  let utilsExtractJdkFile: jest.SpyInstance;
-  let resolvePath: jest.SpyInstance;
-  let tcCacheDir: jest.SpyInstance;
+  let spyUtilsExtractJdkFile: jest.SpyInstance;
+  let spyPathResolve: jest.SpyInstance;
   let expectedJdkFile = 'JavaLocalJdkFile';
 
   beforeEach(() => {
-    tcFind = jest.spyOn(tc, 'find');
-    tcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
+    spyTcFind = jest.spyOn(tc, 'find');
+    spyTcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
       const semverVersion = new semver.Range(javaVersion);
 
       if (path.basename(javaPath) !== architecture || !javaPath.includes(toolname)) {
@@ -40,45 +40,45 @@ describe('setupJava', () => {
       return semver.satisfies(actualJavaVersion, semverVersion) ? javaPath : '';
     });
 
-    tcCacheDir = jest.spyOn(tc, 'cacheDir');
-    tcCacheDir.mockImplementation(
+    spyTcCacheDir = jest.spyOn(tc, 'cacheDir');
+    spyTcCacheDir.mockImplementation(
       (archivePath: string, toolcacheFolderName: string, version: string, architecture: string) =>
         path.join(toolcacheFolderName, version, architecture)
     );
 
     // Spy on core methods
 
-    coreDebug = jest.spyOn(core, 'debug');
-    coreDebug.mockImplementation(() => undefined);
+    spyCoreDebug = jest.spyOn(core, 'debug');
+    spyCoreDebug.mockImplementation(() => undefined);
 
-    coreInfo = jest.spyOn(core, 'info');
-    coreInfo.mockImplementation(() => undefined);
+    spyCoreInfo = jest.spyOn(core, 'info');
+    spyCoreInfo.mockImplementation(() => undefined);
 
-    coreAddPath = jest.spyOn(core, 'addPath');
-    coreAddPath.mockImplementation(() => undefined);
+    spyCoreAddPath = jest.spyOn(core, 'addPath');
+    spyCoreAddPath.mockImplementation(() => undefined);
 
-    coreExportVariable = jest.spyOn(core, 'exportVariable');
-    coreExportVariable.mockImplementation(() => undefined);
+    spyCoreExportVariable = jest.spyOn(core, 'exportVariable');
+    spyCoreExportVariable.mockImplementation(() => undefined);
 
-    coreSetOutput = jest.spyOn(core, 'setOutput');
-    coreSetOutput.mockImplementation(() => undefined);
+    spyCoreSetOutput = jest.spyOn(core, 'setOutput');
+    spyCoreSetOutput.mockImplementation(() => undefined);
 
     // Spy on fs methods
     spyFsReadDir = jest.spyOn(fs, 'readdirSync');
     spyFsReadDir.mockImplementation(() => ['JavaTest']);
 
-    fsStat = jest.spyOn(fs, 'statSync');
-    fsStat.mockImplementation((file: string) => {
+    spyFsStat = jest.spyOn(fs, 'statSync');
+    spyFsStat.mockImplementation((file: string) => {
       return { isFile: () => file === expectedJdkFile };
     });
 
     // Spy on util methods
-    utilsExtractJdkFile = jest.spyOn(utils, 'extractJdkFile');
-    utilsExtractJdkFile.mockImplementation(() => 'some/random/path/');
+    spyUtilsExtractJdkFile = jest.spyOn(utils, 'extractJdkFile');
+    spyUtilsExtractJdkFile.mockImplementation(() => 'some/random/path/');
 
     // Spy on path methods
-    resolvePath = jest.spyOn(path, 'resolve');
-    resolvePath.mockImplementation((path: string) => path);
+    spyPathResolve = jest.spyOn(path, 'resolve');
+    spyPathResolve.mockImplementation((path: string) => path);
   });
 
   afterEach(() => {
@@ -98,9 +98,9 @@ describe('setupJava', () => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-    expect(tcFind).toHaveBeenCalled();
-    expect(coreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).not.toHaveBeenCalledWith(
+    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyCoreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
+    expect(spyCoreInfo).not.toHaveBeenCalledWith(
       `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
     );
   });
@@ -116,9 +116,9 @@ describe('setupJava', () => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-    expect(tcFind).toHaveBeenCalled();
-    expect(coreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).not.toHaveBeenCalledWith(
+    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyCoreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
+    expect(spyCoreInfo).not.toHaveBeenCalledWith(
       `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
     );
   });
@@ -134,10 +134,12 @@ describe('setupJava', () => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-    expect(tcFind).toHaveBeenCalled();
-    expect(coreInfo).not.toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`);
-    expect(coreInfo).toHaveBeenCalledWith(
+    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyCoreInfo).not.toHaveBeenCalledWith(
+      `Resolved Java ${actualJavaVersion} from tool-cache`
+    );
+    expect(spyCoreInfo).toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`);
+    expect(spyCoreInfo).toHaveBeenCalledWith(
       `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
     );
   });
@@ -155,10 +157,12 @@ describe('setupJava', () => {
     await expect(mockJavaBase.setupJava()).rejects.toThrowError(
       "JDK file is not found in path 'not_existing_one'"
     );
-    expect(tcFind).toHaveBeenCalled();
-    expect(coreInfo).not.toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
-    expect(coreInfo).not.toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`);
-    expect(coreInfo).toHaveBeenCalledWith(
+    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyCoreInfo).not.toHaveBeenCalledWith(
+      `Resolved Java ${actualJavaVersion} from tool-cache`
+    );
+    expect(spyCoreInfo).not.toHaveBeenCalledWith(`Extracting Java from '${jdkFile}'`);
+    expect(spyCoreInfo).toHaveBeenCalledWith(
       `Java ${inputs.version} is not found in tool-cache. Trying to unpack JDK file...`
     );
   });
@@ -171,7 +175,7 @@ describe('setupJava', () => {
   ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError(/JDK file is not found in path */);
-    expect(tcFind).toHaveBeenCalled();
+    expect(spyTcFind).toHaveBeenCalled();
   });
 
   it.each([
@@ -182,9 +186,9 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '15.0.289', arch: 'x64', packageType: 'jdk' }, undefined]
-  ])('inputs s, jdkfile %s', async (inputs, jdkFile) => {
+  ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
-    expect(tcFind).toHaveBeenCalled();
+    expect(spyTcFind).toHaveBeenCalled();
   });
 });

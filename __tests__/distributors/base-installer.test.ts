@@ -41,11 +41,11 @@ describe('findInToolcache', () => {
   const javaPath = path.join('Java_Empty_jdk', actualJavaVersion, 'x64');
 
   let mockJavaBase: EmptyJavaBase;
-  let tcFind: jest.SpyInstance;
+  let spyTcFind: jest.SpyInstance;
 
   beforeEach(() => {
-    tcFind = jest.spyOn(tc, 'find');
-    tcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
+    spyTcFind = jest.spyOn(tc, 'find');
+    spyTcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
       const semverVersion = new semver.Range(javaVersion);
 
       if (path.basename(javaPath) !== architecture || !javaPath.includes(toolname)) {
@@ -91,16 +91,16 @@ describe('setupJava', () => {
 
   let mockJavaBase: EmptyJavaBase;
 
-  let tcFind: jest.SpyInstance;
-  let coreDebug: jest.SpyInstance;
-  let coreInfo: jest.SpyInstance;
-  let coreExportVariable: jest.SpyInstance;
-  let coreAddPath: jest.SpyInstance;
-  let coreSetOutput: jest.SpyInstance;
+  let spyTcFind: jest.SpyInstance;
+  let spyCoreDebug: jest.SpyInstance;
+  let spyCoreInfo: jest.SpyInstance;
+  let spyCoreExportVariable: jest.SpyInstance;
+  let spyCoreAddPath: jest.SpyInstance;
+  let spyCoreSetOutput: jest.SpyInstance;
 
   beforeEach(() => {
-    tcFind = jest.spyOn(tc, 'find');
-    tcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
+    spyTcFind = jest.spyOn(tc, 'find');
+    spyTcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
       const semverVersion = new semver.Range(javaVersion);
 
       if (path.basename(javaPath) !== architecture || !javaPath.includes(toolname)) {
@@ -112,20 +112,20 @@ describe('setupJava', () => {
 
     // Spy on core methods
 
-    coreDebug = jest.spyOn(core, 'debug');
-    coreDebug.mockImplementation(() => undefined);
+    spyCoreDebug = jest.spyOn(core, 'debug');
+    spyCoreDebug.mockImplementation(() => undefined);
 
-    coreInfo = jest.spyOn(core, 'info');
-    coreInfo.mockImplementation(() => undefined);
+    spyCoreInfo = jest.spyOn(core, 'info');
+    spyCoreInfo.mockImplementation(() => undefined);
 
-    coreAddPath = jest.spyOn(core, 'addPath');
-    coreAddPath.mockImplementation(() => undefined);
+    spyCoreAddPath = jest.spyOn(core, 'addPath');
+    spyCoreAddPath.mockImplementation(() => undefined);
 
-    coreExportVariable = jest.spyOn(core, 'exportVariable');
-    coreExportVariable.mockImplementation(() => undefined);
+    spyCoreExportVariable = jest.spyOn(core, 'exportVariable');
+    spyCoreExportVariable.mockImplementation(() => undefined);
 
-    coreSetOutput = jest.spyOn(core, 'setOutput');
-    coreSetOutput.mockImplementation(() => undefined);
+    spyCoreSetOutput = jest.spyOn(core, 'setOutput');
+    spyCoreSetOutput.mockImplementation(() => undefined);
   });
 
   afterEach(() => {
@@ -150,7 +150,7 @@ describe('setupJava', () => {
   ])('should find java for path %s -> %s', (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-    expect(tcFind).toHaveBeenCalled();
+    expect(spyTcFind).toHaveBeenCalled();
   });
 
   it.each([
@@ -169,10 +169,10 @@ describe('setupJava', () => {
   ])('download java', async (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-    expect(tcFind).toHaveBeenCalled();
-    expect(coreAddPath).toHaveBeenCalled();
-    expect(coreExportVariable).toHaveBeenCalled();
-    expect(coreSetOutput).toHaveBeenCalled();
+    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyCoreAddPath).toHaveBeenCalled();
+    expect(spyCoreExportVariable).toHaveBeenCalled();
+    expect(spyCoreSetOutput).toHaveBeenCalled();
   });
 
   it.each([
@@ -181,10 +181,10 @@ describe('setupJava', () => {
   ])('should throw an error for Available version not found', async input => {
     mockJavaBase = new EmptyJavaBase(input);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError('Available version not found');
-    expect(tcFind).toHaveBeenCalled();
-    expect(coreAddPath).not.toHaveBeenCalled();
-    expect(coreExportVariable).not.toHaveBeenCalled();
-    expect(coreSetOutput).not.toHaveBeenCalled();
+    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyCoreAddPath).not.toHaveBeenCalled();
+    expect(spyCoreExportVariable).not.toHaveBeenCalled();
+    expect(spyCoreSetOutput).not.toHaveBeenCalled();
   });
 });
 

@@ -1,21 +1,25 @@
 import { HttpClient } from '@actions/http-client';
 import { ZuluDistributor } from '../../src/distributors/zulu/installer';
 import { IZuluVersions } from '../../src/distributors/zulu/models';
+import * as utils from '../../src/util';
 
 let manifestData = require('../data/zulu/zulu-releases-default.json');
 
 describe('getAvailableVersions', () => {
   let spyHttpClient: jest.SpyInstance;
+  let spyUtilGetDownloadArchiveExtension: jest.SpyInstance;
   let zuluDistributor: ZuluDistributor;
-  const result = JSON.stringify(manifestData);
 
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
     spyHttpClient.mockReturnValue({
       statusCode: 200,
       headers: {},
-      result: JSON.parse(result) as IZuluVersions[]
+      result: manifestData as IZuluVersions[]
     });
+
+    spyUtilGetDownloadArchiveExtension = jest.spyOn(utils, 'getDownloadArchiveExtension');
+    spyUtilGetDownloadArchiveExtension.mockReturnValue('tar.gz');
   });
 
   afterEach(() => {
@@ -53,7 +57,7 @@ describe('getAvailableVersions', () => {
     zuluDistributor = new ZuluDistributor(input);
     zuluDistributor['getPlatformOption'] = () => 'macos';
     const buildUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${parsedUrl}`;
-    const releaseCheck = await zuluDistributor['getAvailableVersions']();
+    await zuluDistributor['getAvailableVersions']();
     expect(spyHttpClient.mock.calls).toHaveLength(1);
     expect(spyHttpClient.mock.calls[0][0]).toBe(buildUrl);
   });
@@ -94,7 +98,7 @@ describe('getArchitectureOptions', () => {
     [{ architecture: 'x86' }, { arch: 'x86', hw_bitness: '32', abi: '' }],
     [{ architecture: 'x32' }, { arch: 'x32', hw_bitness: '', abi: '' }],
     [{ architecture: 'arm' }, { arch: 'arm', hw_bitness: '', abi: '' }]
-  ])('%s -> %', (input, expected) => {
+  ])('%s -> %s', (input, expected) => {
     let zuluDistributor = new ZuluDistributor({
       version: '11',
       arch: input.architecture,
@@ -107,14 +111,13 @@ describe('getArchitectureOptions', () => {
 describe('findPackageForDownload', () => {
   let spyHttpClient: jest.SpyInstance;
   let zuluDistributor: ZuluDistributor;
-  const result = JSON.stringify(manifestData);
 
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
     spyHttpClient.mockReturnValue({
       statusCode: 200,
       headers: {},
-      result: JSON.parse(result)
+      result: manifestData
     });
   });
 
@@ -125,18 +128,13 @@ describe('findPackageForDownload', () => {
   });
 
   it.each([
-    // jdk
-
-    [{ version: '8', arch: 'x86', packageType: 'jdk' }, '8.0.282'],
-    [{ version: '11', arch: 'x86', packageType: 'jdk' }, '11.0.10'],
-    [{ version: '8.0', arch: 'x86', packageType: 'jdk' }, '8.0.282'],
-    [{ version: '11.0', arch: 'x86', packageType: 'jdk' }, '11.0.10'],
-    [{ version: '8', arch: 'x86', packageType: 'jdk+fx' }, '8.0.282'],
-    [{ version: '11', arch: 'x86', packageType: 'jdk+fx' }, '11.0.10'],
-    [{ version: '15', arch: 'x86', packageType: 'jdk' }, '15.0.2'],
-    [{ version: '15-ea', arch: 'x86', packageType: 'jdk' }, '15.0.2']
-  ])('version is %s -> %s', async (constructorInput, expected) => {
-    let zuluDistributor = new ZuluDistributor(constructorInput);
+    ['8', '8.0.282'],
+    ['11', '11.0.10'],
+    ['8.0', '8.0.282'],
+    ['11.0', '11.0.10'],
+    ['15', '15.0.2']
+  ])('version is %s -> %s', async (input, expected) => {
+    let zuluDistributor = new ZuluDistributor({ version: input, arch: 'x86', packageType: 'jdk' });
     const result = await zuluDistributor['findPackageForDownload'](zuluDistributor['version']);
 
     expect(result.version).toBe(expected);
