@@ -7,7 +7,7 @@ import { ZuluDistributor } from './zulu/installer';
 enum JavaDistributor {
   Adoptium = 'adoptium',
   Zulu = 'zulu',
-  JdkFile = 'jdkfile' // TO-DO: should be `jdkFile`?
+  JdkFile = 'jdkfile'
 }
 
 export function getJavaDistributor(

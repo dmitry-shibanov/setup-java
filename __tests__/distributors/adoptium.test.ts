@@ -89,14 +89,6 @@ describe('getAvailableVersions', () => {
   });
 });
 
-// TO-DO: show dmitry and remove
-it('test1', () => {
-  const arr = ['12.0.2+10.1', '12.0.2+10.3', '12.0.2+10.2'];
-  //semver.maxSatisfying
-  const res = semver.rsort(arr).find(item => semver.satisfies(item, '12.0.2')); //semver.sort(arr, '12.0.2');
-  expect(res).toBe('12.0.2+10.3');
-});
-
 describe('findPackageForDownload', () => {
   describe('version is resolved correctly', () => {
     it.each([
