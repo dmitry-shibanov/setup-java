@@ -109,7 +109,9 @@ export class AdoptiumDistributor extends JavaBase {
     while (true) {
       const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
       const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
-      core.info(`Gathering available versions from '${availableVersionsUrl}'`);
+      if (core.isDebug()) {
+        core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+      }
 
       const paginationPage = (
         await this.http.getJson<IAdoptiumAvailableVersions[]>(availableVersionsUrl)

@@ -10344,7 +10344,9 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             while (true) {
                 const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
                 const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
-                core.info(`Gathering available versions from '${availableVersionsUrl}'`);
+                if (core.isDebug()) {
+                    core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+                }
                 const paginationPage = (yield this.http.getJson(availableVersionsUrl)).result;
                 if (paginationPage === null || paginationPage.length === 0) {
                     // break infinity loop because we have reached end of pagination
@@ -37462,7 +37464,9 @@ class ZuluDistributor extends base_installer_1.JavaBase {
                 .filter(Boolean)
                 .join('&');
             const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
-            core.info(`Gathering available versions from '${availableVersionsUrl}'`);
+            if (core.isDebug()) {
+                core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+            }
             const availableVersions = (yield this.http.getJson(availableVersionsUrl))
                 .result;
             if (!availableVersions || availableVersions.length === 0) {
