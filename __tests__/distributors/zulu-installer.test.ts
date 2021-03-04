@@ -107,10 +107,13 @@ describe('findPackageForDownload', () => {
     expect(result.version).toBe(expected);
   });
 
-  it('select correct bundle if there are multiple items with the same jdk version but different zulu versions', async() => {
-    const zuluDistributor = new ZuluDistributor({ version: '', arch: 'x86', packageType: 'jdk'});
+  it('select correct bundle if there are multiple items with the same jdk version but different zulu versions', async () => {
+    const zuluDistributor = new ZuluDistributor({ version: '', arch: 'x86', packageType: 'jdk' });
+    zuluDistributor['getAvailableVersions'] = async () => manifestData;
     const result = await zuluDistributor['findPackageForDownload'](new semver.Range('11.0.5'));
-    expect(result.url).toBe('https://cdn.azul.com/zulu/bin/zulu11.35.15-ca-jdk11.0.5-macosx_x64.tar.gz');
+    expect(result.url).toBe(
+      'https://cdn.azul.com/zulu/bin/zulu11.35.15-ca-jdk11.0.5-macosx_x64.tar.gz'
+    );
   });
 
   it('should throw an error', async () => {

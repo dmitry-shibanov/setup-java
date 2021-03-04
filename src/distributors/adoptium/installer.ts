@@ -17,23 +17,25 @@ export class AdoptiumDistributor extends JavaBase {
   }
 
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
-    const availableVersions = await this.getAvailableVersions();
+    const availableVersionsRaw = await this.getAvailableVersions();
+    const availableVersionsWithBinaries = availableVersionsRaw
+      .filter(item => item.binaries.length > 0)
+      .map(item => {
+        return {
+          version: item.version_data.semver,
+          url: item.binaries[0].package.link
+        } as JavaDownloadRelease;
+      });
 
-    const availableVersionsWithBinaries = availableVersions.filter(
-      item => item.binaries.length > 0
-    );
-    const satisfiedVersions = semver.rsort(
-      availableVersionsWithBinaries
-        .map(item => item.version_data.semver)
-        .filter(item => semver.satisfies(item, version))
-    );
-    const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
-    const resolvedFullVersion = availableVersions.find(
-      item => item.version_data.semver === maxSatisfiedVersion
-    );
+    const satisfiedVersions = availableVersionsWithBinaries
+      .filter(item => semver.satisfies(item.version, version))
+      .sort((a, b) => {
+        return -semver.compareBuild(a.version, b.version);
+      });
 
+    const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
     if (!resolvedFullVersion) {
-      const availableOptions = availableVersions.map(item => item.version_data.semver).join(', ');
+      const availableOptions = availableVersionsWithBinaries.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -42,16 +44,7 @@ export class AdoptiumDistributor extends JavaBase {
       );
     }
 
-    if (resolvedFullVersion.binaries.length < 0) {
-      throw new Error(`No binaries were found for SemVer '${version.raw}'`);
-    }
-
-    // take the first element in 'binaries' array
-    // because it is already filtered by arch and platform options and can't contain > 1 elements
-    return {
-      version: resolvedFullVersion.version_data.semver,
-      url: resolvedFullVersion.binaries[0].package.link
-    };
+    return resolvedFullVersion;
   }
 
   protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {

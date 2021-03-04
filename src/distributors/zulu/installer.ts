@@ -9,6 +9,7 @@ import { JavaBase } from '../base-installer';
 import { IZuluVersions } from './models';
 import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
+import { TIMEOUT } from 'dns';
 
 export class ZuluDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
@@ -20,17 +21,29 @@ export class ZuluDistributor extends JavaBase {
     const availableVersions = availableVersionsRaw.map(item => {
       return {
         version: this.convertVersionToSemver(item.jdk_version),
-        url: item.url
-      } as JavaDownloadRelease;
+        url: item.url,
+        zuluVersion: this.convertVersionToSemver(item.zulu_version)
+      };
     });
 
-    const satisfiedVersions = semver.rsort(
-      availableVersions.map(item => item.version).filter(item => semver.satisfies(item, version))
-    );
-    const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
-    const resolvedFullVersion = availableVersions.find(
-      item => item.version === maxSatisfiedVersion
-    );
+    const satisfiedVersions = availableVersions
+      .filter(item => semver.satisfies(item.version, version))
+      .sort((a, b) => {
+        // Azul provides two versions: jdk_version and azul_version
+        // we should sort by both fields by descending
+        return (
+          -semver.compareBuild(a.version, b.version) ||
+          -semver.compareBuild(a.zuluVersion, b.zuluVersion)
+        );
+      })
+      .map(item => {
+        return {
+          version: item.version,
+          url: item.url
+        } as JavaDownloadRelease;
+      });
+
+    const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
     if (!resolvedFullVersion) {
       const availableOptions = availableVersions.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
@@ -40,6 +53,7 @@ export class ZuluDistributor extends JavaBase {
         `Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`
       );
     }
+
     return resolvedFullVersion;
   }
 
