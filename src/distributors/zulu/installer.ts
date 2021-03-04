@@ -18,23 +18,27 @@ export class ZuluDistributor extends JavaBase {
   }
 
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
-    const availableVersions = await this.getAvailableVersions();
-
-    const zuluVersions = availableVersions.map(item => {
+    const availableVersionsRaw = await this.getAvailableVersions();
+    if (availableVersionsRaw.length === 0) {
+      throw new Error(`No versions were found'`);
+    }
+    const availableVersions = availableVersionsRaw.map(item => {
+      const version = item.jdk_version.slice(0, 3).join('.') + '+' + item.jdk_version[3];
       return {
-        version: semver.coerce(item.jdk_version.join('.'))?.version ?? '',
+        version,
         url: item.url
       } as JavaDownloadRelease;
     });
 
-    // TO-DO: need to sort by Zulu version after sorting by JDK version?
-    const maxSatisfiedVersion = semver.maxSatisfying(
-      zuluVersions.map(item => item.version),
-      version
+    const satisfiedVersions = semver.rsort(
+      availableVersions.map(item => item.version).filter(item => semver.satisfies(item, version))
     );
-    const resolvedVersion = zuluVersions.find(item => item.version === maxSatisfiedVersion);
-    if (!resolvedVersion) {
-      const availableOptions = zuluVersions?.map(item => item.version).join(', ');
+    const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
+    const resolvedFullVersion = availableVersions.find(
+      item => item.version === maxSatisfiedVersion
+    );
+    if (!resolvedFullVersion) {
+      const availableOptions = availableVersions.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -42,8 +46,7 @@ export class ZuluDistributor extends JavaBase {
         `Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`
       );
     }
-
-    return resolvedVersion;
+    return resolvedFullVersion;
   }
 
   protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {

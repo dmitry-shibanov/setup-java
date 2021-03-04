@@ -128,11 +128,11 @@ describe('findPackageForDownload', () => {
   });
 
   it.each([
-    ['8', '8.0.282'],
-    ['11', '11.0.10'],
-    ['8.0', '8.0.282'],
-    ['11.0', '11.0.10'],
-    ['15', '15.0.2']
+    ['8', '8.0.282+8'],
+    ['11', '11.0.10+9'],
+    ['8.0', '8.0.282+8'],
+    ['11.0', '11.0.10+9'],
+    ['15', '15.0.2+7']
   ])('version is %s -> %s', async (input, expected) => {
     let zuluDistributor = new ZuluDistributor({ version: input, arch: 'x86', packageType: 'jdk' });
     const result = await zuluDistributor['findPackageForDownload'](zuluDistributor['version']);

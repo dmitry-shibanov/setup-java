@@ -37414,25 +37414,28 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     }
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
-            const availableVersions = yield this.getAvailableVersions();
-            const zuluVersions = availableVersions.map(item => {
-                var _a, _b;
+            const availableVersionsRaw = yield this.getAvailableVersions();
+            if (availableVersionsRaw.length === 0) {
+                throw new Error(`No versions were found'`);
+            }
+            const availableVersions = availableVersionsRaw.map(item => {
+                const version = item.jdk_version.slice(0, 3).join('.') + '+' + item.jdk_version[3];
                 return {
-                    version: (_b = (_a = semver_1.default.coerce(item.jdk_version.join('.'))) === null || _a === void 0 ? void 0 : _a.version) !== null && _b !== void 0 ? _b : '',
+                    version,
                     url: item.url
                 };
             });
-            // TO-DO: need to sort by Zulu version after sorting by JDK version?
-            const maxSatisfiedVersion = semver_1.default.maxSatisfying(zuluVersions.map(item => item.version), version);
-            const resolvedVersion = zuluVersions.find(item => item.version === maxSatisfiedVersion);
-            if (!resolvedVersion) {
-                const availableOptions = zuluVersions === null || zuluVersions === void 0 ? void 0 : zuluVersions.map(item => item.version).join(', ');
+            const satisfiedVersions = semver_1.default.rsort(availableVersions.map(item => item.version).filter(item => semver_1.default.satisfies(item, version)));
+            const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
+            const resolvedFullVersion = availableVersions.find(item => item.version === maxSatisfiedVersion);
+            if (!resolvedFullVersion) {
+                const availableOptions = availableVersions.map(item => item.version).join(', ');
                 const availableOptionsMessage = availableOptions
                     ? `\nAvailable versions: ${availableOptions}`
                     : '';
                 throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
             }
-            return resolvedVersion;
+            return resolvedFullVersion;
         });
     }
     downloadTool(javaRelease) {
