@@ -38,7 +38,7 @@ class EmptyJavaBase extends JavaBase {
 
 describe('findInToolcache', () => {
   const actualJavaVersion = '11.1.10';
-  const javaPath = path.join('Java_Empty_jdk', actualJavaVersion, 'x86');
+  const javaPath = path.join('Java_Empty_jdk', actualJavaVersion, 'x64');
 
   let mockJavaBase: EmptyJavaBase;
   let tcFind: jest.SpyInstance;
@@ -64,21 +64,21 @@ describe('findInToolcache', () => {
 
   it.each([
     [
-      { version: '11', arch: 'x86', packageType: 'jdk' },
+      { version: '11', arch: 'x64', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ],
     [
-      { version: '11.1', arch: 'x86', packageType: 'jdk' },
+      { version: '11.1', arch: 'x64', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ],
     [
-      { version: '11.1.10', arch: 'x86', packageType: 'jdk' },
+      { version: '11.1.10', arch: 'x64', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ],
-    [{ version: '11', arch: 'x86', packageType: 'jre' }, null],
-    [{ version: '8', arch: 'x86', packageType: 'jdk' }, null],
-    [{ version: '11', arch: 'x64', packageType: 'jdk' }, null],
-    [{ version: '11', arch: 'x64', packageType: 'jre' }, null]
+    [{ version: '11', arch: 'x64', packageType: 'jre' }, null],
+    [{ version: '8', arch: 'x64', packageType: 'jdk' }, null],
+    [{ version: '11', arch: 'x86', packageType: 'jdk' }, null],
+    [{ version: '11', arch: 'x86', packageType: 'jre' }, null]
   ])(`should find java for path %o -> %o`, (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     expect(mockJavaBase['findInToolcache']()).toEqual(expected);

@@ -33250,6 +33250,9 @@ const auth = __importStar(__webpack_require__(331));
 const constants = __importStar(__webpack_require__(211));
 const path = __importStar(__webpack_require__(622));
 const distributor_factory_1 = __webpack_require__(264);
+// To-Do need check resolving with 4 numbers
+// To-Do add check that Java resolves from to toolcache to e2e
+// To-Do check sorting for zulu for maxSatisfying
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
