@@ -162,19 +162,6 @@ describe('findPackageForDownload', () => {
     spyHttpClient.mockImplementation(
       async (): Promise<ifm.ITypedResponse<any[]>> => {
         manifestData = require('../data/zulu/zulu-releases-default.json');
-        // if (url.includes('javafx=true')) {
-        //   manifestData = require('../data/zulu/zulu-releases-fx.json');
-        // }
-
-        // if (url.includes('release_status=ea')) {
-        //   manifestData = require('../data/zulu/zulu-releases-ea.json');
-        // }
-
-        // if (url.includes('bundle_type=jdk')) {
-        //   manifestData = manifestData.filter((item: any) => item.name.includes('-jdk'));
-        // } else {
-        //   manifestData = manifestData.filter((item: any) => item.name.includes('-jre'));
-        // }
 
         const result = JSON.stringify(manifestData);
         return {
@@ -196,59 +183,35 @@ describe('findPackageForDownload', () => {
     // jdk
 
     [
-      {
-        version: '8.0.282',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-jdk8.0.282-macosx_x64.tar.gz'
-      },
+      '8.0.282',
       { version: '8', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      {
-        version: '11.0.10',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-jdk11.0.10-macosx_x64.tar.gz'
-      },
+      '11.0.10',
       { version: '11', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      {
-        version: '8.0.282',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-jdk8.0.282-macosx_x64.tar.gz'
-      },
+      '8.0.282',
       { version: '8.0', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      {
-        version: '11.0.10',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-jdk11.0.10-macosx_x64.tar.gz'
-      },
+      '11.0.10',
       { version: '11.0', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      {
-        version: '8.0.282',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-fx-jdk8.0.282-macosx_x64.tar.gz'
-      },
+      '8.0.282',
       { version: '8', arch: 'x86', packageType: 'jdk+fx' }
     ],
     [
-      {
-        version: '11.0.10',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-fx-jdk11.0.10-macosx_x64.tar.gz'
-      },
+      '11.0.10',
       { version: '11', arch: 'x86', packageType: 'jdk+fx' }
     ],
     [
-      {
-        version: '15.0.2',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu15.29.15-ca-jdk15.0.2-macosx_x64.tar.gz'
-      },
+      '15.0.2',
       { version: '15', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      {
-        version: '15.0.0',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu15.0.25-ea-jdk15.0.0-ea.11-macosx_x64.tar.gz'
-      },
+      '15.0.2',
       { version: '15-ea', arch: 'x86', packageType: 'jdk' }
     ],
 
@@ -260,7 +223,7 @@ describe('findPackageForDownload', () => {
       zuluDistributor['version']
     );
 
-    expect(result).toEqual(expected);
+    expect(result.version).toBe(expected);
   });
 
   it('Should throw an error', async () => {
@@ -279,7 +242,6 @@ describe('setupJava', () => {
   let spyHttpClient: jest.SpyInstance;
   const actualJavaVersion = '18.1.10';
   const javaPath = path.join('Java_Zulu_jdk', actualJavaVersion, 'x86');
-  let zuluDistributor: ZuluDistributor;
   let tcFind: jest.SpyInstance;
   let tcDownloadTool: jest.SpyInstance;
   let tcCacheDir: jest.SpyInstance;
@@ -297,19 +259,6 @@ describe('setupJava', () => {
     spyHttpClient.mockImplementation(
       async (url): Promise<ifm.ITypedResponse<IZuluVersions[]>> => {
         manifestData = require('../data/zulu/zulu-releases-default.json');
-        if (url.includes('javafx=true')) {
-          manifestData = require('../data/zulu/zulu-releases-fx.json');
-        }
-
-        if (url.includes('release_status=ea')) {
-          manifestData = require('../data/zulu/zulu-releases-ea.json');
-        }
-
-        if (url.includes('bundle_type=jdk')) {
-          manifestData = manifestData.filter((item: any) => item.name.includes('-jdk'));
-        } else {
-          manifestData = manifestData.filter((item: any) => item.name.includes('-jre'));
-        }
 
         const result = JSON.stringify(manifestData);
         return {
@@ -408,7 +357,7 @@ describe('setupJava', () => {
     ],
     [
       { version: '15-ea', arch: 'x86', packageType: 'jdk' },
-      { javaVersion: '15.0.0', javaPath: path.join('Java_Zulu_jdk', '15.0.0', 'x86') }
+      { javaVersion: '15.0.2', javaPath: path.join('Java_Zulu_jdk', '15.0.2', 'x86') }
     ],
 
     // jre
