@@ -10283,10 +10283,10 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
                 const availableOptionsMessage = availableOptions
                     ? `\nAvailable versions: ${availableOptions}`
                     : '';
-                throw new Error(`Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`);
+                throw new Error(`Could not find satisfied version for SemVer '${version.raw}'. ${availableOptionsMessage}`);
             }
             if (resolvedFullVersion.binaries.length < 0) {
-                throw new Error(`No binaries were found for semver ${version.raw}`);
+                throw new Error(`No binaries were found for SemVer '${version.raw}'`);
             }
             // take the first element in 'binaries' array
             // because it is already filtered by arch and platform options and can't contain > 1 elements
@@ -10344,6 +10344,9 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             while (true) {
                 const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
                 const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
+                if (core.isDebug()) {
+                    core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+                }
                 const paginationPage = (yield this.http.getJson(availableVersionsUrl)).result;
                 if (paginationPage === null || paginationPage.length === 0) {
                     // break infinity loop because we have reached end of pagination
@@ -22746,7 +22749,7 @@ class LocalDistributor extends base_installer_1.JavaBase {
                 core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
             }
             else {
-                core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
+                core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to unpack JDK file...`);
                 if (!this.jdkFile) {
                     throw new Error("'jdkFile' is not specified");
                 }
@@ -23126,7 +23129,7 @@ class JavaBase {
             stable = false;
         }
         if (!semver_1.default.validRange(version)) {
-            throw new Error(`The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`);
+            throw new Error(`The string '${version}' is not valid SemVer notation for Java version. Please check README file for code snippets and more detailed information`);
         }
         return {
             version: new semver_1.default.Range(version),
@@ -37461,6 +37464,9 @@ class ZuluDistributor extends base_installer_1.JavaBase {
                 .filter(Boolean)
                 .join('&');
             const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
+            if (core.isDebug()) {
+                core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+            }
             const availableVersions = (yield this.http.getJson(availableVersionsUrl))
                 .result;
             if (!availableVersions || availableVersions.length === 0) {
