@@ -16,8 +16,6 @@ export class AdoptiumDistributor extends JavaBase {
     super('Adoptium', installerOptions);
   }
 
-  // TO-DO: Validate that all versions are available through API
-
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
     const availableVersions = await this.getAvailableVersions();
 
