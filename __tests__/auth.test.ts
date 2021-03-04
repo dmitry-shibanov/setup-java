@@ -2,9 +2,6 @@ import io = require('@actions/io');
 import fs = require('fs');
 import path = require('path');
 
-import * as core from '@actions/core';
-import * as constants from '../src/constants';
-
 // make the os.homedir() call be local to the tests
 jest.doMock('os', () => {
   return {
@@ -18,34 +15,8 @@ const m2Dir = path.join(__dirname, auth.M2_DIR);
 const settingsFile = path.join(m2Dir, auth.SETTINGS_FILE);
 
 describe('auth tests', () => {
-  let coreSpyGetInput: jest.SpyInstance;
-  const commonObject = {
-    id: '',
-    username: '',
-    password: '',
-    gpgPassphrase: ''
-  };
   beforeEach(async () => {
-    fs.existsSync(m2Dir) && (await io.rmRF(m2Dir));
-    coreSpyGetInput = jest.spyOn(core, 'getInput');
-    coreSpyGetInput.mockImplementation((input: string) => {
-      switch (input) {
-        case constants.INPUT_SERVER_ID:
-          console.log(commonObject.id);
-          return commonObject.id;
-        case constants.INPUT_SERVER_USERNAME:
-          console.log(commonObject.username);
-          return commonObject.username;
-        case constants.INPUT_SERVER_PASSWORD:
-          console.log(commonObject.password);
-          return commonObject.password;
-        case constants.INPUT_GPG_PASSPHRASE:
-          console.log(commonObject.gpgPassphrase);
-          return commonObject.gpgPassphrase;
-        default:
-          return '';
-      }
-    });
+    await io.rmRF(m2Dir);
   }, 300000);
 
   afterAll(async () => {
@@ -63,13 +34,10 @@ describe('auth tests', () => {
 
     const altHome = path.join(__dirname, 'runner', 'settings');
     const altSettingsFile = path.join(altHome, auth.SETTINGS_FILE);
-    process.env[`INPUT_SETTINGS_PATH`] = altHome;
+    process.env[`INPUT_SETTINGS-PATH`] = altHome;
     await io.rmRF(altHome); // ensure it doesn't already exist
 
-    commonObject.id = id;
-    commonObject.username = username;
-    commonObject.password = password;
-    await auth.configureAuthentication();
+    await auth.createAuthenticationSettings(id, username, password);
 
     expect(fs.existsSync(m2Dir)).toBe(false);
     expect(fs.existsSync(settingsFile)).toBe(false);
@@ -80,7 +48,7 @@ describe('auth tests', () => {
       auth.generate(id, username, password)
     );
 
-    delete process.env[`INPUT_SETTINGS_PATH`];
+    delete process.env[`INPUT_SETTINGS-PATH`];
     await io.rmRF(altHome);
   }, 100000);
 
@@ -89,10 +57,7 @@ describe('auth tests', () => {
     const username = 'UNAME';
     const password = 'TOKEN';
 
-    commonObject.id = id;
-    commonObject.username = username;
-    commonObject.password = password;
-    await auth.configureAuthentication();
+    await auth.createAuthenticationSettings(id, username, password);
 
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);
@@ -105,11 +70,7 @@ describe('auth tests', () => {
     const password = 'TOKEN';
     const gpgPassphrase = 'GPG';
 
-    commonObject.id = id;
-    commonObject.username = username;
-    commonObject.password = password;
-    commonObject.gpgPassphrase = gpgPassphrase;
-    await auth.configureAuthentication();
+    await auth.createAuthenticationSettings(id, username, password, gpgPassphrase);
 
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);
@@ -128,10 +89,7 @@ describe('auth tests', () => {
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);
 
-    commonObject.id = id;
-    commonObject.username = username;
-    commonObject.password = password;
-    await auth.configureAuthentication();
+    await auth.createAuthenticationSettings(id, username, password);
 
     expect(fs.existsSync(m2Dir)).toBe(true);
     expect(fs.existsSync(settingsFile)).toBe(true);

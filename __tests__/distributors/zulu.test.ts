@@ -76,7 +76,7 @@ describe('getAvailableVersions', () => {
       { version: '8', arch: 'x64', packageType: 'jdk' },
       `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=64&release_status=ga`
     ]
-  ])('get right url for %o -> $s', async (input, parsedUrl) => {
+  ])('build correct url for %o -> $s', async (input, parsedUrl) => {
     spyHttpClient.mockImplementation(
       async (url): Promise<ifm.ITypedResponse<any>> => {
         const result = JSON.stringify(manifestData);

@@ -25,7 +25,7 @@ class EmptyJavaBase extends JavaBase {
   }
 }
 
-describe('Test findInToolcache', () => {
+describe('findInToolcache', () => {
   const actualJavaVersion = '11.1.10';
   const javaPath = path.join('Java_Empty_jdk', actualJavaVersion, 'x86');
 
@@ -60,12 +60,12 @@ describe('Test findInToolcache', () => {
       { version: '11.1', arch: 'x86', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ],
-    [{ version: '11', arch: 'x86', packageType: 'jre' }, null],
-    [{ version: '8', arch: 'x86', packageType: 'jdk' }, null],
     [
       { version: '11.1.10', arch: 'x86', packageType: 'jdk' },
       { javaVersion: actualJavaVersion, javaPath }
     ],
+    [{ version: '11', arch: 'x86', packageType: 'jre' }, null],
+    [{ version: '8', arch: 'x86', packageType: 'jdk' }, null],
     [{ version: '11', arch: 'x64', packageType: 'jdk' }, null],
     [{ version: '11', arch: 'x64', packageType: 'jre' }, null]
   ])(`should find java for path %o -> %o`, (input, expected) => {
@@ -75,7 +75,7 @@ describe('Test findInToolcache', () => {
   });
 });
 
-describe('Test setupJava', () => {
+describe('setupJava', () => {
   const actualJavaVersion = '11.1.10';
   const javaPath = path.join('Java_Empty_jdk', actualJavaVersion, 'x86');
 
@@ -92,7 +92,6 @@ describe('Test setupJava', () => {
     tcFind = jest.spyOn(tc, 'find');
     tcFind.mockImplementation((toolname: string, javaVersion: string, architecture: string) => {
       const semverVersion = new semver.Range(javaVersion);
-      const possiblePath = path.join(toolname, javaVersion, architecture);
 
       if (path.basename(javaPath) !== architecture || !javaPath.includes(toolname)) {
         return '';
@@ -165,8 +164,9 @@ describe('normalizeVersion', () => {
   it.each([
     ['11', { version: new semver.Range('11'), stable: true }],
     ['11.0', { version: new semver.Range('11.0'), stable: true }],
+    ['11.0.10', { version: new semver.Range('11.0.10'), stable: true }],
     ['11-ea', { version: new semver.Range('11'), stable: false }],
-    ['11.0.10', { version: new semver.Range('11.0.10'), stable: true }]
+    ['11.0.2-ea', { version: new semver.Range('11.0.2'), stable: false }]
   ])('normalizeVersion from %s to %o', (input, expected) => {
     expect(DummyJavaBase.prototype.normalizeVersion.call(null, input)).toEqual(expected);
   });
@@ -174,7 +174,7 @@ describe('normalizeVersion', () => {
   it('normalizeVersion should throw an error for non semver', () => {
     const version = '11g';
     expect(DummyJavaBase.prototype.normalizeVersion.bind(null, version)).toThrowError(
-      `The string '${version}' is not valid semver notation for Java version. Please check README file for code snippets and more detailed information`
+      `The string '${version}' is not valid SemVer notation for Java version. Please check README file for code snippets and more detailed information`
     );
   });
 });

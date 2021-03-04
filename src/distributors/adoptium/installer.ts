@@ -144,7 +144,6 @@ export class AdoptiumDistributor extends JavaBase {
       });
       core.endGroup();
     }
-    
 
     return availableVersions;
   }

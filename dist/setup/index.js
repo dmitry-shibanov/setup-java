@@ -10277,7 +10277,12 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
             const availableVersions = yield this.getAvailableVersions();
-            const resolvedFullVersion = availableVersions.find(item => semver_1.default.satisfies(item.version_data.semver, version));
+            const availableVersionsWithBinaries = availableVersions.filter(item => item.binaries.length > 0);
+            const satisfiedVersions = semver_1.default.rsort(availableVersionsWithBinaries
+                .map(item => item.version_data.semver)
+                .filter(item => semver_1.default.satisfies(item, version)));
+            const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
+            const resolvedFullVersion = availableVersions.find(item => item.version_data.semver === maxSatisfiedVersion);
             if (!resolvedFullVersion) {
                 const availableOptions = availableVersions.map(item => item.version_data.semver).join(', ');
                 const availableOptionsMessage = availableOptions
@@ -10319,22 +10324,20 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             const platform = this.getPlatformOption();
             const arch = this.architecture;
             const imageType = this.packageType;
-            const heapSize = 'normal';
-            const jvmImpl = 'hotspot';
-            const versionRange = '[1.0,100.0]';
+            const versionRange = '[1.0,100.0]'; // retrieve all available versions
             const encodedVersionRange = encodeURI(versionRange);
             const releaseType = this.stable ? 'ga' : 'ea';
             console.time('adopt-retrieve-available-versions');
             const baseRequestArguments = [
-                `os=${platform}`,
-                `architecture=${arch}`,
-                `heap_size=${heapSize}`,
-                `image_type=${imageType}`,
-                `jvm_impl=${jvmImpl}`,
                 `project=jdk`,
                 'vendor=adoptopenjdk',
+                `heap_size=normal`,
+                `jvm_impl=hotspot`,
                 'sort_method=DEFAULT',
                 'sort_order=DESC',
+                `os=${platform}`,
+                `architecture=${arch}`,
+                `image_type=${imageType}`,
                 `release_type=${releaseType}`
             ].join('&');
             // need to iterate through all pages to retrieve the list of all versions
@@ -10355,17 +10358,18 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
                 availableVersions.push(...paginationPage);
                 page_index++;
             }
-            // TO-DO: Debug information, should be removed before release
-            core.startGroup('Print debug information about available versions');
-            console.timeEnd('adopt-retrieve-available-versions');
-            console.log(`Available versions: [${availableVersions.length}]`);
-            console.log(availableVersions.map(item => item.version_data.semver).join(', '));
-            core.endGroup();
-            core.startGroup('Print detailed debug information about available versions');
-            availableVersions.forEach(item => {
-                console.log(JSON.stringify(item));
-            });
-            core.endGroup();
+            if (core.isDebug()) {
+                core.startGroup('Print information about available versions');
+                console.timeEnd('adopt-retrieve-available-versions');
+                console.log(`Available versions: [${availableVersions.length}]`);
+                console.log(availableVersions.map(item => item.version_data.semver).join(', '));
+                core.endGroup();
+                core.startGroup('Print full information about available versions');
+                availableVersions.forEach(item => {
+                    console.log(JSON.stringify(item));
+                });
+                core.endGroup();
+            }
             return availableVersions;
         });
     }
@@ -10616,7 +10620,6 @@ exports.getJavaDistributor = void 0;
 const installer_1 = __webpack_require__(249);
 const installer_2 = __webpack_require__(519);
 const installer_3 = __webpack_require__(853);
-// TO-DO: confirm distributor names
 var JavaDistributor;
 (function (JavaDistributor) {
     JavaDistributor["Adoptium"] = "adoptium";
@@ -13742,7 +13745,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generate = exports.configureAuthentication = exports.SETTINGS_FILE = exports.M2_DIR = void 0;
+exports.generate = exports.createAuthenticationSettings = exports.configureAuthentication = exports.SETTINGS_FILE = exports.M2_DIR = void 0;
 const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(470));
 const io = __importStar(__webpack_require__(1));
@@ -13764,6 +13767,17 @@ function configureAuthentication() {
         if (gpgPrivateKey) {
             core.setSecret(gpgPrivateKey);
         }
+        yield createAuthenticationSettings(id, username, password, gpgPassphrase);
+        if (gpgPrivateKey) {
+            core.info('Importing private gpg key');
+            const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
+            core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+        }
+    });
+}
+exports.configureAuthentication = configureAuthentication;
+function createAuthenticationSettings(id, username, password, gpgPassphrase = undefined) {
+    return __awaiter(this, void 0, void 0, function* () {
         core.info(`Creating ${exports.SETTINGS_FILE} with server-id: ${id};
      environment variables:
      username=\$${username},
@@ -13774,14 +13788,9 @@ function configureAuthentication() {
         const settingsDirectory = path.join(core.getInput(constants.INPUT_SETTINGS_PATH) || os.homedir(), core.getInput(constants.INPUT_SETTINGS_PATH) ? '' : exports.M2_DIR);
         yield io.mkdirP(settingsDirectory);
         yield write(settingsDirectory, generate(id, username, password, gpgPassphrase));
-        if (gpgPrivateKey) {
-            core.info('Importing private gpg key');
-            const keyFingerprint = (yield gpg.importKey(gpgPrivateKey)) || '';
-            core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
-        }
     });
 }
-exports.configureAuthentication = configureAuthentication;
+exports.createAuthenticationSettings = createAuthenticationSettings;
 // only exported for testing purposes
 function generate(id, username, password, gpgPassphrase) {
     const xmlObj = {
@@ -37446,10 +37455,6 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             const extension = util_1.getDownloadArchiveExtension();
             const javafx = (_a = features === null || features === void 0 ? void 0 : features.includes('fx')) !== null && _a !== void 0 ? _a : false;
             const releaseStatus = this.stable ? 'ga' : 'ea';
-            // TO-DO: Remove after updating README
-            // java-package field supports features for Azul
-            // if you specify 'jdk+fx', 'fx' will be passed to features
-            // any number of features can be specified with comma
             console.time('azul-retrieve-available-versions');
             const requestArguments = [
                 `os=${platform}`,
@@ -37473,17 +37478,18 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             if (!availableVersions || availableVersions.length === 0) {
                 throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
             }
-            // TO-DO: Debug information, should be removed before release
-            // core.startGroup('Print debug information about available versions');
-            // console.timeEnd('azul-retrieve-available-versions');
-            // console.log(`Available versions: [${availableVersions.length}]`);
-            // console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
-            // core.endGroup();
-            // core.startGroup('Print detailed debug information about available versions');
-            // availableVersions.forEach(item => {
-            //   console.log(JSON.stringify(item));
-            // });
-            // core.endGroup();
+            if (core.isDebug()) {
+                core.startGroup('Print information about available versions');
+                console.timeEnd('azul-retrieve-available-versions');
+                console.log(`Available versions: [${availableVersions.length}]`);
+                console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+                core.endGroup();
+                core.startGroup('Print full information about available versions');
+                availableVersions.forEach(item => {
+                    console.log(JSON.stringify(item));
+                });
+                core.endGroup();
+            }
             return availableVersions;
         });
     }

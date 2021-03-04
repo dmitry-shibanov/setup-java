@@ -9,7 +9,7 @@ import * as utils from '../../src/util';
 
 import { LocalDistributor } from '../../src/distributors/local/installer';
 
-describe('Test setupJava', () => {
+describe('setupJava', () => {
   const actualJavaVersion = '11.1.10';
   const javaPath = path.join('Java_LocalJDKFile_jdk', actualJavaVersion, 'x86');
 
