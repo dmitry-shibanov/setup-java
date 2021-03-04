@@ -50,32 +50,28 @@ describe('getAvailableVersions', () => {
   it.each([
     [
       { version: '11', arch: 'x86', packageType: 'jdk' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=32&release_status=ga`
-    ],
-    [
-      { version: '11', arch: 'x86', packageType: 'jre' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jre&javafx=false&arch=x86&hw_bitness=32&release_status=ga`
+      '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=32&release_status=ga'
     ],
     [
       { version: '11-ea', arch: 'x86', packageType: 'jdk' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=32&release_status=ea`
-    ],
-    [
-      { version: '8', arch: 'x86', packageType: 'jdk' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=32&release_status=ga`
-    ],
-    [
-      { version: '8', arch: 'x86', packageType: 'jdk+fx' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=true&arch=x86&hw_bitness=32&release_status=ga&features=fx`
-    ],
-    [
-      { version: '8-ea', arch: 'x86', packageType: 'jdk+fx' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=true&arch=x86&hw_bitness=32&release_status=ea&features=fx`
+      '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=32&release_status=ea'
     ],
     [
       { version: '8', arch: 'x64', packageType: 'jdk' },
-      `https://api.azul.com/zulu/download/community/v1.0/bundles/?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=64&release_status=ga`
-    ]
+      '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=false&arch=x86&hw_bitness=64&release_status=ga'
+    ],
+    [
+        { version: '8', arch: 'x64', packageType: 'jre' },
+        '?os=macos&ext=tar.gz&bundle_type=jre&javafx=false&arch=x86&hw_bitness=64&release_status=ga'
+    ],
+    [
+        { version: '8', arch: 'x64', packageType: 'jdk+fx' },
+        '?os=macos&ext=tar.gz&bundle_type=jdk&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
+    ],
+    [
+        { version: '8', arch: 'x64', packageType: 'jre+fx' },
+        '?os=macos&ext=tar.gz&bundle_type=jre&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
+    ],
   ])('build correct url for %o -> $s', async (input, parsedUrl) => {
     spyHttpClient.mockImplementation(
       async (url): Promise<ifm.ITypedResponse<any>> => {
@@ -94,9 +90,10 @@ describe('getAvailableVersions', () => {
     );
 
     zuluDistributor = new ZuluDistributor(input);
+    const buildUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${parsedUrl}`;
     const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
     const releaseCheck = await zuluDistributorPrototype.getAvailableVersions.call(zuluDistributor);
-    expect(releaseCheck[0].url).toEqual(parsedUrl);
+    expect(releaseCheck[0].url).toEqual(buildUrl);
   });
 
   it('load available versions', async () => {
@@ -149,7 +146,8 @@ describe('getArchitectureOptions', () => {
   it.each([
     [{ architecture: 'x64' }, { arch: 'x86', hw_bitness: '64', abi: '' }],
     [{ architecture: 'x86' }, { arch: 'x86', hw_bitness: '32', abi: '' }],
-    [{ architecture: 'x32' }, { arch: 'x32', hw_bitness: '', abi: '' }]
+    [{ architecture: 'x32' }, { arch: 'x32', hw_bitness: '', abi: '' }],
+    [{ architecture: 'arm' }, { arch: 'arm', hw_bitness: '', abi: '' }]
   ])('%o -> %o', (input, expected) => {
     expect(zuluDistributorPrototype.getArchitectureOptions.call(input)).toEqual(expected);
   });
@@ -162,27 +160,27 @@ describe('findPackageForDownload', () => {
   beforeEach(() => {
     spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
     spyHttpClient.mockImplementation(
-      async (url): Promise<ifm.ITypedResponse<IZuluVersions[]>> => {
+      async (): Promise<ifm.ITypedResponse<any[]>> => {
         manifestData = require('../data/zulu/zulu-releases-default.json');
-        if (url.includes('javafx=true')) {
-          manifestData = require('../data/zulu/zulu-releases-fx.json');
-        }
+        // if (url.includes('javafx=true')) {
+        //   manifestData = require('../data/zulu/zulu-releases-fx.json');
+        // }
 
-        if (url.includes('release_status=ea')) {
-          manifestData = require('../data/zulu/zulu-releases-ea.json');
-        }
+        // if (url.includes('release_status=ea')) {
+        //   manifestData = require('../data/zulu/zulu-releases-ea.json');
+        // }
 
-        if (url.includes('bundle_type=jdk')) {
-          manifestData = manifestData.filter((item: any) => item.name.includes('-jdk'));
-        } else {
-          manifestData = manifestData.filter((item: any) => item.name.includes('-jre'));
-        }
+        // if (url.includes('bundle_type=jdk')) {
+        //   manifestData = manifestData.filter((item: any) => item.name.includes('-jdk'));
+        // } else {
+        //   manifestData = manifestData.filter((item: any) => item.name.includes('-jre'));
+        // }
 
         const result = JSON.stringify(manifestData);
         return {
           statusCode: 200,
           headers: {},
-          result: JSON.parse(result) as IZuluVersions[]
+          result: JSON.parse(result)
         };
       }
     );
@@ -198,7 +196,6 @@ describe('findPackageForDownload', () => {
     // jdk
 
     [
-      '8',
       {
         version: '8.0.282',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-jdk8.0.282-macosx_x64.tar.gz'
@@ -206,7 +203,6 @@ describe('findPackageForDownload', () => {
       { version: '8', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      '11',
       {
         version: '11.0.10',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-jdk11.0.10-macosx_x64.tar.gz'
@@ -214,7 +210,6 @@ describe('findPackageForDownload', () => {
       { version: '11', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      '8.0',
       {
         version: '8.0.282',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-jdk8.0.282-macosx_x64.tar.gz'
@@ -222,7 +217,6 @@ describe('findPackageForDownload', () => {
       { version: '8.0', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      '11.0',
       {
         version: '11.0.10',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-jdk11.0.10-macosx_x64.tar.gz'
@@ -230,7 +224,6 @@ describe('findPackageForDownload', () => {
       { version: '11.0', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      '8',
       {
         version: '8.0.282',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-fx-jdk8.0.282-macosx_x64.tar.gz'
@@ -238,7 +231,6 @@ describe('findPackageForDownload', () => {
       { version: '8', arch: 'x86', packageType: 'jdk+fx' }
     ],
     [
-      '11',
       {
         version: '11.0.10',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-fx-jdk11.0.10-macosx_x64.tar.gz'
@@ -246,7 +238,6 @@ describe('findPackageForDownload', () => {
       { version: '11', arch: 'x86', packageType: 'jdk+fx' }
     ],
     [
-      '15',
       {
         version: '15.0.2',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu15.29.15-ca-jdk15.0.2-macosx_x64.tar.gz'
@@ -254,7 +245,6 @@ describe('findPackageForDownload', () => {
       { version: '15', arch: 'x86', packageType: 'jdk' }
     ],
     [
-      '15-ea',
       {
         version: '15.0.0',
         url: 'https://fake.cdn.azul.com/zulu/bin/zulu15.0.25-ea-jdk15.0.0-ea.11-macosx_x64.tar.gz'
@@ -262,65 +252,7 @@ describe('findPackageForDownload', () => {
       { version: '15-ea', arch: 'x86', packageType: 'jdk' }
     ],
 
-    // jre
-
-    [
-      '8',
-      {
-        version: '8.0.282',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-jre8.0.282-macosx_x64.tar.gz'
-      },
-      { version: '8', arch: 'x86', packageType: 'jre' }
-    ],
-    [
-      '11',
-      {
-        version: '11.0.10',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-jre11.0.10-macosx_x64.tar.gz'
-      },
-      { version: '11', arch: 'x86', packageType: 'jre' }
-    ],
-    [
-      '8.0',
-      {
-        version: '8.0.282',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-jre8.0.282-macosx_x64.tar.gz'
-      },
-      { version: '8.0', arch: 'x86', packageType: 'jre' }
-    ],
-    [
-      '11.0',
-      {
-        version: '11.0.10',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-jre11.0.10-macosx_x64.tar.gz'
-      },
-      { version: '11.0', arch: 'x86', packageType: 'jre' }
-    ],
-    [
-      '8',
-      {
-        version: '8.0.282',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu8.52.0.23-ca-fx-jre8.0.282-macosx_x64.tar.gz'
-      },
-      { version: '8', arch: 'x86', packageType: 'jre+fx' }
-    ],
-    [
-      '11',
-      {
-        version: '11.0.10',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu11.45.27-ca-fx-jre11.0.10-macosx_x64.tar.gz'
-      },
-      { version: '11', arch: 'x86', packageType: 'jre+fx' }
-    ],
-    [
-      '15',
-      {
-        version: '15.0.2',
-        url: 'https://fake.cdn.azul.com/zulu/bin/zulu15.29.15-ca-jre15.0.2-macosx_x64.tar.gz'
-      },
-      { version: '15', arch: 'x86', packageType: 'jre' }
-    ]
-  ])('version is %s -> %o', async (functionInput, expected, constructorInput) => {
+  ])('version is %s -> %o', async (expected, constructorInput) => {
     let zuluDistributor = new ZuluDistributor(constructorInput);
     const zuluDistributorPrototype = Object.getPrototypeOf(zuluDistributor);
     const result = await zuluDistributorPrototype.findPackageForDownload.call(

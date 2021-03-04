@@ -89,9 +89,9 @@ describe('setupJava', () => {
 
   it.each([
     [
-      { version: '8.0.289', arch: 'x64', packageType: 'jdk' },
-      expectedJdkFile,
-      { javaVersion: '8.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '8.0.289', 'x64') }
+        { version: '7.0.289', arch: 'x64', packageType: 'jdk' },
+        expectedJdkFile,
+        { javaVersion: '7.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '7.0.289', 'x64') }
     ],
     [
       { version: '11.0.289', arch: 'x64', packageType: 'jdk' },
@@ -99,29 +99,9 @@ describe('setupJava', () => {
       { javaVersion: '11.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '11.0.289', 'x64') }
     ],
     [
-      { version: '12.0.289', arch: 'x64', packageType: 'jdk' },
-      expectedJdkFile,
-      { javaVersion: '12.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '12.0.289', 'x64') }
-    ],
-    [
-      { version: '13.0.289', arch: 'x64', packageType: 'jdk' },
-      expectedJdkFile,
-      { javaVersion: '13.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '13.0.289', 'x64') }
-    ],
-    [
       { version: '15.0.289', arch: 'x64', packageType: 'jdk' },
       expectedJdkFile,
       { javaVersion: '15.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '15.0.289', 'x64') }
-    ],
-    [
-      { version: '16.0.289', arch: 'x64', packageType: 'jdk' },
-      expectedJdkFile,
-      { javaVersion: '16.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '16.0.289', 'x64') }
-    ],
-    [
-      { version: '7.0.289', arch: 'x64', packageType: 'jdk' },
-      expectedJdkFile,
-      { javaVersion: '7.0.289', javaPath: path.join('Java_LocalJDKFile_jdk', '7.0.289', 'x64') }
     ],
     [
       { version: actualJavaVersion, arch: 'x86', packageType: 'jdk' },
@@ -159,12 +139,12 @@ describe('setupJava', () => {
 
   it.each([
     [{ version: '8.0.289', arch: 'x64', packageType: 'jdk' }, ''],
+    [{ version: '13.0.289', arch: 'x64', packageType: 'jdk' }, ''],
+    [{ version: '16.0.289', arch: 'x64', packageType: 'jdk' }, ''],
+    [{ version: '7.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
-    [{ version: '13.0.289', arch: 'x64', packageType: 'jdk' }, ''],
-    [{ version: '15.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
-    [{ version: '16.0.289', arch: 'x64', packageType: 'jdk' }, ''],
-    [{ version: '7.0.289', arch: 'x64', packageType: 'jdk' }, undefined]
+    [{ version: '15.0.289', arch: 'x64', packageType: 'jdk' }, undefined]
   ])('inputs %o, jdkfile %s', async (inputs, jdkFile) => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");

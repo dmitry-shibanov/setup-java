@@ -16,12 +16,23 @@ class EmptyJavaBase extends JavaBase {
     super('Empty', installerOptions);
   }
 
-  protected downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
-    throw new Error('Method not implemented.');
+  protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
+    return {
+        javaVersion: "11.0.8",
+        javaPath: `/toolcache/${this.toolcacheFolderName}/11.0.8`
+    }
   }
 
-  protected findPackageForDownload(range: semver.Range): Promise<JavaDownloadRelease> {
-    throw new Error('Method not implemented.');
+  protected async findPackageForDownload(range: semver.Range): Promise<JavaDownloadRelease> {
+    const availableVersion = "11.0.8";
+    if(!semver.satisfies(availableVersion, range)) {
+        throw new Error("Available version not found")
+    }
+
+    return {
+        version: availableVersion,
+        url: `some/random_url/java/${availableVersion}`
+    };
   }
 }
 
@@ -138,7 +149,7 @@ describe('setupJava', () => {
       { javaVersion: actualJavaVersion, javaPath }
     ]
   ])(
-    'should find java for path %o -> %s, throw an error for non implemented method',
+    'should find java for path %o -> %s',
     (input, expected) => {
       mockJavaBase = new EmptyJavaBase(input);
       expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
@@ -147,14 +158,28 @@ describe('setupJava', () => {
   );
 
   it.each([
-    [{ version: '11', arch: 'x86', packageType: 'jre' }],
-    [{ version: '8', arch: 'x86', packageType: 'jdk' }],
-    [{ version: '11', arch: 'x64', packageType: 'jdk' }],
-    [{ version: '11', arch: 'x64', packageType: 'jre' }]
-  ])('should throw an error for non implemented method', async input => {
+    [{ version: '11', arch: 'x86', packageType: 'jre' }, {javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8'}],
+    [{ version: '11', arch: 'x64', packageType: 'jdk' }, {javaPath: `/toolcache/Java_Empty_jdk/11.0.8`, javaVersion: '11.0.8'}],
+    [{ version: '11', arch: 'x64', packageType: 'jre' }, {javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8'}]
+  ])("download java", async (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
-    await expect(mockJavaBase.setupJava()).rejects.toThrowError('Method not implemented.');
+    await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(tcFind).toHaveBeenCalled();
+    expect(coreAddPath).toHaveBeenCalled();
+    expect(coreExportVariable).toHaveBeenCalled();
+    expect(coreSetOutput).toHaveBeenCalled();
+  })
+
+  it.each([
+    [{ version: '15', arch: 'x86', packageType: 'jre' }],
+    [{ version: '11.0.7', arch: 'x64', packageType: 'jre' }]
+  ])('should throw an error for Available version not found', async input => {
+    mockJavaBase = new EmptyJavaBase(input);
+    await expect(mockJavaBase.setupJava()).rejects.toThrowError('Available version not found');
+    expect(tcFind).toHaveBeenCalled();
+    expect(coreAddPath).not.toHaveBeenCalled();
+    expect(coreExportVariable).not.toHaveBeenCalled();
+    expect(coreSetOutput).not.toHaveBeenCalled();
   });
 });
 
