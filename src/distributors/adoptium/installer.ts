@@ -40,11 +40,16 @@ export class AdoptiumDistributor extends JavaBase {
         ? `\nAvailable versions: ${availableOptions}`
         : '';
       throw new Error(
-        `Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`
+        `Could not find satisfied version for SemVer '${version.raw}'. ${availableOptionsMessage}`
       );
     }
 
-    // take the first element in 'binaries' array because it is already filtered above
+    if (resolvedFullVersion.binaries.length < 0) {
+      throw new Error(`No binaries were found for SemVer '${version.raw}'`);
+    }
+
+    // take the first element in 'binaries' array
+    // because it is already filtered by arch and platform options and can't contain > 1 elements
     return {
       version: resolvedFullVersion.version_data.semver,
       url: resolvedFullVersion.binaries[0].package.link
@@ -111,6 +116,9 @@ export class AdoptiumDistributor extends JavaBase {
     while (true) {
       const requestArguments = `${baseRequestArguments}&page_size=20&page=${page_index}`;
       const availableVersionsUrl = `https://api.adoptopenjdk.net/v3/assets/version/${encodedVersionRange}?${requestArguments}`;
+      if (core.isDebug()) {
+        core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+      }
 
       const paginationPage = (
         await this.http.getJson<IAdoptiumAvailableVersions[]>(availableVersionsUrl)

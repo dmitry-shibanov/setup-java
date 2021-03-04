@@ -21,7 +21,9 @@ export class LocalDistributor extends JavaBase {
     if (foundJava) {
       core.info(`Resolved Java ${foundJava.javaVersion} from tool-cache`);
     } else {
-      core.info(`Java ${this.version.raw} is not found in tool-cache. Trying to download...`);
+      core.info(
+        `Java ${this.version.raw} is not found in tool-cache. Trying to unpack JDK file...`
+      );
       if (!this.jdkFile) {
         throw new Error("'jdkFile' is not specified");
       }

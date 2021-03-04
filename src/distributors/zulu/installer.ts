@@ -95,9 +95,12 @@ export class ZuluDistributor extends JavaBase {
       .join('&');
 
     const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
+    if (core.isDebug()) {
+      core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
+    }
+
     const availableVersions = (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl))
       .result;
-
     if (!availableVersions || availableVersions.length === 0) {
       throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
     }
