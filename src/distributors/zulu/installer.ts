@@ -79,11 +79,6 @@ export class ZuluDistributor extends JavaBase {
     const javafx = features?.includes('fx') ?? false;
     const releaseStatus = this.stable ? 'ga' : 'ea';
 
-    // TO-DO: Remove after updating README
-    // java-package field supports features for Azul
-    // if you specify 'jdk+fx', 'fx' will be passed to features
-    // any number of features can be specified with comma
-
     console.time('azul-retrieve-available-versions');
     const requestArguments = [
       `os=${platform}`,
@@ -107,17 +102,18 @@ export class ZuluDistributor extends JavaBase {
       throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
     }
 
-    // TO-DO: Debug information, should be removed before release
-    // core.startGroup('Print debug information about available versions');
-    // console.timeEnd('azul-retrieve-available-versions');
-    // console.log(`Available versions: [${availableVersions.length}]`);
-    // console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
-    // core.endGroup();
-    // core.startGroup('Print detailed debug information about available versions');
-    // availableVersions.forEach(item => {
-    //   console.log(JSON.stringify(item));
-    // });
-    // core.endGroup();
+    if (core.isDebug()) {
+      core.startGroup('Print information about available versions');
+      console.timeEnd('azul-retrieve-available-versions');
+      console.log(`Available versions: [${availableVersions.length}]`);
+      console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+      core.endGroup();
+      core.startGroup('Print full information about available versions');
+      availableVersions.forEach(item => {
+        console.log(JSON.stringify(item));
+      });
+      core.endGroup();
+    }
 
     return availableVersions;
   }
