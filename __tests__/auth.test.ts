@@ -1,13 +1,7 @@
 import io = require('@actions/io');
 import fs = require('fs');
 import path = require('path');
-
-// make the os.homedir() call be local to the tests
-jest.doMock('os', () => {
-  return {
-    homedir: jest.fn(() => __dirname)
-  };
-});
+import os from 'os';
 
 import * as auth from '../src/auth';
 
@@ -15,8 +9,12 @@ const m2Dir = path.join(__dirname, auth.M2_DIR);
 const settingsFile = path.join(m2Dir, auth.SETTINGS_FILE);
 
 describe('auth tests', () => {
+  let spyOSHomedir: jest.SpyInstance;
+
   beforeEach(async () => {
     await io.rmRF(m2Dir);
+    spyOSHomedir = jest.spyOn(os, 'homedir');
+    spyOSHomedir.mockReturnValue(__dirname);
   }, 300000);
 
   afterAll(async () => {
@@ -25,6 +23,9 @@ describe('auth tests', () => {
     } catch {
       console.log('Failed to remove test directories');
     }
+    jest.resetAllMocks();
+    jest.clearAllMocks();
+    jest.restoreAllMocks();
   }, 100000);
 
   it('creates settings.xml in alternate locations', async () => {

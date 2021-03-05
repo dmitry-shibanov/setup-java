@@ -1,9 +1,10 @@
 import { HttpClient } from '@actions/http-client';
+import * as semver from 'semver';
 import { ZuluDistributor } from '../../src/distributors/zulu/installer';
 import { IZuluVersions } from '../../src/distributors/zulu/models';
 import * as utils from '../../src/util';
 
-let manifestData = require('../data/zulu/zulu-releases-default.json');
+const manifestData = require('../data/zulu-releases-default.json') as [];
 
 describe('getAvailableVersions', () => {
   let spyHttpClient: jest.SpyInstance;
@@ -64,31 +65,8 @@ describe('getAvailableVersions', () => {
 
   it('load available versions', async () => {
     zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-    await expect(zuluDistributor['getAvailableVersions']()).resolves.not.toBeNull();
-  });
-
-  it('Error is thrown for empty response', async () => {
-    spyHttpClient.mockReturnValue({
-      statusCode: 200,
-      headers: {},
-      result: [] as IZuluVersions[]
-    });
-    zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-    await expect(zuluDistributor['getAvailableVersions']()).rejects.toThrowError(
-      /No versions were found using url */
-    );
-  });
-
-  it('Error is thrown for undefined', async () => {
-    spyHttpClient.mockReturnValue({
-      statusCode: 200,
-      headers: {},
-      result: undefined
-    });
-    zuluDistributor = new ZuluDistributor({ version: '11', arch: 'x86', packageType: 'jdk' });
-    await expect(zuluDistributor['getAvailableVersions']()).rejects.toThrowError(
-      /No versions were found using url */
-    );
+    const availableVersions = await zuluDistributor['getAvailableVersions']();
+    expect(availableVersions).toHaveLength(manifestData.length);
   });
 });
 
@@ -109,41 +87,53 @@ describe('getArchitectureOptions', () => {
 });
 
 describe('findPackageForDownload', () => {
-  let spyHttpClient: jest.SpyInstance;
-  let zuluDistributor: ZuluDistributor;
-
-  beforeEach(() => {
-    spyHttpClient = jest.spyOn(HttpClient.prototype, 'getJson');
-    spyHttpClient.mockReturnValue({
-      statusCode: 200,
-      headers: {},
-      result: manifestData
-    });
-  });
-
-  afterEach(() => {
-    jest.resetAllMocks();
-    jest.clearAllMocks();
-    jest.restoreAllMocks();
-  });
-
   it.each([
     ['8', '8.0.282+8'],
-    ['11', '11.0.10+9'],
+    ['11.x', '11.0.10+9'],
     ['8.0', '8.0.282+8'],
-    ['11.0', '11.0.10+9'],
-    ['15', '15.0.2+7']
+    ['11.0.x', '11.0.10+9'],
+    ['15', '15.0.2+7'],
+    ['9.0.0', '9.0.0+0'],
+    ['9.0', '9.0.1+0'],
+    ['8.0.262', '8.0.262+19'] // validate correct choise between [8.0.262.17, 8.0.262.19, 8.0.262.18]
   ])('version is %s -> %s', async (input, expected) => {
-    let zuluDistributor = new ZuluDistributor({ version: input, arch: 'x86', packageType: 'jdk' });
+    const zuluDistributor = new ZuluDistributor({
+      version: input,
+      arch: 'x86',
+      packageType: 'jdk'
+    });
+    zuluDistributor['getAvailableVersions'] = async () => manifestData;
     const result = await zuluDistributor['findPackageForDownload'](zuluDistributor['version']);
-
     expect(result.version).toBe(expected);
   });
 
-  it('Should throw an error', async () => {
-    zuluDistributor = new ZuluDistributor({ version: '18', arch: 'x86', packageType: 'jdk' });
+  it('select correct bundle if there are multiple items with the same jdk version but different zulu versions', async () => {
+    const zuluDistributor = new ZuluDistributor({ version: '', arch: 'x86', packageType: 'jdk' });
+    zuluDistributor['getAvailableVersions'] = async () => manifestData;
+    const result = await zuluDistributor['findPackageForDownload'](new semver.Range('11.0.5'));
+    expect(result.url).toBe(
+      'https://cdn.azul.com/zulu/bin/zulu11.35.15-ca-jdk11.0.5-macosx_x64.tar.gz'
+    );
+  });
+
+  it('should throw an error', async () => {
+    const zuluDistributor = new ZuluDistributor({ version: '18', arch: 'x86', packageType: 'jdk' });
     await expect(
       zuluDistributor['findPackageForDownload'](zuluDistributor['version'])
     ).rejects.toThrowError(/Could not find satisfied version for semver */);
+  });
+});
+
+describe('convertVersionToSemver', () => {
+  it.each([
+    [[12], '12'],
+    [[12, 0], '12.0'],
+    [[12, 0, 2], '12.0.2'],
+    [[12, 0, 2, 1], '12.0.2+1'],
+    [[12, 0, 2, 1, 3], '12.0.2+1']
+  ])('%s -> %s', (input: number[], expected: string) => {
+    const distributor = new ZuluDistributor({ version: '18', arch: 'x86', packageType: 'jdk' });
+    const actual = distributor['convertVersionToSemver'](input);
+    expect(actual).toBe(expected);
   });
 });

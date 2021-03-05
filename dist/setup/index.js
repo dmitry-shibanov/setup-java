@@ -10273,32 +10273,31 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
         super('Adoptium', installerOptions);
     }
-    // TO-DO: Validate that all versions are available through API
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
-            const availableVersions = yield this.getAvailableVersions();
-            const availableVersionsWithBinaries = availableVersions.filter(item => item.binaries.length > 0);
-            const satisfiedVersions = semver_1.default.rsort(availableVersionsWithBinaries
-                .map(item => item.version_data.semver)
-                .filter(item => semver_1.default.satisfies(item, version)));
-            const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
-            const resolvedFullVersion = availableVersions.find(item => item.version_data.semver === maxSatisfiedVersion);
+            const availableVersionsRaw = yield this.getAvailableVersions();
+            const availableVersionsWithBinaries = availableVersionsRaw
+                .filter(item => item.binaries.length > 0)
+                .map(item => {
+                return {
+                    version: item.version_data.semver,
+                    url: item.binaries[0].package.link
+                };
+            });
+            const satisfiedVersions = availableVersionsWithBinaries
+                .filter(item => semver_1.default.satisfies(item.version, version))
+                .sort((a, b) => {
+                return -semver_1.default.compareBuild(a.version, b.version);
+            });
+            const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
             if (!resolvedFullVersion) {
-                const availableOptions = availableVersions.map(item => item.version_data.semver).join(', ');
+                const availableOptions = availableVersionsWithBinaries.map(item => item.version).join(', ');
                 const availableOptionsMessage = availableOptions
                     ? `\nAvailable versions: ${availableOptions}`
                     : '';
                 throw new Error(`Could not find satisfied version for SemVer '${version.raw}'. ${availableOptionsMessage}`);
             }
-            if (resolvedFullVersion.binaries.length < 0) {
-                throw new Error(`No binaries were found for SemVer '${version.raw}'`);
-            }
-            // take the first element in 'binaries' array
-            // because it is already filtered by arch and platform options and can't contain > 1 elements
-            return {
-                version: resolvedFullVersion.version_data.semver,
-                url: resolvedFullVersion.binaries[0].package.link
-            };
+            return resolvedFullVersion;
         });
     }
     downloadTool(javaRelease) {
@@ -33252,7 +33251,6 @@ const path = __importStar(__webpack_require__(622));
 const distributor_factory_1 = __webpack_require__(264);
 // To-Do need check resolving with 4 numbers
 // To-Do add check that Java resolves from to toolcache to e2e
-// To-Do check sorting for zulu for maxSatisfying
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -37407,7 +37405,6 @@ const fs_1 = __importDefault(__webpack_require__(747));
 const semver_1 = __importDefault(__webpack_require__(280));
 const base_installer_1 = __webpack_require__(534);
 const util_1 = __webpack_require__(322);
-// TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
 class ZuluDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions) {
         super('Zulu', installerOptions);
@@ -37415,19 +37412,28 @@ class ZuluDistributor extends base_installer_1.JavaBase {
     findPackageForDownload(version) {
         return __awaiter(this, void 0, void 0, function* () {
             const availableVersionsRaw = yield this.getAvailableVersions();
-            if (availableVersionsRaw.length === 0) {
-                throw new Error(`No versions were found'`);
-            }
             const availableVersions = availableVersionsRaw.map(item => {
-                const version = item.jdk_version.slice(0, 3).join('.') + '+' + item.jdk_version[3];
                 return {
-                    version,
+                    version: this.convertVersionToSemver(item.jdk_version),
+                    url: item.url,
+                    zuluVersion: this.convertVersionToSemver(item.zulu_version)
+                };
+            });
+            const satisfiedVersions = availableVersions
+                .filter(item => semver_1.default.satisfies(item.version, version))
+                .sort((a, b) => {
+                // Azul provides two versions: jdk_version and azul_version
+                // we should sort by both fields by descending
+                return (-semver_1.default.compareBuild(a.version, b.version) ||
+                    -semver_1.default.compareBuild(a.zuluVersion, b.zuluVersion));
+            })
+                .map(item => {
+                return {
+                    version: item.version,
                     url: item.url
                 };
             });
-            const satisfiedVersions = semver_1.default.rsort(availableVersions.map(item => item.version).filter(item => semver_1.default.satisfies(item, version)));
-            const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
-            const resolvedFullVersion = availableVersions.find(item => item.version === maxSatisfiedVersion);
+            const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
             if (!resolvedFullVersion) {
                 const availableOptions = availableVersions.map(item => item.version).join(', ');
                 const availableOptionsMessage = availableOptions
@@ -37453,7 +37459,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
         });
     }
     getAvailableVersions() {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function* () {
             const { arch, hw_bitness, abi } = this.getArchitectureOptions();
             const [bundleType, features] = this.packageType.split('+');
@@ -37479,11 +37485,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             if (core.isDebug()) {
                 core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
             }
-            const availableVersions = (yield this.http.getJson(availableVersionsUrl))
-                .result;
-            if (!availableVersions || availableVersions.length === 0) {
-                throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
-            }
+            const availableVersions = (_b = (yield this.http.getJson(availableVersionsUrl)).result) !== null && _b !== void 0 ? _b : [];
             if (core.isDebug()) {
                 core.startGroup('Print information about available versions');
                 console.timeEnd('azul-retrieve-available-versions');
@@ -37520,6 +37522,15 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             default:
                 return process.platform;
         }
+    }
+    // Azul API returns jdk_version as array of digits like [11, 0, 2, 1]
+    convertVersionToSemver(version_array) {
+        const mainVersion = version_array.slice(0, 3).join('.');
+        if (version_array.length > 3) {
+            // intentionally ignore more than 4 numbers because it is invalid semver
+            return `${mainVersion}+${version_array[3]}`;
+        }
+        return mainVersion;
     }
 }
 exports.ZuluDistributor = ZuluDistributor;

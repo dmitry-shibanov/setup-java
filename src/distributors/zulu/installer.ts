@@ -9,8 +9,7 @@ import { JavaBase } from '../base-installer';
 import { IZuluVersions } from './models';
 import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
-
-// TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
+import { TIMEOUT } from 'dns';
 
 export class ZuluDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
@@ -19,24 +18,32 @@ export class ZuluDistributor extends JavaBase {
 
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
     const availableVersionsRaw = await this.getAvailableVersions();
-    if (availableVersionsRaw.length === 0) {
-      throw new Error(`No versions were found'`);
-    }
     const availableVersions = availableVersionsRaw.map(item => {
-      const version = item.jdk_version.slice(0, 3).join('.') + '+' + item.jdk_version[3];
       return {
-        version,
-        url: item.url
-      } as JavaDownloadRelease;
+        version: this.convertVersionToSemver(item.jdk_version),
+        url: item.url,
+        zuluVersion: this.convertVersionToSemver(item.zulu_version)
+      };
     });
 
-    const satisfiedVersions = semver.rsort(
-      availableVersions.map(item => item.version).filter(item => semver.satisfies(item, version))
-    );
-    const maxSatisfiedVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
-    const resolvedFullVersion = availableVersions.find(
-      item => item.version === maxSatisfiedVersion
-    );
+    const satisfiedVersions = availableVersions
+      .filter(item => semver.satisfies(item.version, version))
+      .sort((a, b) => {
+        // Azul provides two versions: jdk_version and azul_version
+        // we should sort by both fields by descending
+        return (
+          -semver.compareBuild(a.version, b.version) ||
+          -semver.compareBuild(a.zuluVersion, b.zuluVersion)
+        );
+      })
+      .map(item => {
+        return {
+          version: item.version,
+          url: item.url
+        } as JavaDownloadRelease;
+      });
+
+    const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
     if (!resolvedFullVersion) {
       const availableOptions = availableVersions.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
@@ -46,6 +53,7 @@ export class ZuluDistributor extends JavaBase {
         `Could not find satisfied version for semver ${version.raw}. ${availableOptionsMessage}`
       );
     }
+
     return resolvedFullVersion;
   }
 
@@ -102,11 +110,8 @@ export class ZuluDistributor extends JavaBase {
       core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
     }
 
-    const availableVersions = (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl))
-      .result;
-    if (!availableVersions || availableVersions.length === 0) {
-      throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
-    }
+    const availableVersions =
+      (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)).result ?? [];
 
     if (core.isDebug()) {
       core.startGroup('Print information about available versions');
@@ -148,5 +153,16 @@ export class ZuluDistributor extends JavaBase {
       default:
         return process.platform;
     }
+  }
+
+  // Azul API returns jdk_version as array of digits like [11, 0, 2, 1]
+  private convertVersionToSemver(version_array: number[]) {
+    const mainVersion = version_array.slice(0, 3).join('.');
+    if (version_array.length > 3) {
+      // intentionally ignore more than 4 numbers because it is invalid semver
+      return `${mainVersion}+${version_array[3]}`;
+    }
+
+    return mainVersion;
   }
 }
