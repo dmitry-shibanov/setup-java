@@ -10311,7 +10311,8 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.version, this.architecture);
+            const version = this.stable ? javaRelease.version : `${javaRelease.version}-ea`;
+            javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             if (process.platform === 'darwin') {
                 javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
             }
@@ -23114,7 +23115,8 @@ class JavaBase {
         return `Java_${this.distribution}_${this.packageType}`;
     }
     findInToolcache() {
-        const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
+        const version = this.stable ? this.version.raw : `${this.version.raw}-ea`;
+        const javaPath = tc.find(this.toolcacheFolderName, version, this.architecture);
         if (!javaPath) {
             return null;
         }
@@ -37454,7 +37456,8 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.version, this.architecture);
+            const version = this.stable ? javaRelease.version : `${javaRelease.version}-ea`;
+            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             return { javaPath, javaVersion: javaRelease.version };
         });
     }

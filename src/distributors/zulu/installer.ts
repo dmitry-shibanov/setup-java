@@ -71,10 +71,11 @@ export class ZuluDistributor extends JavaBase {
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
+    const version = this.stable ? javaRelease.version : `${javaRelease.version}-ea`;
     const javaPath = await tc.cacheDir(
       archivePath,
       this.toolcacheFolderName,
-      javaRelease.version,
+      version,
       this.architecture
     );
 

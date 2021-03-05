@@ -51,7 +51,8 @@ export abstract class JavaBase {
   }
 
   protected findInToolcache(): JavaInstallerResults | null {
-    const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
+    const version = this.stable ? this.version.raw : `${this.version.raw}-ea`;
+    const javaPath = tc.find(this.toolcacheFolderName, version, this.architecture);
     if (!javaPath) {
       return null;
     }
