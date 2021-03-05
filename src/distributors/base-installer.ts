@@ -50,6 +50,15 @@ export abstract class JavaBase {
     return `Java_${this.distribution}_${this.packageType}`;
   }
 
+  protected getToolcacheVersionName(resolvedVersion: string): string {
+    let version = resolvedVersion;
+    if (!this.stable) {
+      const cleanVersion = semver.clean(version);
+      version = `${cleanVersion}-ea`;
+    }
+    return version;
+  }
+
   protected findInToolcache(): JavaInstallerResults | null {
     // we can't use tc.find directly because firstly, we need to filter versions by stability
     // if *-ea is provided, take only ea versions from toolcache, otherwise - only stable versions
