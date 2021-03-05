@@ -52,6 +52,7 @@ export abstract class JavaBase {
 
   protected findInToolcache(): JavaInstallerResults | null {
     const version = this.stable ? this.version.raw : `${this.version.raw}-ea`;
+    core.info(`find dir java version is ${version}`);
     const javaPath = tc.find(this.toolcacheFolderName, version, this.architecture);
     if (!javaPath) {
       return null;
