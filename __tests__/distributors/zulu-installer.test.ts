@@ -54,11 +54,13 @@ describe('getAvailableVersions', () => {
       { version: '8', arch: 'x64', packageType: 'jre+fx' },
       '?os=macos&ext=tar.gz&bundle_type=jre&javafx=true&arch=x86&hw_bitness=64&release_status=ga&features=fx'
     ]
-  ])('build correct url for %s -> $s', async (input, parsedUrl) => {
+  ])('build correct url for %s -> %s', async (input, parsedUrl) => {
     zuluDistributor = new ZuluDistributor(input);
     zuluDistributor['getPlatformOption'] = () => 'macos';
     const buildUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/${parsedUrl}`;
+
     await zuluDistributor['getAvailableVersions']();
+
     expect(spyHttpClient.mock.calls).toHaveLength(1);
     expect(spyHttpClient.mock.calls[0][0]).toBe(buildUrl);
   });

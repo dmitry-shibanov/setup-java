@@ -12,7 +12,7 @@ import { macOSJavaContentDir } from '../../constants';
 
 export class LocalDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions, private jdkFile?: string) {
-    super('LocalJDKFile', installerOptions);
+    super('jdkfile', installerOptions);
   }
 
   public async setupJava(): Promise<JavaInstallerResults> {

@@ -11,7 +11,7 @@ import { LocalDistributor } from '../../src/distributors/local/installer';
 
 describe('setupJava', () => {
   const actualJavaVersion = '11.1.10';
-  const javaPath = path.join('Java_LocalJDKFile_jdk', actualJavaVersion, 'x86');
+  const javaPath = path.join('Java_jdkfile_jdk', actualJavaVersion, 'x86');
 
   let mockJavaBase: LocalDistributor;
 
@@ -47,7 +47,6 @@ describe('setupJava', () => {
     );
 
     // Spy on core methods
-
     spyCoreDebug = jest.spyOn(core, 'debug');
     spyCoreDebug.mockImplementation(() => undefined);
 
@@ -92,11 +91,11 @@ describe('setupJava', () => {
     const jdkFile = 'not_existing_one';
     const expected = {
       javaVersion: actualJavaVersion,
-      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+      javaPath: path.join('Java_jdkfile_jdk', inputs.version, inputs.arch)
     };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
+    expected.javaPath = path.join('Java_jdkfile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(spyTcFind).toHaveBeenCalled();
     expect(spyCoreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
@@ -110,11 +109,11 @@ describe('setupJava', () => {
     const jdkFile = undefined;
     const expected = {
       javaVersion: actualJavaVersion,
-      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+      javaPath: path.join('Java_jdkfile_jdk', inputs.version, inputs.arch)
     };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
+    expected.javaPath = path.join('Java_jdkfile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(spyTcFind).toHaveBeenCalled();
     expect(spyCoreInfo).toHaveBeenCalledWith(`Resolved Java ${actualJavaVersion} from tool-cache`);
@@ -128,11 +127,11 @@ describe('setupJava', () => {
     const jdkFile = expectedJdkFile;
     const expected = {
       javaVersion: '11.0.289',
-      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+      javaPath: path.join('Java_jdkfile_jdk', inputs.version, inputs.arch)
     };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
+    expected.javaPath = path.join('Java_jdkfile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(spyTcFind).toHaveBeenCalled();
     expect(spyCoreInfo).not.toHaveBeenCalledWith(
@@ -149,11 +148,11 @@ describe('setupJava', () => {
     const jdkFile = 'not_existing_one';
     const expected = {
       javaVersion: '11.0.289',
-      javaPath: path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch)
+      javaPath: path.join('Java_jdkfile_jdk', inputs.version, inputs.arch)
     };
 
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    expected.javaPath = path.join('Java_LocalJDKFile_jdk', inputs.version, inputs.arch);
+    expected.javaPath = path.join('Java_jdkfile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError(
       "JDK file is not found in path 'not_existing_one'"
     );
@@ -172,11 +171,16 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
     [{ version: '11.1.11', arch: 'x64', packageType: 'jdk' }, 'not_existing_one']
-  ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
-    mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    await expect(mockJavaBase.setupJava()).rejects.toThrowError(/JDK file is not found in path */);
-    expect(spyTcFind).toHaveBeenCalled();
-  });
+  ])(
+    `Throw an error if jdkfile has wrong path, inputs %s, jdkfile %s, real name ${expectedJdkFile}`,
+    async (inputs, jdkFile) => {
+      mockJavaBase = new LocalDistributor(inputs, jdkFile);
+      await expect(mockJavaBase.setupJava()).rejects.toThrowError(
+        /JDK file is not found in path */
+      );
+      expect(spyTcFind).toHaveBeenCalled();
+    }
+  );
 
   it.each([
     [{ version: '8.0.289', arch: 'x64', packageType: 'jdk' }, ''],
@@ -186,9 +190,12 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '15.0.289', arch: 'x64', packageType: 'jdk' }, undefined]
-  ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
-    mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
-    expect(spyTcFind).toHaveBeenCalled();
-  });
+  ])(
+    'Throw an error if jdkfile is not specified, inputs %s, jdkfile %s',
+    async (inputs, jdkFile) => {
+      mockJavaBase = new LocalDistributor(inputs, jdkFile);
+      await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
+      expect(spyTcFind).toHaveBeenCalled();
+    }
+  );
 });

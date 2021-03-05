@@ -22748,7 +22748,7 @@ const util_1 = __webpack_require__(322);
 const constants_1 = __webpack_require__(211);
 class LocalDistributor extends base_installer_1.JavaBase {
     constructor(installerOptions, jdkFile) {
-        super('LocalJDKFile', installerOptions);
+        super('jdkfile', installerOptions);
         this.jdkFile = jdkFile;
     }
     setupJava() {
