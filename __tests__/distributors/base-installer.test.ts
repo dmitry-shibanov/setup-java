@@ -111,7 +111,6 @@ describe('setupJava', () => {
     });
 
     // Spy on core methods
-
     spyCoreDebug = jest.spyOn(core, 'debug');
     spyCoreDebug.mockImplementation(() => undefined);
 
