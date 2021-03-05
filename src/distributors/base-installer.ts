@@ -51,17 +51,21 @@ export abstract class JavaBase {
   }
 
   protected findInToolcache(): JavaInstallerResults | null {
-    const version =
-      tc
-        .findAllVersions(this.toolcacheFolderName, this.architecture)
-        .find(
-          item =>
-            item.includes('ea') === !this.stable &&
-            semver.satisfies(item.replace('-ea', ''), this.version)
-        ) ?? this.version.raw;
-    core.info(`find dir java version is ${version}`);
-    const javaPath = tc.find(this.toolcacheFolderName, version, this.architecture);
-    console.log(tc.findAllVersions(this.toolcacheFolderName, this.architecture));
+    const availableVersions = tc
+      .findAllVersions(this.toolcacheFolderName, this.architecture)
+      .filter(item => item.includes('ea') === !this.stable)
+      .map(item => {
+        return item.replace(/-ea$/, '');
+      });
+
+    const satisfiedVersions = availableVersions
+      .filter(item => semver.satisfies(item, this.version))
+      .sort(semver.rcompare);
+    if (!satisfiedVersions || satisfiedVersions.length === 0) {
+      return null;
+    }
+
+    const javaPath = tc.find(this.toolcacheFolderName, satisfiedVersions[0], this.architecture);
     if (!javaPath) {
       return null;
     }
