@@ -17,6 +17,7 @@ describe('setupJava', () => {
 
   let spyTcFind: jest.SpyInstance;
   let spyTcCacheDir: jest.SpyInstance;
+  let spyTcFindAllVersions: jest.SpyInstance;
   let spyCoreDebug: jest.SpyInstance;
   let spyCoreInfo: jest.SpyInstance;
   let spyCoreExportVariable: jest.SpyInstance;
@@ -45,6 +46,9 @@ describe('setupJava', () => {
       (archivePath: string, toolcacheFolderName: string, version: string, architecture: string) =>
         path.join(toolcacheFolderName, version, architecture)
     );
+
+    spyTcFindAllVersions = jest.spyOn(tc, 'findAllVersions');
+    spyTcFindAllVersions.mockReturnValue([actualJavaVersion]);
 
     // Spy on core methods
     spyCoreDebug = jest.spyOn(core, 'debug');
@@ -133,7 +137,7 @@ describe('setupJava', () => {
     mockJavaBase = new LocalDistributor(inputs, jdkFile);
     expected.javaPath = path.join('Java_jdkfile_jdk', inputs.version, inputs.arch);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
-    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyTcFindAllVersions).toHaveBeenCalled();
     expect(spyCoreInfo).not.toHaveBeenCalledWith(
       `Resolved Java ${actualJavaVersion} from tool-cache`
     );
@@ -156,7 +160,7 @@ describe('setupJava', () => {
     await expect(mockJavaBase.setupJava()).rejects.toThrowError(
       "JDK file is not found in path 'not_existing_one'"
     );
-    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyTcFindAllVersions).toHaveBeenCalled();
     expect(spyCoreInfo).not.toHaveBeenCalledWith(
       `Resolved Java ${actualJavaVersion} from tool-cache`
     );
@@ -178,7 +182,7 @@ describe('setupJava', () => {
       await expect(mockJavaBase.setupJava()).rejects.toThrowError(
         /JDK file is not found in path */
       );
-      expect(spyTcFind).toHaveBeenCalled();
+      expect(spyTcFindAllVersions).toHaveBeenCalled();
     }
   );
 
@@ -195,7 +199,7 @@ describe('setupJava', () => {
     async (inputs, jdkFile) => {
       mockJavaBase = new LocalDistributor(inputs, jdkFile);
       await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
-      expect(spyTcFind).toHaveBeenCalled();
+      expect(spyTcFindAllVersions).toHaveBeenCalled();
     }
   );
 });
