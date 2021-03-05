@@ -42,6 +42,7 @@ describe('findInToolcache', () => {
 
   let mockJavaBase: EmptyJavaBase;
   let spyTcFind: jest.SpyInstance;
+  let spyTcFindAllVersions: jest.SpyInstance;
 
   beforeEach(() => {
     spyTcFind = jest.spyOn(tc, 'find');
@@ -54,6 +55,9 @@ describe('findInToolcache', () => {
 
       return semver.satisfies(actualJavaVersion, semverVersion) ? javaPath : '';
     });
+
+    spyTcFindAllVersions = jest.spyOn(tc, 'findAllVersions');
+    spyTcFindAllVersions.mockReturnValue([actualJavaVersion]);
   });
 
   afterEach(() => {
@@ -92,6 +96,7 @@ describe('setupJava', () => {
   let mockJavaBase: EmptyJavaBase;
 
   let spyTcFind: jest.SpyInstance;
+  let spyTcFindAllVersions: jest.SpyInstance;
   let spyCoreDebug: jest.SpyInstance;
   let spyCoreInfo: jest.SpyInstance;
   let spyCoreExportVariable: jest.SpyInstance;
@@ -109,6 +114,9 @@ describe('setupJava', () => {
 
       return semver.satisfies(actualJavaVersion, semverVersion) ? javaPath : '';
     });
+
+    spyTcFindAllVersions = jest.spyOn(tc, 'findAllVersions');
+    spyTcFindAllVersions.mockReturnValue([actualJavaVersion]);
 
     // Spy on core methods
     spyCoreDebug = jest.spyOn(core, 'debug');
@@ -180,7 +188,7 @@ describe('setupJava', () => {
   ])('should throw an error for Available version not found for %s', async input => {
     mockJavaBase = new EmptyJavaBase(input);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError('Available version not found');
-    expect(spyTcFind).toHaveBeenCalled();
+    expect(spyTcFindAllVersions).toHaveBeenCalled();
     expect(spyCoreAddPath).not.toHaveBeenCalled();
     expect(spyCoreExportVariable).not.toHaveBeenCalled();
     expect(spyCoreSetOutput).not.toHaveBeenCalled();
