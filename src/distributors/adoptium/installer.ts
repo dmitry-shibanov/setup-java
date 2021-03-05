@@ -63,12 +63,9 @@ export class AdoptiumDistributor extends JavaBase {
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
-    javaPath = await tc.cacheDir(
-      archivePath,
-      this.toolcacheFolderName,
-      javaRelease.version,
-      this.architecture
-    );
+    let version = this.getToolcacheVersionName(javaRelease.version);
+
+    javaPath = await tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
 
     if (process.platform === 'darwin') {
       javaPath = path.join(javaPath, macOSJavaContentDir);

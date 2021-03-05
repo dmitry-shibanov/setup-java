@@ -10311,7 +10311,8 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.version, this.architecture);
+            let version = this.getToolcacheVersionName(javaRelease.version);
+            javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             if (process.platform === 'darwin') {
                 javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
             }
@@ -23113,8 +23114,30 @@ class JavaBase {
     get toolcacheFolderName() {
         return `Java_${this.distribution}_${this.packageType}`;
     }
+    getToolcacheVersionName(resolvedVersion) {
+        let version = resolvedVersion;
+        if (!this.stable) {
+            const cleanVersion = semver_1.default.clean(version);
+            version = `${cleanVersion}-ea`;
+        }
+        return version;
+    }
     findInToolcache() {
-        const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
+        // we can't use tc.find directly because firstly, we need to filter versions by stability
+        // if *-ea is provided, take only ea versions from toolcache, otherwise - only stable versions
+        const availableVersions = tc
+            .findAllVersions(this.toolcacheFolderName, this.architecture)
+            .filter(item => item.includes('ea') === !this.stable)
+            .map(item => {
+            return item.replace(/-ea$/, '');
+        });
+        const satisfiedVersions = availableVersions
+            .filter(item => semver_1.default.satisfies(item, this.version))
+            .sort(semver_1.default.rcompare);
+        if (!satisfiedVersions || satisfiedVersions.length === 0) {
+            return null;
+        }
+        const javaPath = tc.find(this.toolcacheFolderName, satisfiedVersions[0], this.architecture);
         if (!javaPath) {
             return null;
         }
@@ -37454,7 +37477,8 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, javaRelease.version, this.architecture);
+            let version = this.getToolcacheVersionName(javaRelease.version);
+            const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             return { javaPath, javaVersion: javaRelease.version };
         });
     }

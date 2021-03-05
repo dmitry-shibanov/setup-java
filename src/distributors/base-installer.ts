@@ -50,8 +50,33 @@ export abstract class JavaBase {
     return `Java_${this.distribution}_${this.packageType}`;
   }
 
+  protected getToolcacheVersionName(resolvedVersion: string): string {
+    let version = resolvedVersion;
+    if (!this.stable) {
+      const cleanVersion = semver.clean(version);
+      version = `${cleanVersion}-ea`;
+    }
+    return version;
+  }
+
   protected findInToolcache(): JavaInstallerResults | null {
-    const javaPath = tc.find(this.toolcacheFolderName, this.version.raw, this.architecture);
+    // we can't use tc.find directly because firstly, we need to filter versions by stability
+    // if *-ea is provided, take only ea versions from toolcache, otherwise - only stable versions
+    const availableVersions = tc
+      .findAllVersions(this.toolcacheFolderName, this.architecture)
+      .filter(item => item.includes('ea') === !this.stable)
+      .map(item => {
+        return item.replace(/-ea$/, '');
+      });
+
+    const satisfiedVersions = availableVersions
+      .filter(item => semver.satisfies(item, this.version))
+      .sort(semver.rcompare);
+    if (!satisfiedVersions || satisfiedVersions.length === 0) {
+      return null;
+    }
+
+    const javaPath = tc.find(this.toolcacheFolderName, satisfiedVersions[0], this.architecture);
     if (!javaPath) {
       return null;
     }
