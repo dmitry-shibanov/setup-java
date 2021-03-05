@@ -54,7 +54,7 @@ export abstract class JavaBase {
     let version = resolvedVersion;
     if (!this.stable) {
       const cleanVersion = semver.clean(version);
-      version = `${cleanVersion}-ea`;
+      return `${cleanVersion}-ea`;
     }
     return version;
   }

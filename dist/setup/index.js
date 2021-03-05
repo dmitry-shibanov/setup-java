@@ -10311,7 +10311,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            let version = this.getToolcacheVersionName(javaRelease.version);
+            const version = this.getToolcacheVersionName(javaRelease.version);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             if (process.platform === 'darwin') {
                 javaPath = path_1.default.join(javaPath, constants_1.macOSJavaContentDir);
@@ -23118,7 +23118,7 @@ class JavaBase {
         let version = resolvedVersion;
         if (!this.stable) {
             const cleanVersion = semver_1.default.clean(version);
-            version = `${cleanVersion}-ea`;
+            return `${cleanVersion}-ea`;
         }
         return version;
     }
@@ -37477,7 +37477,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            let version = this.getToolcacheVersionName(javaRelease.version);
+            const version = this.getToolcacheVersionName(javaRelease.version);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             return { javaPath, javaVersion: javaRelease.version };
         });
