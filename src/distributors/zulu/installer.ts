@@ -9,7 +9,6 @@ import { JavaBase } from '../base-installer';
 import { IZuluVersions } from './models';
 import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
-import { TIMEOUT } from 'dns';
 
 export class ZuluDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
