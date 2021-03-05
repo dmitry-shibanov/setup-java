@@ -50,7 +50,9 @@ describe('getAvailableVersions', () => {
         const baseUrl = 'https://api.adoptopenjdk.net/v3/assets/version/%5B1.0,100.0%5D';
         const expectedUrl = `${baseUrl}?project=jdk&vendor=adoptopenjdk&heap_size=normal&jvm_impl=hotspot&sort_method=DEFAULT&sort_order=DESC&${expectedParameters}`;
         distributor['getPlatformOption'] = () => 'mac';
+
         await distributor['getAvailableVersions']();
+
         expect(spyHttpClient.mock.calls).toHaveLength(1);
         expect(spyHttpClient.mock.calls[0][0]).toBe(expectedUrl);
       }

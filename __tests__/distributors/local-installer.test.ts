@@ -172,11 +172,16 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, 'otherJdkFile'],
     [{ version: '11.1.11', arch: 'x64', packageType: 'jdk' }, 'not_existing_one']
-  ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
-    mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    await expect(mockJavaBase.setupJava()).rejects.toThrowError(/JDK file is not found in path */);
-    expect(spyTcFind).toHaveBeenCalled();
-  });
+  ])(
+    `Throw an error if jdkfile has wrong path, inputs %s, jdkfile %s, real name ${expectedJdkFile}`,
+    async (inputs, jdkFile) => {
+      mockJavaBase = new LocalDistributor(inputs, jdkFile);
+      await expect(mockJavaBase.setupJava()).rejects.toThrowError(
+        /JDK file is not found in path */
+      );
+      expect(spyTcFind).toHaveBeenCalled();
+    }
+  );
 
   it.each([
     [{ version: '8.0.289', arch: 'x64', packageType: 'jdk' }, ''],
@@ -186,9 +191,12 @@ describe('setupJava', () => {
     [{ version: '11.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '12.0.289', arch: 'x64', packageType: 'jdk' }, undefined],
     [{ version: '15.0.289', arch: 'x64', packageType: 'jdk' }, undefined]
-  ])('inputs %s, jdkfile %s', async (inputs, jdkFile) => {
-    mockJavaBase = new LocalDistributor(inputs, jdkFile);
-    await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
-    expect(spyTcFind).toHaveBeenCalled();
-  });
+  ])(
+    'Throw an error if jdkfile is not specified, inputs %s, jdkfile %s',
+    async (inputs, jdkFile) => {
+      mockJavaBase = new LocalDistributor(inputs, jdkFile);
+      await expect(mockJavaBase.setupJava()).rejects.toThrowError("'jdkFile' is not specified");
+      expect(spyTcFind).toHaveBeenCalled();
+    }
+  );
 });

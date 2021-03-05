@@ -166,7 +166,7 @@ describe('setupJava', () => {
       { version: '11', arch: 'x64', packageType: 'jre' },
       { javaPath: `/toolcache/Java_Empty_jre/11.0.8`, javaVersion: '11.0.8' }
     ]
-  ])('download java', async (input, expected) => {
+  ])('download java with inputs %s, expcted %s', async (input, expected) => {
     mockJavaBase = new EmptyJavaBase(input);
     await expect(mockJavaBase.setupJava()).resolves.toEqual(expected);
     expect(spyTcFind).toHaveBeenCalled();
@@ -178,7 +178,7 @@ describe('setupJava', () => {
   it.each([
     [{ version: '15', arch: 'x86', packageType: 'jre' }],
     [{ version: '11.0.7', arch: 'x64', packageType: 'jre' }]
-  ])('should throw an error for Available version not found', async input => {
+  ])('should throw an error for Available version not found for %s', async input => {
     mockJavaBase = new EmptyJavaBase(input);
     await expect(mockJavaBase.setupJava()).rejects.toThrowError('Available version not found');
     expect(spyTcFind).toHaveBeenCalled();
