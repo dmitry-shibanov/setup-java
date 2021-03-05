@@ -26,6 +26,21 @@ export async function configureAuthentication() {
     core.setSecret(gpgPrivateKey);
   }
 
+  await createAuthenticationSettings(id, username, password, gpgPassphrase);
+
+  if (gpgPrivateKey) {
+    core.info('Importing private gpg key');
+    const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
+    core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
+  }
+}
+
+export async function createAuthenticationSettings(
+  id: string,
+  username: string,
+  password: string,
+  gpgPassphrase: string | undefined = undefined
+) {
   core.info(
     `Creating ${SETTINGS_FILE} with server-id: ${id};
      environment variables:
@@ -41,12 +56,6 @@ export async function configureAuthentication() {
   );
   await io.mkdirP(settingsDirectory);
   await write(settingsDirectory, generate(id, username, password, gpgPassphrase));
-
-  if (gpgPrivateKey) {
-    core.info('Importing private gpg key');
-    const keyFingerprint = (await gpg.importKey(gpgPrivateKey)) || '';
-    core.saveState(constants.STATE_GPG_PRIVATE_KEY_FINGERPRINT, keyFingerprint);
-  }
 }
 
 // only exported for testing purposes

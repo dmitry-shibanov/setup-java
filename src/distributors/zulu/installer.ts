@@ -10,31 +10,41 @@ import { IZuluVersions } from './models';
 import { extractJdkFile, getDownloadArchiveExtension } from '../../util';
 import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
 
-// TO-DO: issue with 4 digits versions: 15.0.0.36 / 15.0.0+36
-
 export class ZuluDistributor extends JavaBase {
   constructor(installerOptions: JavaInstallerOptions) {
     super('Zulu', installerOptions);
   }
 
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
-    const availableVersions = await this.getAvailableVersions();
-
-    const zuluVersions = availableVersions.map(item => {
+    const availableVersionsRaw = await this.getAvailableVersions();
+    const availableVersions = availableVersionsRaw.map(item => {
       return {
-        version: semver.coerce(item.jdk_version.join('.'))?.version ?? '',
-        url: item.url
-      } as JavaDownloadRelease;
+        version: this.convertVersionToSemver(item.jdk_version),
+        url: item.url,
+        zuluVersion: this.convertVersionToSemver(item.zulu_version)
+      };
     });
 
-    // TO-DO: need to sort by Zulu version after sorting by JDK version?
-    const maxSatisfiedVersion = semver.maxSatisfying(
-      zuluVersions.map(item => item.version),
-      version
-    );
-    const resolvedVersion = zuluVersions.find(item => item.version === maxSatisfiedVersion);
-    if (!resolvedVersion) {
-      const availableOptions = zuluVersions?.map(item => item.version).join(', ');
+    const satisfiedVersions = availableVersions
+      .filter(item => semver.satisfies(item.version, version))
+      .sort((a, b) => {
+        // Azul provides two versions: jdk_version and azul_version
+        // we should sort by both fields by descending
+        return (
+          -semver.compareBuild(a.version, b.version) ||
+          -semver.compareBuild(a.zuluVersion, b.zuluVersion)
+        );
+      })
+      .map(item => {
+        return {
+          version: item.version,
+          url: item.url
+        } as JavaDownloadRelease;
+      });
+
+    const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
+    if (!resolvedFullVersion) {
+      const availableOptions = availableVersions.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -43,7 +53,7 @@ export class ZuluDistributor extends JavaBase {
       );
     }
 
-    return resolvedVersion;
+    return resolvedFullVersion;
   }
 
   protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
@@ -79,11 +89,6 @@ export class ZuluDistributor extends JavaBase {
     const javafx = features?.includes('fx') ?? false;
     const releaseStatus = this.stable ? 'ga' : 'ea';
 
-    // TO-DO: Remove after updating README
-    // java-package field supports features for Azul
-    // if you specify 'jdk+fx', 'fx' will be passed to features
-    // any number of features can be specified with comma
-
     console.time('azul-retrieve-available-versions');
     const requestArguments = [
       `os=${platform}`,
@@ -104,23 +109,21 @@ export class ZuluDistributor extends JavaBase {
       core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
     }
 
-    const availableVersions = (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl))
-      .result;
-    if (!availableVersions || availableVersions.length === 0) {
-      throw new Error(`No versions were found using url '${availableVersionsUrl}'`);
-    }
+    const availableVersions =
+      (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)).result ?? [];
 
-    // TO-DO: Debug information, should be removed before release
-    core.startGroup('Print debug information about available versions');
-    console.timeEnd('azul-retrieve-available-versions');
-    console.log(`Available versions: [${availableVersions.length}]`);
-    console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
-    core.endGroup();
-    core.startGroup('Print detailed debug information about available versions');
-    availableVersions.forEach(item => {
-      console.log(JSON.stringify(item));
-    });
-    core.endGroup();
+    if (core.isDebug()) {
+      core.startGroup('Print information about available versions');
+      console.timeEnd('azul-retrieve-available-versions');
+      console.log(`Available versions: [${availableVersions.length}]`);
+      console.log(availableVersions.map(item => item.jdk_version.join('.')).join(', '));
+      core.endGroup();
+      core.startGroup('Print full information about available versions');
+      availableVersions.forEach(item => {
+        console.log(JSON.stringify(item));
+      });
+      core.endGroup();
+    }
 
     return availableVersions;
   }
@@ -149,5 +152,16 @@ export class ZuluDistributor extends JavaBase {
       default:
         return process.platform;
     }
+  }
+
+  // Azul API returns jdk_version as array of digits like [11, 0, 2, 1]
+  private convertVersionToSemver(version_array: number[]) {
+    const mainVersion = version_array.slice(0, 3).join('.');
+    if (version_array.length > 3) {
+      // intentionally ignore more than 4 numbers because it is invalid semver
+      return `${mainVersion}+${version_array[3]}`;
+    }
+
+    return mainVersion;
   }
 }

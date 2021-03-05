@@ -4,7 +4,6 @@ import { JavaInstallerOptions } from './base-models';
 import { LocalDistributor } from './local/installer';
 import { ZuluDistributor } from './zulu/installer';
 
-// TO-DO: confirm distributor names
 enum JavaDistributor {
   Adoptium = 'adoptium',
   Zulu = 'zulu',

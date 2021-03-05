@@ -6,6 +6,8 @@ import * as path from 'path';
 import { getJavaDistributor } from './distributors/distributor-factory';
 import { JavaInstallerOptions } from './distributors/base-models';
 
+// To-Do need check resolving with 4 numbers
+// To-Do add check that Java resolves from to toolcache to e2e
 async function run() {
   try {
     const version = core.getInput(constants.INPUT_JAVA_VERSION);

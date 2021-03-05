@@ -16,17 +16,26 @@ export class AdoptiumDistributor extends JavaBase {
     super('Adoptium', installerOptions);
   }
 
-  // TO-DO: Validate that all versions are available through API
-
   protected async findPackageForDownload(version: semver.Range): Promise<JavaDownloadRelease> {
-    const availableVersions = await this.getAvailableVersions();
+    const availableVersionsRaw = await this.getAvailableVersions();
+    const availableVersionsWithBinaries = availableVersionsRaw
+      .filter(item => item.binaries.length > 0)
+      .map(item => {
+        return {
+          version: item.version_data.semver,
+          url: item.binaries[0].package.link
+        } as JavaDownloadRelease;
+      });
 
-    const resolvedFullVersion = availableVersions.find(item =>
-      semver.satisfies(item.version_data.semver, version)
-    );
+    const satisfiedVersions = availableVersionsWithBinaries
+      .filter(item => semver.satisfies(item.version, version))
+      .sort((a, b) => {
+        return -semver.compareBuild(a.version, b.version);
+      });
 
+    const resolvedFullVersion = satisfiedVersions.length > 0 ? satisfiedVersions[0] : null;
     if (!resolvedFullVersion) {
-      const availableOptions = availableVersions.map(item => item.version_data.semver).join(', ');
+      const availableOptions = availableVersionsWithBinaries.map(item => item.version).join(', ');
       const availableOptionsMessage = availableOptions
         ? `\nAvailable versions: ${availableOptions}`
         : '';
@@ -35,16 +44,7 @@ export class AdoptiumDistributor extends JavaBase {
       );
     }
 
-    if (resolvedFullVersion.binaries.length < 0) {
-      throw new Error(`No binaries were found for SemVer '${version.raw}'`);
-    }
-
-    // take the first element in 'binaries' array
-    // because it is already filtered by arch and platform options and can't contain > 1 elements
-    return {
-      version: resolvedFullVersion.version_data.semver,
-      url: resolvedFullVersion.binaries[0].package.link
-    };
+    return resolvedFullVersion;
   }
 
   protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
@@ -81,24 +81,22 @@ export class AdoptiumDistributor extends JavaBase {
     const platform = this.getPlatformOption();
     const arch = this.architecture;
     const imageType = this.packageType;
-    const heapSize = 'normal';
-    const jvmImpl = 'hotspot';
-    const versionRange = '[1.0,100.0]';
+    const versionRange = '[1.0,100.0]'; // retrieve all available versions
     const encodedVersionRange = encodeURI(versionRange);
     const releaseType = this.stable ? 'ga' : 'ea';
 
     console.time('adopt-retrieve-available-versions');
 
     const baseRequestArguments = [
-      `os=${platform}`,
-      `architecture=${arch}`,
-      `heap_size=${heapSize}`,
-      `image_type=${imageType}`,
-      `jvm_impl=${jvmImpl}`,
       `project=jdk`,
       'vendor=adoptopenjdk',
+      `heap_size=normal`,
+      `jvm_impl=hotspot`,
       'sort_method=DEFAULT',
       'sort_order=DESC',
+      `os=${platform}`,
+      `architecture=${arch}`,
+      `image_type=${imageType}`,
       `release_type=${releaseType}`
     ].join('&');
 
@@ -125,17 +123,18 @@ export class AdoptiumDistributor extends JavaBase {
       page_index++;
     }
 
-    // TO-DO: Debug information, should be removed before release
-    core.startGroup('Print debug information about available versions');
-    console.timeEnd('adopt-retrieve-available-versions');
-    console.log(`Available versions: [${availableVersions.length}]`);
-    console.log(availableVersions.map(item => item.version_data.semver).join(', '));
-    core.endGroup();
-    core.startGroup('Print detailed debug information about available versions');
-    availableVersions.forEach(item => {
-      console.log(JSON.stringify(item));
-    });
-    core.endGroup();
+    if (core.isDebug()) {
+      core.startGroup('Print information about available versions');
+      console.timeEnd('adopt-retrieve-available-versions');
+      console.log(`Available versions: [${availableVersions.length}]`);
+      console.log(availableVersions.map(item => item.version_data.semver).join(', '));
+      core.endGroup();
+      core.startGroup('Print full information about available versions');
+      availableVersions.forEach(item => {
+        console.log(JSON.stringify(item));
+      });
+      core.endGroup();
+    }
 
     return availableVersions;
   }
