@@ -63,7 +63,11 @@ export class AdoptiumDistributor extends JavaBase {
 
     const archiveName = fs.readdirSync(extractedJavaPath)[0];
     const archivePath = path.join(extractedJavaPath, archiveName);
-    const version = this.stable ? javaRelease.version : `${javaRelease.version}-ea`;
+    let version = javaRelease.version;
+    if (!this.stable) {
+      const cleanVersion = semver.clean(version);
+      version = `${cleanVersion}-ea`;
+    }
     core.info(`cache dir java version is ${version}`);
     javaPath = await tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
 

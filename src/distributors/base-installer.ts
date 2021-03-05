@@ -54,6 +54,7 @@ export abstract class JavaBase {
     const version = this.stable ? this.version.raw : `${this.version.raw}-ea`;
     core.info(`find dir java version is ${version}`);
     const javaPath = tc.find(this.toolcacheFolderName, version, this.architecture);
+    console.log(tc.findAllVersions(this.toolcacheFolderName,this.architecture));
     if (!javaPath) {
       return null;
     }

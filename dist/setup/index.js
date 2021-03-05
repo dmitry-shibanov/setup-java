@@ -10311,7 +10311,11 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            const version = this.stable ? javaRelease.version : `${javaRelease.version}-ea`;
+            let version = javaRelease.version;
+            if (!this.stable) {
+                const cleanVersion = semver_1.default.clean(version);
+                version = `${cleanVersion}-ea`;
+            }
             core.info(`cache dir java version is ${version}`);
             javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             if (process.platform === 'darwin') {
@@ -23119,6 +23123,7 @@ class JavaBase {
         const version = this.stable ? this.version.raw : `${this.version.raw}-ea`;
         core.info(`find dir java version is ${version}`);
         const javaPath = tc.find(this.toolcacheFolderName, version, this.architecture);
+        console.log(tc.findAllVersions(this.toolcacheFolderName, this.architecture));
         if (!javaPath) {
             return null;
         }
@@ -37458,7 +37463,11 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             extractedJavaPath = yield util_1.extractJdkFile(javaArchivePath, extension);
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
-            const version = this.stable ? javaRelease.version : `${javaRelease.version}-ea`;
+            let version = javaRelease.version;
+            if (!this.stable) {
+                const cleanVersion = semver_1.default.clean(version);
+                version = `${cleanVersion}-ea`;
+            }
             core.info(`cache dir java version is ${version}`);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, version, this.architecture);
             return { javaPath, javaVersion: javaRelease.version };
