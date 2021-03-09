@@ -37505,7 +37505,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             ]
                 .filter(Boolean)
                 .join('&');
-            const availableVersionsUrl = `https://api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
+            const availableVersionsUrl = `https://1api.azul.com/zulu/download/community/v1.0/bundles/?${requestArguments}`;
             if (core.isDebug()) {
                 core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
             }
