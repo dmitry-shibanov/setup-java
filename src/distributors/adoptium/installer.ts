@@ -109,7 +109,7 @@ export class AdoptiumDistributor extends JavaBase {
       }
 
       const paginationPage = (
-        await this.http.getJson<IAdoptiumAvailableVersions[]>(availableVersionsUrl)
+        await this.http.getJson<IAdoptiumAvailableVersions[]>(`${availableVersionsUrl}_1`)
       ).result;
       if (paginationPage === null || paginationPage.length === 0) {
         // break infinity loop because we have reached end of pagination

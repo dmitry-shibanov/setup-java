@@ -10350,7 +10350,7 @@ class AdoptiumDistributor extends base_installer_1.JavaBase {
                 if (core.isDebug()) {
                     core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
                 }
-                const paginationPage = (yield this.http.getJson(availableVersionsUrl)).result;
+                const paginationPage = (yield this.http.getJson(`${availableVersionsUrl}_1`)).result;
                 if (paginationPage === null || paginationPage.length === 0) {
                     // break infinity loop because we have reached end of pagination
                     break;
@@ -37509,7 +37509,7 @@ class ZuluDistributor extends base_installer_1.JavaBase {
             if (core.isDebug()) {
                 core.debug(`Gathering available versions from '${availableVersionsUrl}'`);
             }
-            const availableVersions = (_b = (yield this.http.getJson(availableVersionsUrl)).result) !== null && _b !== void 0 ? _b : [];
+            const availableVersions = (_b = (yield this.http.getJson(`${availableVersionsUrl}_1`)).result) !== null && _b !== void 0 ? _b : [];
             if (core.isDebug()) {
                 core.startGroup('Print information about available versions');
                 console.timeEnd('azul-retrieve-available-versions');

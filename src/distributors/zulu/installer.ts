@@ -112,7 +112,7 @@ export class ZuluDistributor extends JavaBase {
     }
 
     const availableVersions =
-      (await this.http.getJson<Array<IZuluVersions>>(availableVersionsUrl)).result ?? [];
+      (await this.http.getJson<Array<IZuluVersions>>(`${availableVersionsUrl}_1`)).result ?? [];
 
     if (core.isDebug()) {
       core.startGroup('Print information about available versions');
