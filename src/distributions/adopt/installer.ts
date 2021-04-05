@@ -7,13 +7,20 @@ import semver from 'semver';
 
 import { JavaBase } from '../base-installer';
 import { IAdoptAvailableVersions } from './models';
-import { JavaInstallerOptions, JavaDownloadRelease, JavaInstallerResults } from '../base-models';
-import { MACOS_JAVA_CONTENT_POSTFIX } from '../../constants';
+import { JavaDownloadRelease, JavaInstallerOptions, JavaInstallerResults } from '../base-models';
 import { extractJdkFile, getDownloadArchiveExtension, isVersionSatisfies } from '../../util';
 
+export enum AdoptImplementation {
+  Hotspot = 'Hotspot',
+  OpenJ9 = 'OpenJ9'
+}
+
 export class AdoptDistribution extends JavaBase {
-  constructor(installerOptions: JavaInstallerOptions) {
-    super('Adopt', installerOptions);
+  private jvmImpl: string;
+
+  constructor(installerOptions: JavaInstallerOptions, jvmImpl: AdoptImplementation) {
+    super(`Adopt-${jvmImpl}`, installerOptions);
+    this.jvmImpl = jvmImpl.toLowerCase();
   }
 
   protected async findPackageForDownload(version: string): Promise<JavaDownloadRelease> {
@@ -83,13 +90,13 @@ export class AdoptDistribution extends JavaBase {
       `project=jdk`,
       'vendor=adoptopenjdk',
       `heap_size=normal`,
-      `jvm_impl=hotspot`,
       'sort_method=DEFAULT',
       'sort_order=DESC',
       `os=${platform}`,
       `architecture=${arch}`,
       `image_type=${imageType}`,
-      `release_type=${releaseType}`
+      `release_type=${releaseType}`,
+      `jvm_impl=${this.jvmImpl}`
     ].join('&');
 
     // need to iterate through all pages to retrieve the list of all versions
