@@ -3952,6 +3952,7 @@ exports.JavaBase = void 0;
 const tc = __importStar(__webpack_require__(139));
 const core = __importStar(__webpack_require__(470));
 const fs = __importStar(__webpack_require__(747));
+const exec = __importStar(__webpack_require__(986));
 const semver_1 = __importDefault(__webpack_require__(876));
 const path_1 = __importDefault(__webpack_require__(622));
 const httpm = __importStar(__webpack_require__(539));
@@ -4047,6 +4048,29 @@ class JavaBase {
             version: satisfiedVersions[0].version,
             path: satisfiedVersions[0].path
         };
+    }
+    // This method recursively finds all .pack files under fsPath and unpacks them with the unpack200 tool
+    unpackJars(fsPath, javaBinPath) {
+        return __awaiter(this, void 0, void 0, function* () {
+            if (fs.existsSync(fsPath)) {
+                if (fs.lstatSync(fsPath).isDirectory()) {
+                    for (const file in fs.readdirSync(fsPath)) {
+                        const curPath = path_1.default.join(fsPath, file);
+                        yield this.unpackJars(curPath, javaBinPath);
+                    }
+                }
+                else if (path_1.default.extname(fsPath).toLowerCase() === '.pack') {
+                    // Unpack the pack file synchonously
+                    const p = path_1.default.parse(fsPath);
+                    const toolName = process.platform === 'win32' ? 'unpack200.exe' : 'unpack200';
+                    const args = process.platform === 'win32' ? '-r -v -l ""' : '';
+                    const name = path_1.default.join(p.dir, p.name);
+                    yield exec.exec(`"${path_1.default.join(javaBinPath, toolName)}"`, [
+                        `${args} "${name}.pack" "${name}.jar"`
+                    ]);
+                }
+            }
+        });
     }
     normalizeVersion(version) {
         let stable = true;
@@ -14037,6 +14061,7 @@ class ZuluDistribution extends base_installer_1.JavaBase {
             const archiveName = fs_1.default.readdirSync(extractedJavaPath)[0];
             const archivePath = path_1.default.join(extractedJavaPath, archiveName);
             const javaPath = yield tc.cacheDir(archivePath, this.toolcacheFolderName, this.getToolcacheVersionName(javaRelease.version), this.architecture);
+            yield this.unpackJars(javaPath, path_1.default.join(javaPath, 'bin'));
             return { version: javaRelease.version, path: javaPath };
         });
     }

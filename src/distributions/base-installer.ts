@@ -1,6 +1,7 @@
 import * as tc from '@actions/tool-cache';
 import * as core from '@actions/core';
 import * as fs from 'fs';
+import * as exec from '@actions/exec';
 import semver from 'semver';
 import path from 'path';
 import * as httpm from '@actions/http-client';
@@ -115,6 +116,27 @@ export abstract class JavaBase {
       version: satisfiedVersions[0].version,
       path: satisfiedVersions[0].path
     };
+  }
+
+  // This method recursively finds all .pack files under fsPath and unpacks them with the unpack200 tool
+  protected async unpackJars(fsPath: string, javaBinPath: string) {
+    if (fs.existsSync(fsPath)) {
+      if (fs.lstatSync(fsPath).isDirectory()) {
+        for (const file in fs.readdirSync(fsPath)) {
+          const curPath = path.join(fsPath, file);
+          await this.unpackJars(curPath, javaBinPath);
+        }
+      } else if (path.extname(fsPath).toLowerCase() === '.pack') {
+        // Unpack the pack file synchonously
+        const p = path.parse(fsPath);
+        const toolName = process.platform === 'win32' ? 'unpack200.exe' : 'unpack200';
+        const args = process.platform === 'win32' ? '-r -v -l ""' : '';
+        const name = path.join(p.dir, p.name);
+        await exec.exec(`"${path.join(javaBinPath, toolName)}"`, [
+          `${args} "${name}.pack" "${name}.jar"`
+        ]);
+      }
+    }
   }
 
   protected normalizeVersion(version: string) {

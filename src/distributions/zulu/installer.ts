@@ -79,6 +79,8 @@ export class ZuluDistribution extends JavaBase {
       this.architecture
     );
 
+    await this.unpackJars(javaPath, path.join(javaPath, 'bin'));
+
     return { version: javaRelease.version, path: javaPath };
   }
 
