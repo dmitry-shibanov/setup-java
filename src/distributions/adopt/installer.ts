@@ -55,7 +55,7 @@ export class AdoptDistribution extends JavaBase {
   }
 
   protected get toolcacheFolderName(): string {
-    if (this.jvmImpl === AdoptImplementation.Hotspot) {
+    if (this.jvmImpl === AdoptImplementation.Hotspot.toLowerCase()) {
       return `Java_Adopt_${this.packageType}`;
     }
     return super.toolcacheFolderName;

@@ -26940,7 +26940,7 @@ class AdoptDistribution extends base_installer_1.JavaBase {
         });
     }
     get toolcacheFolderName() {
-        if (this.jvmImpl === AdoptImplementation.Hotspot) {
+        if (this.jvmImpl === AdoptImplementation.Hotspot.toLowerCase()) {
             return `Java_Adopt_${this.packageType}`;
         }
         return super.toolcacheFolderName;
