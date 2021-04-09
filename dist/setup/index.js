@@ -26939,6 +26939,12 @@ class AdoptDistribution extends base_installer_1.JavaBase {
             return resolvedFullVersion;
         });
     }
+    get toolcacheFolderName() {
+        if (this.jvmImpl === AdoptImplementation.Hotspot) {
+            return `Java_Adopt_${this.packageType}`;
+        }
+        return super.toolcacheFolderName;
+    }
     downloadTool(javaRelease) {
         return __awaiter(this, void 0, void 0, function* () {
             let javaPath;

@@ -54,6 +54,13 @@ export class AdoptDistribution extends JavaBase {
     return resolvedFullVersion;
   }
 
+  protected get toolcacheFolderName(): string {
+    if (this.jvmImpl === AdoptImplementation.Hotspot) {
+      return `Java_Adopt_${this.packageType}`;
+    }
+    return super.toolcacheFolderName;
+  }
+
   protected async downloadTool(javaRelease: JavaDownloadRelease): Promise<JavaInstallerResults> {
     let javaPath: string;
     let extractedJavaPath: string;
