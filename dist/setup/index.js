@@ -4004,7 +4004,7 @@ class JavaBase {
         });
     }
     get toolcacheFolderName() {
-        return `Java_${this.distribution}_${this.packageType}`;
+        return `Java_${this.distribution}_${this.packageType}`.toLowerCase();
     }
     getToolcacheVersionName(version) {
         if (!this.stable) {
@@ -26959,7 +26959,7 @@ class AdoptDistribution extends base_installer_1.JavaBase {
         if (this.jvmImpl === AdoptImplementation.Hotspot) {
             // exclude Hotspot postfix from distribution name because Hosted runners have pre-cached Adopt OpenJDK under "Java_Adopt_jdk"
             // for more information see: https://github.com/actions/setup-java/pull/155#discussion_r610451063
-            return `Java_Adopt_${this.packageType}`;
+            return `Java_Adopt_${this.packageType}`.toLowerCase();
         }
         return super.toolcacheFolderName;
     }

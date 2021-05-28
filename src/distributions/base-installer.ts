@@ -63,7 +63,7 @@ export abstract class JavaBase {
   }
 
   protected get toolcacheFolderName(): string {
-    return `Java_${this.distribution}_${this.packageType}`;
+    return `Java_${this.distribution}_${this.packageType}`.toLowerCase();
   }
 
   protected getToolcacheVersionName(version: string): string {
