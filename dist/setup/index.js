@@ -18998,7 +18998,7 @@ exports.restore = restore;
 function save(id) {
     return __awaiter(this, void 0, void 0, function* () {
         const packageManager = findPackageManager(id);
-        const primaryKey = yield computeCacheKey(packageManager);
+        const primaryKey = core.getState(STATE_CACHE_PRIMARY_KEY);
         const matchedKey = core.getState(CACHE_MATCHED_KEY);
         if (matchedKey === primaryKey) {
             // no change in target directories

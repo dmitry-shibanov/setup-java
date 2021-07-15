@@ -90,7 +90,7 @@ export async function restore(id: string) {
  */
 export async function save(id: string) {
   const packageManager = findPackageManager(id);
-  const primaryKey = await computeCacheKey(packageManager);
+  const primaryKey = core.getState(STATE_CACHE_PRIMARY_KEY);
   const matchedKey = core.getState(CACHE_MATCHED_KEY);
   if (matchedKey === primaryKey) {
     // no change in target directories
